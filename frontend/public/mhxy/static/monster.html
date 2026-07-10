@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>山河画境怪物底细 - 996长安酒店</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .monster-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .monster-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .monster-header h2 {
+            font-size: 28px;
+            color: #ffa726;
+            margin-bottom: 10px;
+        }
+        .monster-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .monster-tab {
+            padding: 8px 16px;
+            background: rgba(255, 167, 38, 0.2);
+            border: 1px solid rgba(255, 167, 38, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #ffa726;
+            font-size: 14px;
+        }
+        .monster-tab:hover, .monster-tab.active {
+            background: rgba(255, 167, 38, 0.4);
+            border-color: #ffa726;
+        }
+        .monster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
+        }
+        .monster-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .monster-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            border-color: #ffa726;
+        }
+        .monster-item img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+        .monster-item .name {
+            font-size: 14px;
+            color: #fff;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+        .monster-item .badges {
+            margin-top: 8px;
+        }
+        .monster-item .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin: 2px;
+        }
+        .badge-type1 { background: rgba(239, 83, 80, 0.7); color: #fff; }
+        .badge-type2 { background: rgba(102, 187, 106, 0.7); color: #fff; }
+        .badge-perception1 { background: rgba(171, 71, 188, 0.7); color: #fff; }
+
+        /* 详情弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 20px;
+            max-width: 600px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 25px;
+            position: relative;
+            border: 1px solid rgba(255, 167, 38, 0.3);
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .modal-image {
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+            margin: 0 auto 15px;
+            display: block;
+        }
+        .modal-title {
+            font-size: 26px;
+            color: #ffa726;
+            margin-bottom: 10px;
+        }
+        .modal-badges {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .modal-badges .badge {
+            padding: 5px 12px;
+            font-size: 13px;
+        }
+
+        /* 等级计算器 */
+        .calculator {
+            background: rgba(79, 195, 247, 0.1);
+            border: 1px solid rgba(79, 195, 247, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .calculator-title {
+            color: #4fc3f7;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .calculator-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .calculator-input input {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: #fff;
+            font-size: 16px;
+            width: 100px;
+            text-align: center;
+        }
+        .calculator-input input:focus {
+            border-color: #4fc3f7;
+            outline: none;
+        }
+        .calculator-result {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .result-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .result-label {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        .result-value {
+            color: #4fc3f7;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* 特性列表 */
+        .peculiarity-box {
+            background: rgba(255, 167, 38, 0.1);
+            border: 1px solid rgba(255, 167, 38, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .peculiarity-title {
+            color: #ffa726;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .peculiarity-list {
+            list-style: none;
+            padding: 0;
+        }
+        .peculiarity-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            color: #ccc;
+            font-size: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .peculiarity-item:last-child { margin-bottom: 0; }
+        .peculiarity-num {
+            background: #ffa726;
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* 公式展示 */
+        .formula-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .formula-title {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        .formula-item {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        /* 提示 */
+        .tip-box {
+            background: rgba(239, 83, 80, 0.1);
+            border: 1px solid rgba(239, 83, 80, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            color: #ef5350;
+            font-size: 14px;
+            margin: 15px 0;
+        }
+
+        /* 视频链接 */
+        .video-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(124, 77, 255, 0.2);
+            color: #7c4dff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin: 15px auto;
+            transition: all 0.3s;
+        }
+        .video-link:hover {
+            background: rgba(124, 77, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="navbar-brand">
+            <span class="logo">👹</span>
+            <h1>山河画境怪物底细</h1>
+        </div>
+        <div class="navbar-info">
+            <a href="/" style="color: #4fc3f7;">返回首页</a>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="monster-page">
+            <div class="monster-header">
+                <h2>山河画境怪物底细</h2>
+                <p style="color: #888;">点击怪物查看详细属性、气血计算和打法攻略</p>
+            </div>
+
+            <div class="monster-tabs" id="level-tabs"></div>
+
+            <div id="monster-content">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>正在加载怪物数据...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 详情弹窗 -->
+    <div class="modal" id="monster-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+
+            <div class="modal-header">
+                <img class="modal-image" id="modal-image" src="" alt="">
+                <h3 class="modal-title" id="modal-title"></h3>
+                <div class="modal-badges" id="modal-badges"></div>
+            </div>
+
+            <!-- 等级计算器 -->
+            <div class="calculator">
+                <div class="calculator-title">🧮 气血计算器</div>
+                <div class="calculator-input">
+                    <label style="color:#888;">角色等级：</label>
+                    <select id="level-input" onchange="calculateHP()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;color:#fff;font-size:14px;">
+                        <option value="69" style="background:#1a1a2e;color:#fff;">69级</option>
+                        <option value="89" style="background:#1a1a2e;color:#fff;">89级</option>
+                        <option value="109" selected style="background:#1a1a2e;color:#fff;">109级</option>
+                        <option value="129" style="background:#1a1a2e;color:#fff;">129级</option>
+                        <option value="159" style="background:#1a1a2e;color:#fff;">159级</option>
+                        <option value="175" style="background:#1a1a2e;color:#fff;">175级</option>
+                    </select>
+                </div>
+                <div class="calculator-result">
+                    <div class="result-item">
+                        <div class="result-label">🔵 蓝门气血</div>
+                        <div class="result-value" id="blue-hp">-</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">🔴 红门气血</div>
+                        <div class="result-value" id="reg-hp">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 公式展示 -->
+            <div class="formula-box">
+                <div class="formula-title">气血公式</div>
+                <div class="formula-item" id="modal-blue-formula">蓝门：-</div>
+                <div class="formula-item" id="modal-red-formula">红门：-</div>
+            </div>
+
+            <!-- 特性列表（打法攻略） -->
+            <div class="peculiarity-box" id="peculiarity-box" style="display:none;">
+                <div class="peculiarity-title">📝 打法攻略</div>
+                <ul class="peculiarity-list" id="peculiarity-list"></ul>
+            </div>
+
+            <!-- 注意提示 -->
+            <div class="tip-box" id="modal-tip" style="display:none;"></div>
+
+            <!-- 视频链接 -->
+            <div style="text-align:center;">
+                <a class="video-link" id="video-link" href="" target="_blank" style="display:none;">
+                    ▶️ 观看视频攻略
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>数据来源: api.xyq2.com | 996长安酒店</p>
+    </footer>
+
+    <script>
+        let monsterData = null;
+        let monsterDetailData = [];  // 存储详情数据
+        let currentMonsterId = null;
+        let currentBlueFormula = '';
+        let currentRegFormula = '';
+
+        // 加载怪物数据（直接读取本地JSON）
+        async function loadMonsterData() {
+            try {
+                const resp = await fetch('/mhxy/data/monsters.json');
+                const data = await resp.json();
+
+                monsterData = {
+                    list: data.list || [],
+                    checkpoint_list: data.checkpoint_list || {},
+                    checkpoint_data_list: data.checkpoint_data_list || []
+                };
+                monsterDetailData = data.monsters_detail || [];
+
+                renderTabs();
+                renderMonsters('all');
+            } catch (e) {
+                document.getElementById('monster-content').innerHTML =
+                    '<div class="error-box"><p>加载失败</p><button onclick="loadMonsterData()">重试</button></div>';
+            }
+        }
+
+        // 渲染关卡标签
+        function renderTabs() {
+            const tabsEl = document.getElementById('level-tabs');
+            const levels = monsterData.checkpoint_data_list || [];
+
+            let html = '<div class="monster-tab active" data-level="all">全部</div>';
+            levels.forEach(level => {
+                html += `<div class="monster-tab" data-level="${level.name}">${level.name}</div>`;
+            });
+
+            tabsEl.innerHTML = html;
+
+            tabsEl.querySelectorAll('.monster-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabsEl.querySelectorAll('.monster-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    renderMonsters(tab.dataset.level);
+                });
+            });
+        }
+
+        // 渲染怪物列表
+        function renderMonsters(level) {
+            const contentEl = document.getElementById('monster-content');
+            let monsters = [];
+
+            if (level === 'all') {
+                monsters = monsterData.list || [];
+            } else {
+                const levelData = monsterData.checkpoint_data_list.find(l => l.name === level);
+                monsters = levelData ? levelData.list : [];
+            }
+
+            if (!monsters.length) {
+                contentEl.innerHTML = '<p style="text-align:center;color:#888;padding:50px;">暂无数据</p>';
+                return;
+            }
+
+            let html = '<div class="monster-grid">';
+            monsters.forEach(m => {
+                const typeBadge = m.type === 1 ?
+                    '<span class="badge badge-type1">单怪</span>' :
+                    '<span class="badge badge-type2">群怪</span>';
+                const perceptionBadge = m.perception === 1 ?
+                    '<span class="badge badge-perception1">有感知</span>' : '';
+
+                // 构建本地备用图片路径（从OSS URL提取文件名）
+                const imageFilename = m.image.split('/').pop();
+                const imageLocal = `/static/images/monsters/${imageFilename}`;
+
+                // 优先使用远程OSS图片，失败后切换本地
+                html += `
+                    <div class="monster-item" onclick="showDetail(${m.id})">
+                        <img src="${m.image}" alt="${m.title}" loading="lazy" onerror="this.src='${imageLocal}'">
+                        <div class="name">${m.title}</div>
+                        <div class="badges">
+                            ${typeBadge}
+                            ${perceptionBadge}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            contentEl.innerHTML = html;
+        }
+
+        // 显示详情弹窗
+        async function showDetail(monsterId) {
+            currentMonsterId = monsterId;
+            const modal = document.getElementById('monster-modal');
+            modal.classList.add('active');
+
+            // 先用列表数据快速显示
+            const basicMonster = monsterData.list.find(m => m.id === monsterId);
+            if (basicMonster) {
+                updateBasicInfo(basicMonster);
+            }
+
+            // 从本地详情数据中查找
+            const detail = monsterDetailData.find(d => d.info && d.info.id === monsterId);
+            if (detail) {
+                updateDetailInfo(detail);
+            }
+        }
+
+        // 更新基本信息
+        function updateBasicInfo(monster) {
+            const imgEl = document.getElementById('modal-image');
+            const imageFilename = monster.image.split('/').pop();
+            const imageLocal = `/static/images/monsters/${imageFilename}`;
+            imgEl.src = monster.image;
+            imgEl.onerror = function() { this.src = imageLocal; };
+            document.getElementById('modal-title').textContent = monster.title;
+
+            const typeBadge = monster.type === 1 ?
+                '<span class="badge badge-type1">单怪</span>' :
+                '<span class="badge badge-type2">群怪</span>';
+            const perceptionBadge = monster.perception === 1 ?
+                '<span class="badge badge-perception1">有感知</span>' : '';
+
+            document.getElementById('modal-badges').innerHTML = typeBadge + perceptionBadge;
+
+            // 公式
+            currentBlueFormula = monster.blue_gate_formula_gs || monster.blue_gate_formula || '';
+            currentRegFormula = monster.reg_gate_formula_gs || monster.reg_gate_formula || '';
+
+            document.getElementById('modal-blue-formula').textContent = `蓝门：${currentBlueFormula}`;
+            document.getElementById('modal-red-formula').textContent = `红门：${currentRegFormula}`;
+
+            // 初始显示
+            document.getElementById('blue-hp').textContent = '-';
+            document.getElementById('reg-hp').textContent = '-';
+
+            // 提示
+            const tipEl = document.getElementById('modal-tip');
+            if (monster.content) {
+                tipEl.textContent = '⚠️ ' + monster.content;
+                tipEl.style.display = 'block';
+            } else {
+                tipEl.style.display = 'none';
+            }
+
+            // 重置特性列表和视频
+            document.getElementById('peculiarity-box').style.display = 'none';
+            document.getElementById('video-link').style.display = 'none';
+
+            // 计算默认等级的气血
+            calculateHP();
+        }
+
+        // 更新详细信息
+        function updateDetailInfo(data) {
+            const info = data.info;
+            const peculiarityList = data.peculiarity_list || [];
+            const videoUrl = data.ay_PlayURL || info.video_id || '';
+
+            // 更新公式（如果有更详细的）
+            if (info.blue_gate_formula_gs) {
+                currentBlueFormula = info.blue_gate_formula_gs;
+                currentRegFormula = info.reg_gate_formula_gs;
+                document.getElementById('modal-blue-formula').textContent = `蓝门：${currentBlueFormula}`;
+                document.getElementById('modal-red-formula').textContent = `红门：${currentRegFormula}`;
+            }
+
+            // 更新提示
+            if (info.content) {
+                document.getElementById('modal-tip').textContent = '⚠️ ' + info.content;
+                document.getElementById('modal-tip').style.display = 'block';
+            }
+
+            // 特性列表（打法攻略）
+            if (peculiarityList.length > 0) {
+                const listEl = document.getElementById('peculiarity-list');
+                let html = '';
+                peculiarityList.forEach((p, index) => {
+                    html += `<li class="peculiarity-item">
+                        <span class="peculiarity-num">${index + 1}</span>
+                        <span>${p.name}</span>
+                    </li>`;
+                });
+                listEl.innerHTML = html;
+                document.getElementById('peculiarity-box').style.display = 'block';
+            }
+
+            // 视频链接
+            if (videoUrl) {
+                const videoLink = document.getElementById('video-link');
+                videoLink.href = videoUrl;
+                videoLink.style.display = 'inline-flex';
+            }
+        }
+
+        // 从API获取气血数据
+        async function fetchBloodData() {
+            const number = parseInt(document.getElementById('level-input').value) || 109;
+
+            try {
+                const resp = await fetch(`/api/monster/blood?number=${number}`);
+                const result = await resp.json();
+
+                if (result.code === 1 && result.data) {
+                    // checkpoint_list 中包含计算后的气血数值
+                    const checkpointList = result.data.checkpoint_list || {};
+
+                    // 遍历所有关卡寻找当前怪物
+                    let foundMonster = null;
+                    for (const key in checkpointList) {
+                        const monsters = checkpointList[key];
+                        foundMonster = monsters.find(m => m.id === currentMonsterId);
+                        if (foundMonster) break;
+                    }
+
+                    if (foundMonster) {
+                        // blue_gate_formula 和 reg_gate_formula 此时是计算后的数值
+                        const blueHP = foundMonster.blue_gate_formula;
+                        const regHP = foundMonster.reg_gate_formula;
+
+                        document.getElementById('blue-hp').textContent = typeof blueHP === 'number' ? blueHP.toLocaleString() : blueHP;
+                        document.getElementById('reg-hp').textContent = typeof regHP === 'number' ? regHP.toLocaleString() : regHP;
+                    } else {
+                        // 如果没找到，自己计算
+                        calculateHP();
+                    }
+                }
+            } catch (e) {
+                console.error('获取气血数据失败:', e);
+                calculateHP();
+            }
+        }
+
+        // 自己解析公式计算气血
+        function calculateHP() {
+            const number = parseInt(document.getElementById('level-input').value) || 109;
+
+            const blueHP = evaluateFormula(currentBlueFormula, number);
+            const regHP = evaluateFormula(currentRegFormula, number);
+
+            document.getElementById('blue-hp').textContent = blueHP !== null ? blueHP.toLocaleString() : '-';
+            document.getElementById('reg-hp').textContent = regHP !== null ? regHP.toLocaleString() : '-';
+        }
+
+        // 解析公式计算
+        function evaluateFormula(formula, number) {
+            if (!formula) return null;
+
+            try {
+                // 替换 number 变量
+                let expr = formula.replace(/number/g, number);
+                // 移除空格
+                expr = expr.replace(/\s/g, '');
+
+                // 使用 Function 安全求值
+                const result = Function('"use strict"; return (' + expr + ')')();
+                return Math.round(result);
+            } catch (e) {
+                console.error('公式解析失败:', formula, e);
+                return null;
+            }
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('monster-modal').classList.remove('active');
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('monster-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'monster-modal') closeModal();
+        });
+
+        // ESC关闭
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // 加载
+        loadMonsterData();
+    </script>
+</body>
+</html>

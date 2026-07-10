@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>996长安酒店</title>
+    <!-- Swiper轮播库 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="/mhxy/static/css/style.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="navbar">
+        <div class="navbar-inner">
+            <div class="navbar-brand">
+                <span class="logo">🏔️</span>
+                <h1>996长安酒店</h1>
+            </div>
+            <div class="navbar-menu">
+                <a href="#" class="nav-item active">首页</a>
+                <a href="#" class="nav-item">工具</a>
+                <a href="#" class="nav-item">关于</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 今日活动条 -->
+    <div class="activity-bar" id="activityBar">
+        <div class="activity-bar-inner">
+            <!-- 时间提醒 -->
+            <div class="home-reminder">
+                <div class="home-reminder-item" id="homeReminderFB">
+                    <span class="home-reminder-label">⏰ 副本</span>
+                    <span class="home-reminder-value" id="homeFBRefreshTime">--</span>
+                </div>
+                <div class="home-reminder-item" id="homeReminderFestival" style="display:none;">
+                    <span class="home-reminder-label festival">🎉</span>
+                    <span class="home-reminder-value festival" id="homeFestivalName">--</span>
+                </div>
+                <div class="home-reminder-item" id="homeReminderNext">
+                    <span class="home-reminder-label">🎊 节日</span>
+                    <span class="home-reminder-value" id="homeNextFestival">--</span>
+                </div>
+            </div>
+
+            <!-- 分隔线 -->
+            <div class="activity-divider"></div>
+
+            <!-- 中间：今日活动列表（可滑动） -->
+            <div class="activity-list-wrapper">
+                <div class="activity-list" id="activityList">
+                    <div class="activity-loading">加载中...</div>
+                </div>
+            </div>
+
+            <!-- 右侧：展开按钮 -->
+            <div class="activity-expand" id="activityExpand">
+                <span>本月活动</span>
+                <span class="expand-icon">▼</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 日历弹窗 -->
+    <div class="calendar-modal" id="calendarModal">
+        <div class="calendar-modal-content">
+            <div class="calendar-header">
+                <h3>📅 本月活动日历</h3>
+                <span class="calendar-close" id="calendarClose">×</span>
+            </div>
+            <div class="calendar-body">
+                <!-- 月历视图 -->
+                <div class="calendar-month-header">
+                    <button class="month-arrow" id="monthPrev">◀</button>
+                    <span class="month-title" id="monthTitle">2026年6月</span>
+                    <button class="month-arrow" id="monthNext">▶</button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-weekdays">
+                        <span>周日</span><span>周一</span><span>周二</span><span>周三</span><span>周四</span><span>周五</span><span>周六</span>
+                    </div>
+                    <div class="calendar-days" id="calendarDays">
+                        <!-- 动态生成日期格子 -->
+                    </div>
+                </div>
+
+                <!-- 选中日期的活动列表（小程序样式） -->
+                <div class="calendar-activity-panel" id="calendarActivityPanel">
+                    <div class="panel-header">
+                        <div class="panel-date-info">
+                            <button class="date-nav-btn" id="panelDatePrev">◀</button>
+                            <span class="panel-date-text" id="panelDateText">6月11日 周三</span>
+                            <button class="date-nav-btn" id="panelDateNext">▶</button>
+                        </div>
+                        <button class="back-to-today-btn" id="backToToday">今天</button>
+                    </div>
+                    <div class="panel-activity-list" id="panelActivityList">
+                        <!-- 动态生成活动列表 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 活动详情弹窗 -->
+    <div class="activity-detail-modal" id="activityDetailModal">
+        <div class="activity-detail-content">
+            <div class="activity-detail-header">
+                <h3 id="activityDetailTitle">活动详情</h3>
+                <span class="activity-detail-close" id="activityDetailClose">×</span>
+            </div>
+            <div class="activity-detail-body" id="activityDetailBody">
+                <!-- 动态填充活动详情 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="main-container">
+        <!-- 大型轮播横幅（支持视频/图片） -->
+        <div class="hero-banner">
+            <div class="swiper heroSwiper">
+                <div class="swiper-wrapper">
+                    <!-- Slide 1 - 山河画境 -->
+                    <div class="swiper-slide hero-slide" data-module="huajing">
+                        <div class="slide-bg" style="background: linear-gradient(135deg, #0a3d2a 0%, #0d2818 50%, #061a0f 100%);"></div>
+                        <div class="slide-content">
+                            <div class="slide-left">
+                                <div class="slide-tag">🔥 热门推荐</div>
+                                <h2 class="slide-title">山河画境</h2>
+                                <p class="slide-desc">探索神秘的画境世界，挑战各类怪物Boss，收集稀有道具与宝藏。</p>
+                                <div class="slide-actions">
+                                    <a href="/mhxy/static/monster.html" class="btn-primary">
+                                        <span>👹</span> 怪物图鉴
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slide-right">
+                                <div class="slide-visual">
+                                    <span class="visual-icon">🏔️</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 2 - 宝图助手 -->
+                    <div class="swiper-slide hero-slide" data-module="baotu">
+                        <div class="slide-bg" style="background: linear-gradient(135deg, #3d320a 0%, #2d2408 50%, #1a1505 100%);"></div>
+                        <div class="slide-content">
+                            <div class="slide-left">
+                                <div class="slide-tag">💰 财富之路</div>
+                                <h2 class="slide-title">宝图助手</h2>
+                                <p class="slide-desc">精准定位宝图坐标，智能规划挖图路线，让你的每一次挖掘都不落空。</p>
+                                <div class="slide-actions">
+                                    <a href="/baotu" class="btn-primary">
+                                        <span>⛏️</span> 开始挖图
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slide-right">
+                                <div class="slide-visual">
+                                    <span class="visual-icon">🗺️</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 3 - 抓鬼助手 -->
+                    <div class="swiper-slide hero-slide" data-module="ghost">
+                        <div class="slide-bg" style="background: linear-gradient(135deg, #2d1a3d 0%, #1a0f28 50%, #0f0818 100%);"></div>
+                        <div class="slide-content">
+                            <div class="slide-left">
+                                <div class="slide-tag">👻 幽灵猎人</div>
+                                <h2 class="slide-title">抓鬼助手</h2>
+                                <p class="slide-desc">实时坐标追踪，一键导航至鬼怪位置，大幅提升抓鬼效率。</p>
+                                <div class="slide-actions">
+                                    <a href="/ghost" class="btn-primary">
+                                        <span>📍</span> 坐标可视化
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slide-right">
+                                <div class="slide-visual">
+                                    <span class="visual-icon">👻</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 4 - 记账本 -->
+                    <div class="swiper-slide hero-slide" data-module="jizhang">
+                        <div class="slide-bg" style="background: linear-gradient(135deg, #3d1a1a 0%, #281010 50%, #150808 100%);"></div>
+                        <div class="slide-content">
+                            <div class="slide-left">
+                                <div class="slide-tag">📊 市场分析</div>
+                                <h2 class="slide-title">记账本</h2>
+                                <p class="slide-desc">记录每一笔交易，追踪物价波动，把握市场脉搏，成为商业大亨。</p>
+                                <div class="slide-actions">
+                                    <a href="http://localhost:8767" class="btn-primary">
+                                        <span>💰</span> 物价宝鉴
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slide-right">
+                                <div class="slide-visual">
+                                    <span class="visual-icon">📒</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 5 - 答题助手 -->
+                    <div class="swiper-slide hero-slide" data-module="quiz">
+                        <div class="slide-bg" style="background: linear-gradient(135deg, #1a2d3d 0%, #0f1a28 50%, #081018 100%);"></div>
+                        <div class="slide-content">
+                            <div class="slide-left">
+                                <div class="slide-tag">📚 学霸必备</div>
+                                <h2 class="slide-title">答题助手</h2>
+                                <p class="slide-desc">海量题库收录，智能搜索匹配，实时答题辅助，轻松应对科举考试。</p>
+                                <div class="slide-actions">
+                                    <a href="/mhxy/static/questions.html" class="btn-primary">
+                                        <span>🔍</span> 题库搜索
+                                    </a>
+                                    <a href="/mhxy/static/quiz_helper.html" class="btn-secondary">
+                                        <span>⚡</span> 实时答题
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slide-right">
+                                <div class="slide-visual">
+                                    <span class="visual-icon">📚</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 分页指示器 -->
+                <div class="swiper-pagination"></div>
+                <!-- 导航按钮 -->
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-button-next"></div>
+            </div>
+        </div>
+
+        <!-- 功能导航栏 - 一排横向排列 -->
+        <div class="quick-nav">
+            <div class="nav-title">
+                <span>快捷入口</span>
+                <span class="nav-subtitle">选择功能快速开始</span>
+            </div>
+            <div class="nav-grid">
+                <a href="/mhxy/static/monster.html" class="nav-card" data-color="green">
+                    <div class="nav-card-icon">🏔️</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">山河画境</span>
+                        <span class="nav-card-sub">怪物图鉴</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/baotu" class="nav-card" data-color="gold">
+                    <div class="nav-card-icon">🗺️</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">宝图助手</span>
+                        <span class="nav-card-sub">挖图工具</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/ghost" class="nav-card" data-color="purple">
+                    <div class="nav-card-icon">👻</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">抓鬼助手</span>
+                        <span class="nav-card-sub">画中画监控</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/ghost_monitor.html" class="nav-card" data-color="orange">
+                    <div class="nav-card-icon">🎯</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">抓鬼监控</span>
+                        <span class="nav-card-sub">YOLO自动识别</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="http://localhost:8767" class="nav-card" data-color="red">
+                    <div class="nav-card-icon">📒</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">记账本</span>
+                        <span class="nav-card-sub">物价宝鉴</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <!-- 答题助手 - 多入口卡片 -->
+                <div class="nav-card nav-card-multi" data-color="blue">
+                    <div class="nav-card-icon">📚</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">答题助手</span>
+                        <span class="nav-card-sub">2个入口可用</span>
+                    </div>
+                    <div class="nav-card-links">
+                        <a href="/mhxy/static/questions.html" class="nav-link-btn">
+                            <span>🔍</span> 题库搜索
+                        </a>
+                        <a href="/mhxy/static/quiz_helper.html" class="nav-link-btn">
+                            <span>⚡</span> 实时答题
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 截图工具 - YOLO训练数据采集 -->
+                <a href="/mhxy/static/screenshot_tool.html" class="nav-card" data-color="cyan">
+                    <div class="nav-card-icon">📸</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">截图工具</span>
+                        <span class="nav-card-sub">YOLO训练数据</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <span>996长安酒店</span>
+            <span class="divider">|</span>
+            <span>本站仅供学习研究使用</span>
+        </div>
+    </footer>
+
+    <script src="/mhxy/static/js/app.js?v=20260611h"></script>
+</body>
+</html>

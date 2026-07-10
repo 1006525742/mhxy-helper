@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>抓鬼助手 - 画中画监控</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; overflow: hidden; }
+.header { background: #16213e; padding: 10px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #0f3460; }
+.header h1 { font-size: 16px; color: #e94560; }
+.btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+.btn:hover { opacity: 0.85; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: #0f3460; color: #eee; }
+.btn-success { background: #1b5e20; color: #eee; }
+.btn-danger { background: #b71c1c; color: #eee; }
+.btn-warning { background: #e65100; color: #eee; }
+.status-badge { padding: 3px 10px; border-radius: 10px; font-size: 11px; background: #0f3460; }
+.status-badge.loading { background: #e65100; animation: pulse 1s infinite; }
+.status-badge.ready { background: #1b5e20; }
+.status-badge.triggered { background: #ffc107; color: #000; animation: pulse 0.5s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+.main { display: flex; height: calc(100vh - 50px); }
+.left-panel { width: 280px; padding: 15px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; background: #16213e; }
+.section { background: #1a1f2e; padding: 12px; border-radius: 6px; }
+.section h2 { font-size: 14px; color: #4fc3f7; margin-bottom: 8px; }
+.info-item { background: #16213e; padding: 8px; border-radius: 4px; margin-bottom: 6px; }
+.info-item .label { color: #888; font-size: 11px; }
+.info-item .value { color: #4fc3f7; font-size: 14px; font-weight: bold; }
+
+/* 条件状态显示 */
+.condition-item { background: #16213e; padding: 8px; border-radius: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+.cond-label { color: #888; font-size: 12px; }
+.cond-value { font-size: 12px; font-weight: bold; }
+.cond-value.success { color: #4caf50; }
+.cond-value.fail { color: #e94560; }
+.cond-value.pending { color: #888; }
+.monitor-status { padding: 20px; text-align: center; border-radius: 8px; background: #1a1f2e; margin-bottom: 10px; border: 3px solid #2a3040; transition: border-color 0.3s; }
+.monitor-status.active { border-color: #1b5e20; }
+.monitor-status.triggered { border-color: #ffc107; animation: glow 0.5s infinite; }
+@keyframes glow { 0%,100% { box-shadow: 0 0 10px #ffc107; } 50% { box-shadow: 0 0 20px #ffc107; } }
+.monitor-status .icon { font-size: 40px; margin-bottom: 10px; }
+.monitor-status .text { font-size: 14px; color: #888; }
+.monitor-status.triggered .text { color: #ffc107; font-weight: bold; }
+.detect-count { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+.detect-item { padding: 8px 12px; background: #16213e; border-radius: 4px; text-align: center; }
+.detect-item .name { font-size: 11px; color: #888; }
+.detect-item .count { font-size: 18px; font-weight: bold; }
+.detect-item.active .count { color: #4fc3f7; }
+.detect-item.triggered .count { color: #ffc107; }
+.right-panel { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+.pip-window { width: 300px; background: #16213e; border-radius: 8px; border: 2px solid #2a3040; padding: 10px; display: none; position: fixed; top: 60px; right: 20px; overflow: hidden; }
+.pip-window.active { display: block; }
+.pip-window img { display: block; transform-origin: top left; }
+.pip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.pip-header h3 { font-size: 14px; color: #4fc3f7; }
+.pip-close { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; }
+.pip-close:hover { color: #e94560; }
+.map-display { background: #0f0f23; border-radius: 8px; padding: 10px; text-align: center; }
+.map-display img { max-width: 100%; max-height: 300px; border-radius: 4px; }
+.map-name { font-size: 16px; color: #4fc3f7; margin-bottom: 5px; font-weight: bold; }
+.map-coord { font-size: 14px; color: #e0e0e0; }
+.map-areas { margin-top: 10px; display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+.area-tag { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+.area-tag.position { background: #e94560; color: #fff; }
+.area-tag.corner { background: #ff9800; color: #000; }
+.log-section { max-height: 200px; overflow-y: auto; }
+.log-item { font-size: 11px; color: #888; margin-bottom: 2px; padding: 2px 4px; border-radius: 2px; }
+.log-item.error { color: #e94560; background: rgba(233,69,96,0.1); }
+.log-item.success { color: #4caf50; background: rgba(76,175,80,0.1); }
+.log-item.trigger { color: #ffc107; background: rgba(255,193,7,0.1); }
+
+/* 识别历史 */
+.history-section { max-height: 300px; overflow-y: auto; }
+.history-item { background: #1a1f2e; padding: 8px; border-radius: 4px; margin-bottom: 6px; border-left: 3px solid #4fc3f7; }
+.history-item.template-success { border-left-color: #4caf50; }
+.history-item.ocr-success { border-left-color: #ff9800; }
+.history-item .time { font-size: 10px; color: #888; }
+.history-item .map { font-size: 14px; color: #4fc3f7; font-weight: bold; }
+.history-item .coord { font-size: 12px; color: #e0e0e0; }
+.history-item .compare { font-size: 10px; color: #888; margin-top: 4px; }
+
+/* 画中画可拖拽 */
+.pip-window { position: absolute; cursor: move; }
+.pip-window.dragging { cursor: grabbing; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>👻 抓鬼助手 - 画中画监控</h1>
+  <span class="status-badge" id="statusBadge">加载模型...</span>
+  <button class="btn btn-primary" id="btnShare" onclick="startMonitor()" disabled>开始监控</button>
+  <button class="btn btn-danger" id="btnStop" onclick="stopMonitor()" disabled>停止监控</button>
+  <button class="btn btn-success" id="btnRecognize" onclick="manualRecognize()" disabled>🔍 手动识别</button>
+  <button class="btn btn-warning" id="btnPip" onclick="togglePip()" style="display:none">📍 地图画中画</button>
+  <span id="fpsDisplay" style="color:#4fc3f7;font-size:12px;"></span>
+</div>
+
+<!-- 隐藏的 canvas 用于绘制地图（PiP 源） -->
+<canvas id="mapCanvas" width="380" height="300" style="position:fixed;top:-9999px;left:-9999px;"></canvas>
+
+<!-- 隐藏的 video 元素（PiP 必须挂在 video 上） -->
+<video id="pipVideo" muted playsinline style="position:fixed;top:-9999px;left:-9999px;"></video>
+<div class="main">
+  <div class="left-panel">
+    <div class="monitor-status" id="monitorStatus">
+      <div class="icon" id="monitorIcon">😴</div>
+      <div class="text" id="monitorText">等待开始监控</div>
+    </div>
+
+    <!-- 条件状态显示 -->
+    <div class="section" id="conditionStatus" style="display:none">
+      <h2>📊 检测状态</h2>
+      <div class="condition-item" id="condTaskTrack">
+        <span class="cond-label">任务追踪</span>
+        <span class="cond-value">❌ 未检测</span>
+      </div>
+      <div class="condition-item" id="condZhongKui">
+        <span class="cond-label">钟馗</span>
+        <span class="cond-value">❌ 未检测</span>
+      </div>
+    </div>
+    <div class="section">
+      <h2>🎯 识别结果</h2>
+      <div class="info-item"><div class="label">地图</div><div class="value" id="resultMap">-</div></div>
+      <div class="info-item"><div class="label">坐标</div><div class="value" id="resultCoord">-</div></div>
+      <div class="info-item"><div class="label">鬼名</div><div class="value" id="resultGhost">-</div></div>
+    </div>
+    <div class="section history-section" id="historySection">
+      <h2>📜 识别历史</h2>
+      <div id="historyList"></div>
+    </div>
+  </div>
+  <div class="right-panel">
+    <!-- 截图预览 -->
+    <div id="capturePreview" style="display:none; margin-top:20px; background:#16213e; border-radius:8px; padding:15px;">
+      <h3 style="color:#4fc3f7;font-size:12px;margin-bottom:10px">📤 发送给后端的截图（PNG无损）</h3>
+      <img id="captureImage" style="border-radius:4px; border:1px solid #2a3040; image-rendering: pixelated;">
+      <div id="captureInfo" style="color:#888;font-size:11px;margin-top:5px"></div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0"></script>
+<script>
+const CONFIG = {
+  yoloModelPath: '/models/zhuagui/model.json',
+  apiBaseUrl: 'https://api.mhwk.cloud',
+  confidenceThreshold: 0.8,
+  inputSize: 480,
+  classes: ['任务追踪', '钟馗', '黑无常', '店小二', '接引仙女', '左侧干扰', '驿站老板', '强盗对话'],
+  monitorInterval: 200
+};
+let yoloModel = null, videoStream = null, video = null, canvas = null, ctx = null, isMonitoring = false, monitorLoopId = null, recognizeHistory = [];
+function addToHistory(result) {
+  const time = new Date().toLocaleTimeString();
+  const item = {
+    time: time,
+    map: result.map,
+    x: result.x,
+    y: result.y,
+    success: result.ocr?.map
+  };
+  recognizeHistory.unshift(item);
+  if (recognizeHistory.length > 20) recognizeHistory.pop();
+
+  const historyList = document.getElementById('historyList');
+  const div = document.createElement('div');
+  div.className = 'history-item ' + (item.success ? 'ocr-success' : '');
+
+  div.innerHTML = '<div class="time">' + time + '</div>' +
+    '<div class="map">' + (item.map || '-') + '</div>' +
+    '<div class="coord">坐标: ' + item.x + ', ' + item.y + '</div>' +
+    '<div class="compare">OCR识别</div>';
+
+  historyList.insertBefore(div, historyList.firstChild);
+}
+function setStatus(text, type = '') { const badge = document.getElementById('statusBadge'); badge.textContent = text; badge.className = 'status-badge ' + type; }
+async function initModels() { try { setStatus('加载YOLO...', 'loading'); console.log('加载YOLO模型...'); yoloModel = await tf.loadGraphModel(CONFIG.yoloModelPath); setStatus('就绪', 'ready'); console.log('YOLO模型加载完成'); document.getElementById('btnShare').disabled = false; } catch (e) { console.error('模型加载失败:', e.message); setStatus('加载失败', 'error'); } }
+async function startMonitor() { try { videoStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'never' }, audio: false }); video = document.createElement('video'); video.srcObject = videoStream; await video.play(); canvas = document.createElement('canvas'); canvas.width = video.videoWidth; canvas.height = video.videoHeight; ctx = canvas.getContext('2d'); videoStream.getVideoTracks()[0].onended = () => stopMonitor(); isMonitoring = true; document.getElementById('btnShare').disabled = true; document.getElementById('btnStop').disabled = false; document.getElementById('btnRecognize').disabled = false; updateMonitorStatus('active', '🔍 监控中', '点击手动识别按钮'); setStatus('监控中', 'ready'); monitorLoop(); } catch (e) { console.error('无法启动监控:', e.message); } }
+function stopMonitor() { isMonitoring = false; if (monitorLoopId) { clearInterval(monitorLoopId); monitorLoopId = null; } if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; } video = null; canvas = null; document.getElementById('btnShare').disabled = false; document.getElementById('btnStop').disabled = true; document.getElementById('btnRecognize').disabled = true; updateMonitorStatus('inactive', '😴 已停止', '等待开始监控'); setStatus('就绪', 'ready'); hidePip(); }
+async function monitorLoop() {
+  if (!isMonitoring || !video || !yoloModel) return;
+  const t0 = performance.now();
+  try {
+    ctx.drawImage(video, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const detections = await runYOLO(imageData);
+
+    // 检测任务追踪和钟馗
+    const taskTrack = detections.filter(d => d.classId === 0 && d.conf > CONFIG.confidenceThreshold);
+    const zhongKui = detections.filter(d => d.classId === 1 && d.conf > CONFIG.confidenceThreshold);
+
+    // 更新条件状态显示
+    updateConditionStatus(taskTrack.length > 0, zhongKui.length > 0);
+
+    // 检测到任务追踪和钟馗后自动触发识别
+    if (taskTrack.length > 0 && zhongKui.length > 0) {
+      onTrigger(imageData, taskTrack[0], zhongKui[0]);
+      updateMonitorStatus('triggered', '⚡ 条件满足，开始识别', '');
+    } else {
+      updateMonitorStatus('active', '🔍 监控中', '');
+    }
+
+    const fps = Math.round(1000 / (performance.now() - t0));
+    document.getElementById('fpsDisplay').textContent = fps + ' FPS';
+  } catch (e) {
+    console.error('检测错误:', e.message);
+  }
+  if (isMonitoring) {
+    monitorLoopId = setTimeout(monitorLoop, CONFIG.monitorInterval);
+  }
+}
+
+// 手动识别
+async function manualRecognize() {
+  if (!video || !ctx || !yoloModel) {
+    alert('请先开始监控');
+    return;
+  }
+
+  setStatus('识别中...', 'loading');
+
+  try {
+    ctx.drawImage(video, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const detections = await runYOLO(imageData);
+
+    const taskTrack = detections.filter(d => d.classId === 0 && d.conf > CONFIG.confidenceThreshold);
+
+    if (taskTrack.length === 0) {
+      alert('未检测到任务追踪');
+      setStatus('就绪', 'ready');
+      return;
+    }
+
+    await onTrigger(imageData, taskTrack[0]);
+
+  } catch (e) {
+    console.error('识别失败:', e.message);
+    setStatus('识别失败', 'error');
+  }
+}
+
+// 更新条件状态显示
+function updateConditionStatus(hasTaskTrack, hasZhongKui) {
+  // 显示条件状态区域
+  document.getElementById('conditionStatus').style.display = 'block';
+
+  // 任务追踪
+  const ttEl = document.getElementById('condTaskTrack').querySelector('.cond-value');
+  if (hasTaskTrack) {
+    ttEl.textContent = '✅ 检测到';
+    ttEl.className = 'cond-value success';
+  } else {
+    ttEl.textContent = '❌ 未检测';
+    ttEl.className = 'cond-value fail';
+  }
+
+  // 钟馗
+  const zkEl = document.getElementById('condZhongKui').querySelector('.cond-value');
+  if (hasZhongKui) {
+    zkEl.textContent = '✅ 检测到';
+    zkEl.className = 'cond-value success';
+  } else {
+    zkEl.textContent = '❌ 未检测';
+    zkEl.className = 'cond-value fail';
+  }
+}
+
+async function runYOLO(imageData) { const { width, height, data } = imageData; const inputSize = CONFIG.inputSize; const inputTensor = tf.tidy(() => { let tensor = tf.tensor3d(new Uint8Array(data), [height, width, 4]); tensor = tensor.slice([0, 0, 0], [-1, -1, 3]); tensor = tf.image.resizeBilinear(tensor, [inputSize, inputSize]); tensor = tensor.toFloat().div(255); return tensor.expandDims(0); }); const output = await yoloModel.executeAsync({ images: inputTensor }); const outputData = await output.data(); const dims = output.shape; inputTensor.dispose(); output.dispose(); const numAnchors = dims[2]; const boxes = []; for (let i = 0; i < numAnchors; i++) { const cx = outputData[0 * numAnchors + i]; const cy = outputData[1 * numAnchors + i]; const w = outputData[2 * numAnchors + i]; const h = outputData[3 * numAnchors + i]; let maxConf = 0, classId = 0; for (let c = 4; c < 12; c++) { const conf = outputData[c * numAnchors + i]; if (conf > maxConf) { maxConf = conf; classId = c - 4; } } if (maxConf > CONFIG.confidenceThreshold) { boxes.push({ x1: (cx - w/2) * width / inputSize, y1: (cy - h/2) * height / inputSize, x2: (cx + w/2) * width / inputSize, y2: (cy + h/2) * height / inputSize, conf: maxConf, classId, className: CONFIG.classes[classId] }); } } return boxes; }
+async function onTrigger(imageData, taskTrack) {
+  setStatus('识别中...', 'triggered');
+  console.log(`触发识别: 任务追踪置信=${taskTrack.conf.toFixed(2)}`);
+
+  try {
+    // 裁剪：任务追踪 bbox 正下方区域
+    const bbox = taskTrack;
+    const bx = bbox.x1;
+    const by = bbox.y1;
+    const bw = bbox.x2 - bbox.x1;
+    const bh = bbox.y2 - bbox.y1;
+
+    // 裁剪起点：bbox 底部
+    const cropX = Math.max(0, bx);
+    const cropY = Math.max(0, by + bh);
+    const cropW = bw + 10;
+
+    // 高度 ×4，限制 100-280px
+    let cropH = bh * 4;
+    cropH = Math.max(100, Math.min(280, cropH));
+    cropH = Math.min(canvas.height - cropY, cropH);
+
+    // 创建裁剪 canvas
+    const cropCanvas = document.createElement('canvas');
+    cropCanvas.width = cropW;
+    cropCanvas.height = cropH;
+    const cropCtx = cropCanvas.getContext('2d');
+    cropCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+    // 无损 PNG
+    const pngData = cropCanvas.toDataURL('image/png');
+
+    // 显示截图预览
+    document.getElementById('capturePreview').style.display = 'block';
+    document.getElementById('capturePreview').innerHTML = `
+      <h3 style="color:#4fc3f7;font-size:12px;margin-bottom:10px">📤 发送给后端的截图（PNG无损）</h3>
+      <img id="captureImage" src="${pngData}" style="border-radius:4px; border:1px solid #2a3040; image-rendering: pixelated;">
+      <div id="captureInfo" style="color:#888;font-size:11px;margin-top:5px">尺寸: ${cropW}x${cropH}</div>
+    `;
+
+    // 调用后端 API
+    const response = await fetch(CONFIG.apiBaseUrl + '/api/ghost/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: pngData.split(',')[1] })
+    });
+    const result = await response.json();
+
+    if (result.success) {
+      document.getElementById('resultMap').textContent = result.map || '-';
+      document.getElementById('resultCoord').textContent = result.x + ', ' + result.y;
+      document.getElementById('resultGhost').textContent = '-';
+
+      addToHistory(result);
+
+      setStatus('识别完成', 'ready');
+      updateMonitorStatus('active', '🔍 监控中', `识别成功: ${result.map} (${result.x},${result.y})`);
+    } else {
+      // 识别失败，3秒后重试一次
+      console.log('识别失败，3秒后重试');
+      setTimeout(() => {
+        if (isMonitoring) {
+          console.log('重试识别...');
+          onTrigger(imageData, taskTrack);
+        }
+      }, 3000);
+
+      document.getElementById('resultMap').textContent = '识别失败';
+      document.getElementById('resultCoord').textContent = '-';
+      setStatus('识别失败', 'error');
+      updateMonitorStatus('active', '🔍 监控中', '识别失败，3秒后重试...');
+    }
+  } catch (e) {
+    console.error('API调用失败:', e.message);
+    setStatus('识别失败', 'error');
+  }
+}
+function showPip(result) {
+  lastPipData = result;
+  document.getElementById('btnPip').style.display = 'inline-block';
+
+  if (result.annotated_image) {
+    const img = document.getElementById('pipMapImage');
+    img.src = 'data:image/png;base64,' + result.annotated_image;
+    img.style.display = 'block';
+  }
+}
+function hidePip() {
+  document.getElementById('pipWindow').classList.remove('active', 'triggered');
+}
+function updateMonitorStatus(status, icon, text) {
+  const statusDiv = document.getElementById('monitorStatus');
+  const iconDiv = document.getElementById('monitorIcon');
+  const textDiv = document.getElementById('monitorText');
+  statusDiv.className = 'monitor-status ' + status;
+  iconDiv.textContent = icon;
+  textDiv.textContent = text;
+}
+
+// 画中画拖拽功能
+function initDraggable() {
+  const pip = document.getElementById('pipWindow');
+  let isDragging = false, startX, startY, startLeft, startTop;
+
+  pip.addEventListener('mousedown', (e) => {
+    if (e.target.tagName === 'BUTTON') return;
+    isDragging = true;
+    pip.classList.add('dragging');
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = pip.getBoundingClientRect();
+    startLeft = rect.left;
+    startTop = rect.top;
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    pip.style.left = (startLeft + dx) + 'px';
+    pip.style.top = (startTop + dy) + 'px';
+    pip.style.right = 'auto';
+    pip.style.transform = 'none';
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    pip.classList.remove('dragging');
+  });
+}
+
+// ========== 浏览器原生画中画功能 ==========
+let pipVideo = null;
+let canvasStream = null;
+let pipRefreshTimer = null;
+let lastPipData = null;
+
+async function togglePip() {
+  if (!document.pictureInPictureEnabled) {
+    console.error('当前浏览器不支持画中画');
+    return;
+  }
+
+  try {
+    // 如果已在画中画 → 关闭
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+      cleanupPip();
+      document.getElementById('btnPip').textContent = '📍 地图画中画';
+      // 恢复右侧显示
+      document.getElementById('pipWindow').style.display = 'block';
+      return;
+    }
+
+    // 需要有识别结果才能显示地图
+    if (!lastPipData) {
+      console.error('请先触发抓鬼检测获取识别结果');
+      return;
+    }
+
+    // 隐藏右侧预测地图（节省资源）
+    document.getElementById('pipWindow').style.display = 'none';
+
+    // 先画一帧地图到 canvas
+    drawMapToCanvas(lastPipData);
+
+    // 创建隐藏 video 元素
+    if (!pipVideo) {
+      pipVideo = document.getElementById('pipVideo');
+      pipVideo.muted = true;
+      pipVideo.playsInline = true;
+    }
+
+    // canvas → MediaStream（8fps）→ 挂到 video
+    if (!canvasStream) {
+      const mapCanvas = document.getElementById('mapCanvas');
+      canvasStream = mapCanvas.captureStream(8);
+      pipVideo.srcObject = canvasStream;
+      await pipVideo.play();
+    }
+
+    // 每 120ms 重绘 canvas（PiP 窗口自动跟随）
+    if (!pipRefreshTimer) {
+      pipRefreshTimer = setInterval(() => {
+        if (lastPipData) drawMapToCanvas(lastPipData);
+      }, 120);
+    }
+
+    // 请求浏览器原生画中画
+    await pipVideo.requestPictureInPicture();
+    document.getElementById('btnPip').textContent = '❌ 关闭画中画';
+
+    // 监听退出事件
+    pipVideo.addEventListener('leavepictureinpicture', () => {
+      cleanupPip();
+      document.getElementById('btnPip').textContent = '📍 地图画中画';
+      // 恢复右侧显示
+      document.getElementById('pipWindow').style.display = 'block';
+    });
+
+  } catch (e) {
+    console.error('画中画开启失败:', e.message);
+    // 失败时恢复右侧显示
+    document.getElementById('pipWindow').style.display = 'block';
+  }
+}
+
+function drawMapToCanvas(data) {
+  const canvas = document.getElementById('mapCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // 清空画布
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // 只绘制标注地图图片（PNG无损）
+  if (data.annotated_image) {
+    const img = new Image();
+    img.src = 'data:image/png;base64,' + data.annotated_image;
+    if (img.complete) {
+      // 调整canvas尺寸匹配图片
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+    }
+  }
+}
+
+function cleanupPip() {
+  if (pipRefreshTimer) {
+    clearInterval(pipRefreshTimer);
+    pipRefreshTimer = null;
+  }
+  if (canvasStream) {
+    canvasStream.getTracks().forEach(t => t.stop());
+    canvasStream = null;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => { initModels(); initDraggable(); });
+</script>
+</body>
+</html>

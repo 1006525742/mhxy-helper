@@ -1,0 +1,2573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时答题助手</title>
+    <!-- TensorFlow.js (YOLO检测模型) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+    <!-- ONNX Runtime Web (识别模型) -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/ort.min.js"></script>
+    <style>
+        * { margin: 0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .navbar-top {
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .navbar-brand .logo {
+            font-size: 24px;
+        }
+        .navbar-brand h1 {
+            font-size: 18px;
+            color: #fff;
+            font-weight: 600;
+        }
+        .navbar-link {
+            color: #4fc3f7;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .navbar-link:hover {
+            color: #7c4dff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 50px);
+        }
+        .panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .panel-title {
+            font-size: 18px;
+            color: #4fc3f7;
+            font-weight: 600;
+        }
+        .window-select {
+            padding: 8px 12px;
+            background: #2a2a4a;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: #fff;
+            min-width: 200px;
+        }
+        .window-select option {
+            background: #2a2a4a;
+            color: #fff;
+        }
+        .screenshot-area {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .screenshot-area img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .screenshot-placeholder {
+            color: #666;
+            text-align: center;
+        }
+        .screenshot-placeholder .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4fc3f7, #7c4dff);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .ocr-result {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #ffa726;
+            min-height: 60px;
+        }
+        .answer-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .answer-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 3px solid #4fc3f7;
+            transition: all 0.3s;
+        }
+        .answer-item:hover {
+            background: rgba(255,255,255,0.08);
+        }
+        .answer-item.best {
+            border-left-color: #ffa726;
+            background: rgba(255,167,38,0.1);
+        }
+        .answer-question {
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        .answer-answer {
+            font-size: 20px;
+            color: #4fc3f7;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .answer-pinyin {
+            font-size: 12px;
+            color: #888;
+        }
+        .answer-category {
+            display: inline-block;
+            padding: 2px 8px;
+            background: rgba(124,77,255,0.2);
+            color: #7c4dff;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .answer-score {
+            float: right;
+            background: rgba(76,175,80,0.2);
+            color: #4caf50;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        .status-bar {
+            display: flex;
+            gap: 15px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #888;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .status-dot.active { background: #4caf50; }
+        .status-dot.inactive { background: #666; }
+        .auto-mode {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 26px;
+            transition: 0.3s;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle input:checked + .toggle-slider {
+            background: #4fc3f7;
+        }
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(79,195,247,0.3);
+            border-top-color: #4fc3f7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .region-selector {
+            position: absolute;
+            border: 2px dashed #4fc3f7;
+            background: rgba(79,195,247,0.1);
+            pointer-events: none;
+        }
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .panel {
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="navbar-top">
+        <div class="navbar-brand">
+            <span class="logo">📚</span>
+            <h1>实时答题助手</h1>
+        </div>
+        <a href="/" class="navbar-link">🏠 返回首页</a>
+    </div>
+
+    <div class="container">
+        <!-- 左侧：截图区域 -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">📷 截图预览</div>
+                <select class="window-select" id="windowSelect">
+                    <option value="">请选择窗口...</option>
+                </select>
+            </div>
+
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="captureScreenshot()">
+                    📸 截图识别
+                </button>
+                <button class="btn btn-secondary" onclick="openRegionConfig()">
+                    ⚙️ 配置区域
+                </button>
+                <button class="btn btn-secondary" onclick="refreshWindows()">
+                    🔄 刷新窗口
+                </button>
+                <button class="btn btn-secondary" id="pipBtn" onclick="togglePip()">
+                    🖼️ 画中画
+                </button>
+                <div class="auto-mode">
+                    <span>实时监控</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="autoMode" onchange="toggleAutoMode()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <select id="monitorInterval" style="padding:4px 8px;background:#2a2a4a;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;margin-left:5px;" title="监控频率">
+                        <option value="1" selected>1秒</option>
+                        <option value="2">2秒</option>
+                        <option value="3">3秒</option>
+                        <option value="5">5秒</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">未连接</span>
+                </div>
+                <div class="status-item" id="ocrStatus">
+                    <span style="color:#888;">OCR加载中...</span>
+                </div>
+                <div class="status-item">题库: <span id="questionCount">0</span> 题</div>
+                <div class="status-item" id="monitorStatus" style="display:none;">
+                    <span style="color:#FFD700;">🔄 监控中...</span>
+                </div>
+                <div class="status-item" id="loadingIndicator" style="display:none;">
+                    <span class="loading"></span>
+                    <span>识别中...</span>
+                </div>
+            </div>
+
+            <!-- 分类筛选 -->
+            <div class="category-filter" style="margin-bottom:15px;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px;">
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                    <span style="color:#888;font-size:13px;">分类:</span>
+                    <select id="level1Filter" class="filter-select" onchange="updateLevel2Filter()" style="padding:6px 10px;background:#2a2a4a;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;min-width:100px;">
+                        <option value="all">全部</option>
+                        <option value="daily">日常</option>
+                        <option value="dungeon">副本</option>
+                        <option value="activity">活动</option>
+                        <option value="festival">节日</option>
+                    </select>
+                    <select id="level2Filter" class="filter-select" style="padding:6px 10px;background:#2a2a4a;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;min-width:150px;display:none;">
+                        <option value="all">全部</option>
+                    </select>
+                    <span id="filteredCount" style="color:#4fc3f7;font-size:12px;"></span>
+                </div>
+            </div>
+
+            <div class="screenshot-area" id="screenshotArea">
+                <div class="screenshot-placeholder" id="screenshotPlaceholder">
+                    <div class="icon">🖼️</div>
+                    <p>选择窗口后点击截图</p>
+                    <p style="font-size:12px;margin-top:10px;">或开启实时预览</p>
+                </div>
+                <!-- 实时预览容器 -->
+                <div id="livePreviewBox" style="display:none;width:100%;height:100%;position:relative;">
+                    <img id="livePreviewImg" style="max-width:100%;max-height:100%;object-fit:contain;">
+                    <div style="position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.7);padding:5px 10px;border-radius:4px;font-size:11px;color:#FFD700;" id="livePreviewInfo"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：答案区域 -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">💡 识别结果</div>
+                <button class="btn btn-secondary" onclick="clearResults()">清空</button>
+            </div>
+
+            <div class="ocr-result" id="ocrResult">
+                等待截图识别...
+            </div>
+
+            <div class="panel-title" style="margin-bottom:10px;">🎯 匹配答案</div>
+
+            <div class="answer-list" id="answerList">
+                <div style="text-align:center;color:#666;padding:40px;">
+                    截图后将自动搜索答案
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ OCR 全局变量 ============
+        let yoloModel = null;    // TensorFlow.js YOLO检测模型
+        let detSession = null;   // ONNX det.onnx 文字行检测模型
+        let recSession = null;   // ONNX识别模型
+        let charDict = null;     // 字符字典
+        let ocrReady = false;    // OCR就绪标志
+        let useLocalOCR = true;  // 使用本地OCR开关
+
+        // ============ 原有变量 ============
+        let allQuestions = [];
+        let selectedHwnd = null;
+        let autoModeTimer = null;
+        let selectedRegion = null;
+        let floatWindowOpen = false;  // 画中画窗口状态
+        let currentAnswers = [];  // 当前答案列表
+        let lastOcrText = '';  // 上次OCR结果（用于缓存判断）
+
+        // 分类配置
+        const CATEGORY_MAP = {
+            'riChangQianDao': { name: '每日签到', level1: 'daily' },
+            'sanJieShuYuan': { name: '三界书院', level1: 'daily' },
+            'kouDaiGuoZiJian': { name: '口袋-国子监', level1: 'daily' },
+            'kjds': { name: '科举大赛', level1: 'activity' },
+            'wenYunMoXiang': { name: '文韵墨香', level1: 'activity' },
+            'xunMengZhuiYi': { name: '寻梦追忆', level1: 'activity' },
+            'cheChiDouFa': { name: '车迟斗法', level1: 'dungeon' },
+            'tongTianHe': { name: '通天河', level1: 'dungeon' },
+            'daNaoTianGong': { name: '大闹天宫', level1: 'dungeon' },
+            'dunHuangYeTan': { name: '敦煌夜谭上部', level1: 'dungeon' },
+            'huJiPiPaXing': { name: '胡姬琵琶行', level1: 'dungeon' },
+            'yiGuanGuQiu': { name: '衣冠古丘', level1: 'dungeon' },
+            'jianLingMoYing': { name: '剑灵魔影', level1: 'dungeon' },
+            'siJi': { name: '四季', level1: 'dungeon' },
+            'jinDouDong': { name: '金兜洞兕大王', level1: 'dungeon' },
+            'kanTuShuoHua': { name: '教师节-看图说话', level1: 'festival' },
+            'shuiShiXueBa': { name: '教师节-谁是学霸', level1: 'festival' },
+            'yuanXiaoDengMi': { name: '元宵灯谜', level1: 'festival' },
+        };
+
+        const LEVEL1_NAMES = {
+            'daily': '日常',
+            'activity': '活动',
+            'dungeon': '副本',
+            'festival': '节日'
+        };
+
+        // ============ OCR 初始化 (YOLO检测 + ONNX识别) ============
+        async function initLocalOCR() {
+            if (ocrReady) return true;
+
+            let step = 0;
+            let lastSuccess = '';
+            try {
+                // ONNX Runtime 配置
+                ort.env.wasm.numThreads = 1;
+                ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/';
+                ort.env.logLevel = 'warning';
+
+                console.log('开始加载 OCR 模型 (YOLO + ONNX)...');
+                updateOCRStatus('loading');
+
+                const ocrBase = './ocr_models/';
+
+                // 【步骤1】加载 YOLO 检测模型 (TensorFlow.js)
+                step = 1;
+                console.log('[1/4] 加载 YOLO model.json ...');
+                yoloModel = await tf.loadGraphModel(ocrBase + 'model.json');
+                console.log('[1/4] ✅ YOLO 加载完成');
+                console.log('  inputs:', yoloModel.inputs?.map(i => i.name));
+                console.log('  outputs:', yoloModel.outputs?.map(o => o.name));
+                lastSuccess = 'YOLO';
+
+                // 【步骤2】加载 ONNX det.onnx 文字行检测模型（可选，失败不影响整体）
+                step = 2;
+                console.log('[2/4] 加载 det.onnx ...');
+                try {
+                    detSession = await ort.InferenceSession.create(ocrBase + 'det.onnx');
+                    console.log('[2/4] ✅ det.onnx 加载完成');
+                    console.log('  inputs:', detSession.inputNames);
+                    console.log('  outputs:', detSession.outputNames);
+                } catch (detErr) {
+                    console.warn('[2/4] ⚠️ det.onnx 加载失败，将使用水平分割替代:', detErr.message);
+                    detSession = null;
+                }
+
+                // 【步骤3】加载 ONNX 识别模型
+                step = 3;
+                console.log('[3/4] 加载 rec.onnx ...');
+                recSession = await ort.InferenceSession.create(ocrBase + 'rec.onnx');
+                console.log('[3/4] ✅ rec.onnx 加载完成');
+                console.log('  inputs:', recSession.inputNames);
+                console.log('  outputs:', recSession.outputNames);
+                lastSuccess = 'rec.onnx';
+
+                // 【步骤4】加载字符字典
+                step = 4;
+                console.log('[4/4] 加载字典 ...');
+                const dictResp = await fetch(ocrBase + 'ppocrv5_dict.txt');
+                const dictText = await dictResp.text();
+                charDict = dictText.trim().split('\n');
+                console.log('[4/4] ✅ 字典加载完成，共', charDict.length, '字符');
+
+                ocrReady = true;
+                console.log('✅✅✅ OCR 初始化完成 (YOLO检测 + ' + (detSession ? 'det.onnx行检测' : '水平分割') + ' + ONNX识别)');
+                updateOCRStatus(true);
+                return true;
+            } catch (e) {
+                const stage = step === 1 ? 'YOLO' : (step === 2 ? 'det.onnx' : (step === 3 ? 'rec.onnx' : (step === 4 ? '字典' : '未知')));
+                console.error(`❌ 初始化失败在步骤[${step}] ${stage}:`, e);
+                console.error('  上一步成功:', lastSuccess || '无');
+                console.error('  错误类型:', e.constructor.name);
+                console.error('  错误消息:', e.message);
+
+                ocrReady = false;
+                const errMsg = `${stage}: ${e.message || e.constructor.name || '加载失败'}`;
+                updateOCRStatus(false, errMsg.substring(0, 60));
+                return false;
+            }
+        }
+
+        function updateOCRStatus(ready, errorMsg = null) {
+            const statusEl = document.getElementById('ocrStatus');
+            if (statusEl) {
+                if (ready === 'loading') {
+                    statusEl.innerHTML = '<span style="color:#ffa726;">⏳ 加载模型中...</span>';
+                } else if (ready === true) {
+                    statusEl.innerHTML = '<span style="color:#4caf50;">✅ 本地OCR就绪</span>';
+                } else {
+                    statusEl.innerHTML = `<span style="color:#f44336;">❌ OCR失败: ${errorMsg || '未知错误'}</span>`;
+                }
+            }
+        }
+
+        // ============ 文本检测 (YOLO) ============
+        async function detectText(canvas) {
+            console.log('[YOLO detect] 开始, canvas尺寸:', canvas.width, 'x', canvas.height);
+            try {
+                if (!yoloModel) {
+                    throw new Error('YOLO模型未加载');
+                }
+
+                // YOLO 输入固定 480x480（简单拉伸，非letterbox）
+                const inputSize = 480;
+                const origW = canvas.width;
+                const origH = canvas.height;
+
+                // 创建临时canvas resize到模型输入尺寸（拉伸）
+                const resizedCanvas = document.createElement('canvas');
+                resizedCanvas.width = inputSize;
+                resizedCanvas.height = inputSize;
+                const ctx = resizedCanvas.getContext('2d');
+                ctx.drawImage(canvas, 0, 0, inputSize, inputSize);
+
+                console.log('[YOLO resize] 原尺寸:', origW, 'x', origH, '→ 480x480 (拉伸)');
+
+                // 转为 TensorFlow tensor
+                const imgData = ctx.getImageData(0, 0, inputSize, inputSize);
+                const rgbData = new Float32Array(inputSize * inputSize * 3);
+                for (let i = 0; i < inputSize * inputSize; i++) {
+                    rgbData[i * 3] = imgData.data[i * 4] / 255;      // R
+                    rgbData[i * 3 + 1] = imgData.data[i * 4 + 1] / 255;  // G
+                    rgbData[i * 3 + 2] = imgData.data[i * 4 + 2] / 255;  // B
+                }
+                const tensor = tf.tensor3d(rgbData, [inputSize, inputSize, 3]);
+                const inputTensor = tensor.expandDims(0);
+
+                console.log('[YOLO] 输入tensor shape:', inputTensor.shape);
+
+                // 推理
+                const prediction = yoloModel.predict(inputTensor);
+                console.log('[YOLO] 输出:', prediction);
+
+                // 输出格式: [x, y, w, h, confidence] 或 [N, 5] 或 [1, N, 5]
+                let outputData;
+                if (prediction instanceof tf.Tensor) {
+                    outputData = prediction.dataSync();  // 同步获取数据
+                    console.log('[YOLO] output shape:', prediction.shape, 'data长度:', outputData.length);
+                } else if (Array.isArray(prediction)) {
+                    // 多个输出，取第一个
+                    outputData = prediction[0].dataSync();
+                    console.log('[YOLO] 多输出, 取第一个 shape:', prediction[0].shape);
+                }
+
+                // 清理 tensor
+                tensor.dispose();
+                inputTensor.dispose();
+                if (prediction instanceof tf.Tensor) prediction.dispose();
+                else if (Array.isArray(prediction)) prediction.forEach(p => p.dispose());
+
+                // 后处理: 从YOLO输出提取bbox（简单拉伸缩放）
+                const boxes = postprocessYOLODetection(outputData, prediction.shape || [outputData.length], canvas.width, canvas.height, inputSize);
+                console.log('[YOLO] 检测到boxes:', boxes.length);
+                return boxes;
+
+            } catch (e) {
+                console.error('[YOLO detect] 失败:', e, 'message:', e?.message);
+                throw e;
+            }
+        }
+
+        // YOLO后处理: 输出 [1, 8, 4725] → 需要转置为 [4725, 8]
+        // 每个框 8 个值: [cx, cy, w, h, cls0, cls1, cls2, cls3]
+        // 4个类别可能代表: cls0=题目, cls1=选项A, cls2=选项B, cls3=其他
+        function postprocessYOLODetection(outputData, shape, origW, origH, inputSize) {
+            const confidenceThreshold = 0.8;  // 阈值0.8，保留高置信度框
+            const boxes = [];
+
+            // 缩放比例：简单拉伸，X和Y分别缩放
+            const scaleX = origW / inputSize;
+            const scaleY = origH / inputSize;
+
+            console.log('[YOLO postprocess] 开始处理, shape:', shape, '原图尺寸:', origW, 'x', origH, 'scaleX:', scaleX, 'scaleY:', scaleY);
+
+            // 输出 shape: [1, 8, 4725]
+            // TensorFlow.js 输出是 row-major，所以 data 排列是：
+            // outputData[0..4724] = cx of all 4725 boxes
+            // outputData[4725..9449] = cy of all 4725 boxes
+            // outputData[9450..14174] = w of all 4725 boxes
+            // outputData[14175..18899] = h of all 4725 boxes
+            // outputData[18900..23624] = cls0 of all 4725 boxes
+            // ...
+
+            const numCandidates = 4725;
+
+            console.log('[YOLO postprocess] numCandidates:', numCandidates);
+            console.log('[YOLO postprocess] 前10个值:', outputData.slice(0, 10));
+
+            for (let i = 0; i < numCandidates; i++) {
+                // 按原始排列读取（每个属性的偏移 + 框索引）
+                const cx = outputData[i];                        // offset 0
+                const cy = outputData[4725 + i];                 // offset 1
+                const w = outputData[9450 + i];                  // offset 2 (4725 * 2)
+                const h = outputData[14175 + i];                 // offset 3 (4725 * 3)
+
+                // 后4个类别概率
+                const cls0 = outputData[18900 + i];              // offset 4 (4725 * 4)
+                const cls1 = outputData[23625 + i];              // offset 5 (4725 * 5)
+                const cls2 = outputData[28350 + i];              // offset 6 (4725 * 6)
+                const cls3 = outputData[33075 + i];              // offset 7 (4725 * 7)
+
+                // 取最大类别概率作为置信度
+                const classProbs = [cls0, cls1, cls2, cls3];
+                let maxClassProb = 0;
+                let classId = 0;
+                for (let c = 0; c < 4; c++) {
+                    if (classProbs[c] > maxClassProb) {
+                        maxClassProb = classProbs[c];
+                        classId = c;
+                    }
+                }
+
+                // 过滤低置信度
+                if (maxClassProb < confidenceThreshold) continue;
+
+                // 打印前10个有效框（调试用）
+                if (boxes.length < 10) {
+                    console.log('[YOLO] 有效框#' + boxes.length, '原始:', {cx, cy, w, h}, '类别:', classId, '置信:', maxClassProb.toFixed(3));
+                }
+
+                // 坐标还原: 从480空间映射到原图（简单拉伸）
+                // 对方源码逻辑: realBox = bbox.map((v, i) => v * (i % 2 === 0 ? scaleX : scaleY))
+                const x1 = Math.round((cx - w/2) * scaleX);
+                const y1 = Math.round((cy - h/2) * scaleY);
+                const x2 = Math.round((cx + w/2) * scaleX);
+                const y2 = Math.round((cy + h/2) * scaleY);
+
+                // 过滤无效框
+                if (w > 10 && h > 10 && x2 > x1 && y2 > y1 && x1 >= 0 && y1 >= 0 && x2 <= origW && y2 <= origH) {
+                    boxes.push({
+                        x1, y1, x2, y2,
+                        confidence: maxClassProb,
+                        classId
+                    });
+                }
+            }
+
+            // 按置信度排序
+            boxes.sort((a, b) => b.confidence - a.confidence);
+            console.log('[YOLO postprocess] 有效boxes:', boxes.length);
+
+            // 打印所有框的尺寸信息
+            boxes.forEach((b, i) => {
+                const area = (b.x2 - b.x1) * (b.y2 - b.y1);
+                console.log(`[YOLO] 框#${i}: 宽=${b.x2-b.x1} 高=${b.y2-b.y1} 面积=${area} 置信=${b.confidence.toFixed(3)} 类别=${b.classId}`);
+            });
+
+            // 策略：优先选择高度较小（单行文字）的框，但也要有足够置信度
+            // 按高度排序，取前10个（单行文字高度通常在30-80px范围）
+            const sortedByHeight = [...boxes].sort((a, b) => (a.y2 - a.y1) - (b.y2 - b.y1));
+            const smallBoxes = sortedByHeight.slice(0, 10);
+
+            // 如果有高度小于100px的框，优先用这些
+            const narrowBoxes = boxes.filter(b => (b.y2 - b.y1) < 100);
+            const finalBoxes = narrowBoxes.length > 0 ? narrowBoxes.slice(0, 8) : boxes.slice(0, 5);
+
+            console.log('[YOLO] 最终选择的框:', finalBoxes.length, '个');
+
+            // NMS去重（防止同一区域被多次识别）
+            const nmsBoxes = applyNMS(finalBoxes, 0.5);
+            console.log('[YOLO] NMS后剩余:', nmsBoxes.length, '个');
+            return nmsBoxes;
+        }
+
+        // NMS (Non-Maximum Suppression) 去重
+        function applyNMS(boxes, iouThreshold) {
+            if (boxes.length <= 1) return boxes;
+
+            // 按置信度排序
+            boxes.sort((a, b) => b.confidence - a.confidence);
+
+            const keep = [];
+            const suppressed = new Set();
+
+            for (let i = 0; i < boxes.length; i++) {
+                if (suppressed.has(i)) continue;
+
+                keep.push(boxes[i]);
+
+                // 抑制与当前框重叠度高的其他框
+                for (let j = i + 1; j < boxes.length; j++) {
+                    if (suppressed.has(j)) continue;
+
+                    const iou = calculateIOU(boxes[i], boxes[j]);
+                    if (iou > iouThreshold) {
+                        suppressed.add(j);
+                    }
+                }
+            }
+
+            return keep;
+        }
+
+        // 计算两个框的IOU (Intersection over Union)
+        function calculateIOU(box1, box2) {
+            const x1 = Math.max(box1.x1, box2.x1);
+            const y1 = Math.max(box1.y1, box2.y1);
+            const x2 = Math.min(box1.x2, box2.x2);
+            const y2 = Math.min(box1.y2, box2.y2);
+
+            if (x2 <= x1 || y2 <= y1) return 0;
+
+            const intersection = (x2 - x1) * (y2 - y1);
+            const area1 = (box1.x2 - box1.x1) * (box1.y2 - box1.y1);
+            const area2 = (box2.x2 - box2.x1) * (box2.y2 - box2.y1);
+            const union = area1 + area2 - intersection;
+
+            return intersection / union;
+        }
+
+        // ============ 文字行检测 (det.onnx - DB算法) ============
+        // 对方源码预处理流程
+
+        // Step 1: df 函数 - 缩放绘制到目标尺寸
+        function df(originalCanvas, targetW, targetH) {
+            const r = document.createElement('canvas');
+            r.width = targetW;
+            r.height = targetH;
+            r.getContext('2d', { willReadFrequently: true }).drawImage(originalCanvas, 0, 0, targetW, targetH);
+            return r;
+        }
+
+        // Step 2: gf 函数 - ImageNet 归一化
+        const mf = [0.485, 0.456, 0.406];  // mean
+        const hf = [0.229, 0.224, 0.225];  // std
+
+        function gf(scaledCanvas) {
+            const { data: t } = scaledCanvas.getContext('2d').getImageData(0, 0, scaledCanvas.width, scaledCanvas.height);
+            const n = scaledCanvas.width * scaledCanvas.height;
+            const r = new Float32Array(n * 3);
+
+            for (let e = 0; e < n; e += 1) {
+                const i = e * 4;
+                r[e] = (t[i] / 255 - mf[0]) / hf[0];           // R
+                r[n + e] = (t[i + 1] / 255 - mf[1]) / hf[1];   // G
+                r[n * 2 + e] = (t[i + 2] / 255 - mf[2]) / hf[2]; // B
+            }
+            return r;
+        }
+
+        // Step 3: _f 函数 - 完整预处理
+        function _f(e, t = 480) {
+            const n = Math.max(e.width, e.height);
+            const r = n > t ? t / n : 1;
+
+            // 32 对齐
+            const i = Math.max(32, Math.round(e.width * r / 32) * 32);  // resizedWidth
+            const a = Math.max(32, Math.round(e.height * r / 32) * 32); // resizedHeight
+
+            const scaledCanvas = df(e, i, a);
+            const normalizedData = gf(scaledCanvas);
+
+            console.log('[det _f] 原尺寸:', e.width, 'x', e.height, '缩放比例:', r);
+            console.log('[det _f] 缩放后尺寸:', i, 'x', a, '是否32对齐:', i % 32 === 0, a % 32 === 0);
+
+            // 计算数据范围（不能用 ... 展开，会栈溢出）
+            let dataMin = Infinity, dataMax = -Infinity;
+            for (let j = 0; j < normalizedData.length; j++) {
+                if (normalizedData[j] < dataMin) dataMin = normalizedData[j];
+                if (normalizedData[j] > dataMax) dataMax = normalizedData[j];
+            }
+            console.log('[det _f] 归一化后数据范围:', dataMin.toFixed(3), '~', dataMax.toFixed(3));
+
+            return {
+                tensor: new ort.Tensor('float32', normalizedData, [1, 3, a, i]),
+                resizedWidth: i,
+                resizedHeight: a,
+                ratioWidth: i / e.width,
+                ratioHeight: a / e.height,
+                scaledCanvas
+            };
+        }
+
+        async function detectTextLines(canvas) {
+            if (!detSession) {
+                console.log('[det] det.onnx 未加载，跳过');
+                return null;
+            }
+
+            console.log('[det] inputNames:', detSession.inputNames);
+            console.log('[det] outputNames:', detSession.outputNames);
+            console.log('[det] 开始检测文字行, canvas:', canvas.width, 'x', canvas.height);
+
+            // 使用对方 _f 函数预处理
+            const preprocessed = _f(canvas, 480);
+            const inputName = detSession.inputNames[0];
+            const feeds = { [inputName]: preprocessed.tensor };
+
+            console.log('[det] tensor shape:', preprocessed.tensor.dims);
+
+            try {
+                const results = await detSession.run(feeds);
+                console.log('[det] results:', results);
+
+                const outputName = detSession.outputNames[0];
+                const output = results[outputName];
+
+                console.log('[det] output:', output);
+                console.log('[det] output.dims:', output?.dims);
+                console.log('[det] output.data length:', output?.data?.length);
+
+                if (!output || !output.data) {
+                    console.error('[det] output无效');
+                    return null;
+                }
+
+                // DB算法后处理: 从概率图提取文字区域
+                // 传入原始尺寸用于坐标还原
+                const boxes = postprocessDB(output.data, output.dims || [1, 1, preprocessed.resizedHeight, preprocessed.resizedWidth], preprocessed.resizedWidth, preprocessed.resizedHeight, canvas.width, canvas.height);
+                console.log('[det] 检测到', boxes.length, '个文字行');
+                return boxes;
+            } catch (err) {
+                console.error('[det] 详细错误:', err);
+                console.error('[det] 错误类型:', typeof err);
+                if (err && err.message) console.error('[det] 错误消息:', err.message);
+                if (err && err.stack) console.error('[det] 错误栈:', err.stack);
+                if (typeof err === 'number') {
+                    console.error('[det] 数字错误码:', err, '转为十六进制:', '0x' + err.toString(16));
+                }
+                return null;
+            }
+        }
+
+        // DB算法后处理: 从概率图提取文字行边界框
+        function postprocessDB(data, dims, detW, detH, origW, origH) {
+            // 概率阈值 - 降低到0.1试试
+            const threshold = 0.1;
+            // 最小行高度 - 3像素
+            const minBlockHeight = 3;
+            const scaleX = origW / detW;
+            const scaleY = origH / detH;
+
+            console.log('[det postprocess] 阈值:', threshold, '最小高度:', minBlockHeight, '缩放:', scaleX, scaleY);
+
+            // 确定 data 的形状 (可能是 [1,1,H,W] 或 [1,H,W])
+            let probMap;
+            let mapH, mapW;
+
+            if (dims.length === 4) {
+                // [1, 1, H, W]
+                mapH = dims[2];
+                mapW = dims[3];
+                probMap = data;  // 直接使用
+            } else if (dims.length === 3) {
+                // [1, H, W]
+                mapH = dims[1];
+                mapW = dims[2];
+                probMap = data;
+            } else {
+                console.warn('[det] 未知输出格式, dims:', dims);
+                return [];
+            }
+
+            console.log('[det] 概率图尺寸:', mapW, 'x', mapH);
+
+            // 打印输出值的范围（调试）
+            let minVal = Infinity, maxVal = -Infinity;
+            for (let i = 0; i < data.length; i++) {
+                if (data[i] < minVal) minVal = data[i];
+                if (data[i] > maxVal) maxVal = data[i];
+            }
+            console.log('[det] 输出值范围: min=', minVal, 'max=', maxVal);
+
+            // 计算每行的平均概率（调试）
+            const rowAvgProb = [];
+            for (let y = 0; y < mapH; y++) {
+                let sum = 0, count = 0;
+                for (let x = 0; x < mapW; x++) {
+                    const prob = probMap[y * mapW + x];
+                    if (prob > threshold) {
+                        sum += prob;
+                        count++;
+                    }
+                }
+                rowAvgProb.push({ y, avg: count > 0 ? sum / count : 0, count });
+            }
+
+            // 打印概率较高的行（调试）
+            const highProbRows = rowAvgProb.filter(r => r.count > 10);
+            console.log('[det] 有文字的行:', highProbRows.length, '行, 分布:', highProbRows.slice(0, 15).map(r => `y=${r.y} cnt=${r.count} avg=${r.avg.toFixed(2)}`).join(', '));
+
+            // 后处理：合并连续的有文字行成文字区域（允许中间有少量空白行）
+            const boxes = [];
+            let inBlock = false;
+            let blockStart = 0;
+            let blockX1 = 0, blockX2 = 0;
+            let blankRows = 0;  // 连续空白行计数
+            const maxBlankRows = 10;  // 允许最多10行空白
+
+            for (let y = 0; y < mapH; y++) {
+                const stat = rowAvgProb[y];
+                const hasText = stat.count > 5;  // 该行至少有5个文字像素
+
+                if (hasText && !inBlock) {
+                    // 开始新的文字块
+                    inBlock = true;
+                    blockStart = y;
+                    blockX1 = 0;
+                    blockX2 = mapW;
+                    blankRows = 0;
+
+                    // 找该行的文字X范围
+                    for (let x = 0; x < mapW; x++) {
+                        if (probMap[y * mapW + x] > threshold) {
+                            blockX1 = Math.min(blockX1, x);
+                            blockX2 = Math.max(blockX2, x);
+                        }
+                    }
+                } else if (hasText && inBlock) {
+                    // 继续当前块，更新X范围
+                    blankRows = 0;  // 重置空白计数
+                    for (let x = 0; x < mapW; x++) {
+                        if (probMap[y * mapW + x] > threshold) {
+                            blockX1 = Math.min(blockX1, x);
+                            blockX2 = Math.max(blockX2, x);
+                        }
+                    }
+                } else if (!hasText && inBlock) {
+                    blankRows++;
+                    if (blankRows >= maxBlankRows) {
+                        // 连续空白行太多，结束当前块
+                        const blockH = y - blankRows + 1 - blockStart;
+                        if (blockH >= minBlockHeight) {
+                            boxes.push({
+                                x1: Math.round(blockX1 * scaleX),
+                                y1: Math.round(blockStart * scaleY),
+                                x2: Math.round(blockX2 * scaleX),
+                                y2: Math.round((y - blankRows + 1) * scaleY)
+                            });
+                        }
+                        inBlock = false;
+                        blankRows = 0;
+                    }
+                }
+            }
+
+            // 处理最后一个块
+            if (inBlock) {
+                const blockH = mapH - blockStart;
+                if (blockH >= minBlockHeight) {
+                    boxes.push({
+                        x1: Math.round(blockX1 * scaleX),
+                        y1: Math.round(blockStart * scaleY),
+                        x2: Math.round(blockX2 * scaleX),
+                        y2: Math.round(mapH * scaleY)
+                    });
+                }
+            }
+
+            // 给每个区域加 padding（向上少扩展，向下多扩展以包含完整题目）
+            const padTop = 10;     // 向上加 10px
+            const padBottom = 50;  // 向下加 50px（题目可能需要更多高度）
+            const padX = 10;       // 左右加 10px
+            const paddedBoxes = boxes.map(b => {
+                return {
+                    x1: Math.max(0, b.x1 - padX),
+                    y1: Math.max(0, b.y1 - padTop),
+                    x2: b.x2 + padX,
+                    y2: b.y2 + padBottom
+                };
+            });
+
+            console.log('[det] 后处理检测到', paddedBoxes.length, '个文字区域（已加padding）');
+
+            // 计算每个区域的文字像素总数（用于判断哪个是题目）
+            const boxesWithScore = paddedBoxes.map((b, i) => {
+                const yStart = Math.floor(b.y1 / scaleY);
+                const yEnd = Math.ceil(b.y2 / scaleY);
+                let totalCount = 0;
+                for (let y = yStart; y < yEnd && y < mapH; y++) {
+                    if (rowAvgProb[y]) {
+                        totalCount += rowAvgProb[y].count;
+                    }
+                }
+                console.log(`[det] 区域#${i}: y=${b.y1}-${b.y2} 高度=${b.y2-b.y1}px 宽度=${b.x2-b.x1}px 文字像素=${totalCount}`);
+                return { box: b, count: totalCount };
+            });
+
+            // 过滤掉无效区域：
+            // 1. 文字像素太少（小于50可能是噪点/图标）
+            const filteredBoxes = boxesWithScore.filter(b => b.count >= 50);
+
+            console.log('[det] 过滤后剩余', filteredBoxes.length, '个有效区域');
+
+            // 返回文字像素最多的区域（题目区域通常像素最多）
+            if (filteredBoxes.length > 0) {
+                filteredBoxes.sort((a, b) => b.count - a.count);
+                console.log('[det] 选择文字像素最多的区域（题目区域），count=', filteredBoxes[0].count);
+                return [filteredBoxes[0].box];
+            }
+            return [];
+        }
+
+        // ============ 文字识别 (rec.onnx) ============
+        // 调试：在页面显示送进 rec.onnx 的图片（放在上方）
+        function showDebugImage(canvas, w, h) {
+            let debugArea = document.getElementById('recDebugArea');
+            if (!debugArea) {
+                // 创建调试区域（放在页面顶部）
+                debugArea = document.createElement('div');
+                debugArea.id = 'recDebugArea';
+                debugArea.style.cssText = 'position:fixed; top:10px; left:10px; background:#222; padding:10px; border:2px solid #4CAF50; z-index:9999;';
+                debugArea.innerHTML = '<div style="color:#4CAF50; font-size:12px; margin-bottom:5px;">rec.onnx 输入图片调试:</div>';
+                document.body.appendChild(debugArea);
+            }
+
+            // 添加图片（放大显示，保持比例）
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL('image/png');
+            img.style.cssText = `width: ${Math.min(w * 3, 300)}px; height: ${Math.min(h * 3, 150)}px; border:1px solid #fff; margin-right:5px; object-fit: contain;`;
+            img.title = `${w}x${h} (送进rec.onnx)`;
+
+            // 清空并添加新图片（只保留最近5张）
+            const imgs = debugArea.querySelectorAll('img');
+            if (imgs.length >= 5) {
+                imgs[0].remove();
+            }
+            debugArea.appendChild(img);
+        }
+
+        async function recognizeCrop(canvas) {
+            if (!recSession) {
+                throw new Error('识别模型未加载');
+            }
+
+            const inputName = recSession.inputNames[0];
+            // rec.onnx 输入 [batch, 3, 48, width] - 高度固定48，宽度最大320
+            const recImageHeight = 48;
+            const recImageWidth = 320;
+
+            // 计算缩放比例（保持长宽比）
+            const ratio = canvas.width / canvas.height;
+            const scaledW = Math.min(recImageWidth, Math.max(1, Math.ceil(recImageHeight * ratio)));
+            const scaledH = recImageHeight;
+
+            console.log('[rec] 输入:', inputName, '原尺寸:', canvas.width, 'x', canvas.height, '缩放后:', scaledW, 'x', scaledH);
+
+            // Step 1: 缩放图片（保持长宽比）
+            const scaledCanvas = document.createElement('canvas');
+            scaledCanvas.width = scaledW;
+            scaledCanvas.height = scaledH;
+            const scaledCtx = scaledCanvas.getContext('2d', { willReadFrequently: true });
+            scaledCtx.imageSmoothingEnabled = true;
+            scaledCtx.imageSmoothingQuality = 'high';
+            scaledCtx.drawImage(canvas, 0, 0, scaledW, scaledH);
+
+            // Step 2: 创建白色背景画布（320×48）
+            const paddedCanvas = document.createElement('canvas');
+            paddedCanvas.width = recImageWidth;
+            paddedCanvas.height = recImageHeight;
+            const paddedCtx = paddedCanvas.getContext('2d', { willReadFrequently: true });
+
+            // 白色背景填充
+            paddedCtx.fillStyle = '#ffffff';
+            paddedCtx.fillRect(0, 0, recImageWidth, recImageHeight);
+
+            // 将缩放后的图居中绘制到白色背景上
+            paddedCtx.drawImage(scaledCanvas, 0, 0);
+
+            // ============ 调试：显示送进 rec.onnx 的图片 ============
+            showDebugImage(paddedCanvas, recImageWidth, recImageHeight);
+            console.log('[rec调试] 送进模型的图片已显示在页面调试区, 尺寸:', recImageWidth, 'x', recImageHeight);
+
+            // Step 3: 使用 gf 函数归一化（ImageNet）
+            const normalizedData = gf(paddedCanvas);
+
+            // 打印归一化后数据范围（调试）
+            let dataMin = Infinity, dataMax = -Infinity;
+            for (let j = 0; j < Math.min(1000, normalizedData.length); j++) {
+                if (normalizedData[j] < dataMin) dataMin = normalizedData[j];
+                if (normalizedData[j] > dataMax) dataMax = normalizedData[j];
+            }
+            console.log('[rec预处理] 使用 gf (ImageNet) 归一化, 数据范围:', dataMin.toFixed(3), '~', dataMax.toFixed(3));
+            console.log('[rec预处理] tensor shape:', [1, 3, recImageHeight, recImageWidth]);
+
+            // 创建输入tensor: [1, 3, 48, 320]
+            const inputTensor = new ort.Tensor('float32', normalizedData, [1, 3, recImageHeight, recImageWidth]);
+
+            // 推理
+            const results = await recSession.run({ [inputName]: inputTensor });
+            const outputName = recSession.outputNames[0];
+            const output = results[outputName];
+
+            console.log('[rec] 输出shape:', output.dims, 'data长度:', output.data.length);
+
+            // 打印输出值范围（判断是否需要softmax）
+            let outMin = Infinity, outMax = -Infinity;
+            for (let i = 0; i < Math.min(100, output.data.length); i++) {
+                if (output.data[i] < outMin) outMin = output.data[i];
+                if (output.data[i] > outMax) outMax = output.data[i];
+            }
+            console.log('[rec] 输出值范围(前100个): min=', outMin.toFixed(3), 'max=', outMax.toFixed(3));
+
+            // CTC解码 - 传入实际dims
+            return ctcDecode(output.data, output.dims);
+        }
+
+        // CTC解码 - 支持两种 dims 格式
+        function ctcDecode(outputData, dims) {
+            // 输出shape: [batch, seq_len, num_classes]
+            // num_classes = dict_size + 1 (含blank)
+            // 直接用对方网站的解析方式
+
+            console.log('[ctcDecode] dims:', JSON.stringify(dims), 'data长度:', outputData.length, '字典长度:', charDict.length);
+
+            // 简化解析: 取最后两个维度
+            const seqLen = dims[dims.length - 2];
+            const dictSize = dims[dims.length - 1];
+
+            console.log('[ctcDecode] seqLen:', seqLen, 'dictSize:', dictSize);
+
+            // 对每个时间步做 softmax（尝试）
+            const softmaxData = new Float32Array(seqLen * dictSize);
+            for (let t = 0; t < seqLen; t++) {
+                // 找最大值（数值稳定性）
+                let maxVal = -Infinity;
+                for (let j = 0; j < dictSize; j++) {
+                    const val = outputData[j * seqLen + t];  // channel-first
+                    if (val > maxVal) maxVal = val;
+                }
+                // softmax: exp(x - max) / sum
+                let sum = 0;
+                for (let j = 0; j < dictSize; j++) {
+                    const val = outputData[j * seqLen + t];
+                    softmaxData[j * seqLen + t] = Math.exp(val - maxVal);
+                    sum += softmaxData[j * seqLen + t];
+                }
+                // 归一化
+                for (let j = 0; j < dictSize; j++) {
+                    softmaxData[j * seqLen + t] /= sum;
+                }
+            }
+
+            // 打印 softmax 后的概率范围
+            let softmaxMin = Infinity, softmaxMax = -Infinity;
+            for (let i = 0; i < Math.min(100, softmaxData.length); i++) {
+                if (softmaxData[i] < softmaxMin) softmaxMin = softmaxData[i];
+                if (softmaxData[i] > softmaxMax) softmaxMax = softmaxData[i];
+            }
+            console.log('[ctcDecode] softmax后概率范围:', softmaxMin.toFixed(6), '~', softmaxMax.toFixed(6));
+
+            const chars = [];
+            let lastIdx = 0;
+
+            for (let i = 0; i < seqLen; i++) {
+                // 使用 channel-first 格式 + softmax后的数据
+                let maxIdx = 0;
+                let maxProb = -Infinity;
+
+                for (let j = 0; j < dictSize; j++) {
+                    const prob = softmaxData[j * seqLen + i];
+                    if (prob > maxProb) {
+                        maxProb = prob;
+                        maxIdx = j;
+                    }
+                }
+
+                // 打印前5步（调试）
+                if (i < 5) {
+                    console.log(`[ctcDecode] t=${i} maxIdx=${maxIdx} maxProb=${maxProb.toFixed(3)}`);
+                }
+
+                // CTC规则: 跳过blank(索引0)和连续重复
+                if (maxIdx !== 0 && maxIdx !== lastIdx) {
+                    // PaddleOCR字典索引: maxIdx 对应 charDict[maxIdx-1]
+                    let charIdx = maxIdx - 1;
+                    if (charIdx >= 0 && charIdx < charDict.length) {
+                        chars.push(charDict[charIdx]);
+                    }
+                }
+                lastIdx = maxIdx;
+            }
+
+            const result = chars.join('');
+            console.log('[ctcDecode] 解码结果:', result);
+            return result;
+        }
+
+        // 从canvas裁剪区域
+        function cropRegionFromCanvas(canvas, box) {
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = box.x2 - box.x1;
+            cropCanvas.height = box.y2 - box.y1;
+            const ctx = cropCanvas.getContext('2d');
+            ctx.drawImage(canvas, box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1, 0, 0, cropCanvas.width, cropCanvas.height);
+            return cropCanvas;
+        }
+
+        // ============ 后端识别函数（对比测试）============
+        async function recognizeWithBackend(canvas) {
+            // 将 canvas 转 base64 发送给后端 PaddleOCR
+            const base64Data = canvas.toDataURL('image/png');
+            const base64 = base64Data.split(',')[1];
+
+            console.log('[后端识别] 图片尺寸:', canvas.width, 'x', canvas.height, 'base64长度:', base64.length);
+
+            try {
+                const resp = await fetch('/api/QuizOCR', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({img: base64})
+                });
+
+                if (!resp.ok) {
+                    const errorText = await resp.text();
+                    console.error('[后端识别] HTTP错误:', resp.status, errorText);
+                    return null;
+                }
+
+                const data = await resp.json();
+                console.log('[后端识别] 返回数据:', JSON.stringify(data));
+                if (data.success && data.text) {
+                    return data.text;
+                }
+                console.error('[后端识别] 识别失败, success=', data.success, 'text=', data.text, 'error=', data.error);
+                return null;
+            } catch (e) {
+                console.error('[后端识别] 失败:', e);
+                return null;
+            }
+        }
+
+        // ============ 完整OCR流程 ============
+        async function localOCR(canvas) {
+            console.log('localOCR开始, canvas尺寸:', canvas.width, 'x', canvas.height);
+
+            if (!ocrReady) {
+                await initLocalOCR();
+            }
+
+            if (!ocrReady) {
+                throw new Error('OCR初始化失败');
+            }
+
+            // 1. 检测文字区域
+            console.log('[OCR] 步骤1: 检测文字区域...');
+            const boxes = await detectText(canvas);
+            console.log('[OCR] 检测完成, boxes数量:', boxes.length);
+
+            if (boxes.length === 0) {
+                console.log('[OCR] 未检测到文字区域');
+                return '';
+            }
+
+            // 打印第一个box看看格式
+            console.log('[OCR] 第一个box:', JSON.stringify(boxes[0]));
+
+            // ========== 在截图区域绘制 YOLO 检测框（调试用）==========
+            drawYOLOBoxes(canvas, boxes);
+
+            // 2. 识别每个区域（大区域需要细分为文字行）
+            const texts = [];
+            for (let i = 0; i < boxes.length; i++) {
+                const box = boxes[i];
+                console.log(`[OCR] 步骤2.${i}: 识别区域`, box);
+                try {
+                    const cropCanvas = cropRegionFromCanvas(canvas, box);
+                    console.log(`[OCR] 裁剪canvas尺寸:`, cropCanvas.width, 'x', cropCanvas.height);
+
+                    // 如果裁剪区域高度 > 100px，需要细分为文字行
+                    if (cropCanvas.height > 100 && false) {  // 暂时禁用det.onnx分行，直接识别大区域
+                        let lineBoxes = null;
+
+                        // 使用 det.onnx 检测文字行
+                        if (detSession) {
+                            console.log('[OCR] 使用 det.onnx 检测文字行...');
+                            lineBoxes = await detectTextLines(cropCanvas);
+                        }
+
+                        if (lineBoxes && lineBoxes.length > 0) {
+                            // det.onnx 检测到文字行
+                            console.log('[OCR] det.onnx 检测到', lineBoxes.length, '行');
+                            // 调试：绘制 det.onnx 检测的行框（蓝色）
+                            drawDetLineBoxes(cropCanvas, lineBoxes, box);
+
+                            // 🔍 新增：把裁剪的图片也显示在调试区，方便检查
+                            const debugImg = document.createElement('img');
+                            debugImg.src = lineCanvas.toDataURL('image/png');
+                            debugImg.style.cssText = 'max-width:200px; border:2px solid red; margin:2px;';
+                            debugImg.title = `det裁剪: ${lineCanvas.width}x${lineCanvas.height}`;
+                            document.getElementById('recDebugArea').appendChild(debugImg);
+
+                            for (let j = 0; j < lineBoxes.length; j++) {
+                                const lb = lineBoxes[j];
+                                console.log(`[OCR] 行#${j} (det) 原始坐标:`, lb);
+                                const lineCanvas = cropRegionFromCanvas(cropCanvas, lb);
+                                console.log(`[OCR] 行#${j} (det)裁剪尺寸: ${lineCanvas.width}x${lineCanvas.height}`);
+
+                                // 🔍 对比测试：同时用前端 rec.onnx 和后端 PaddleOCR 识别
+                                const frontendText = await recognizeCrop(lineCanvas);
+                                console.log(`[OCR] 行#${j} 前端rec.onnx识别:`, frontendText);
+
+                                // 发送给后端识别
+                                const backendText = await recognizeWithBackend(lineCanvas);
+                                console.log(`[OCR] 行#${j} 后端PaddleOCR识别:`, backendText);
+
+                                // 使用后端结果（更准确）
+                                if (backendText) texts.push(backendText);
+                            }
+                        } else {
+                            // det.onnx 未检测到，使用水平分割
+                            console.log('[OCR] det.onnx 未检测到，使用水平分割...');
+                            const lines = splitIntoLines(cropCanvas);
+                            for (let j = 0; j < lines.length; j++) {
+                                const lineCanvas = extractLine(cropCanvas, lines[j]);
+                                console.log(`[OCR] 行#${j} (split): ${lineCanvas.width}x${lineCanvas.height}`);
+                                const lineText = await recognizeCrop(lineCanvas);
+                                console.log(`[OCR] 行#${j}识别结果:`, lineText);
+                                if (lineText) texts.push(lineText);
+                            }
+                        }
+                    } else {
+                        // 小区域直接识别
+                        const text = await recognizeCrop(cropCanvas);
+                        console.log(`[OCR] 识别结果:`, text);
+                        if (text) texts.push(text);
+                    }
+                } catch (e) {
+                    console.error(`[OCR] 识别裁剪区域#${i}失败:`, e, 'box:', box);
+                }
+            }
+
+            const result = texts.join(' ');
+            console.log('[OCR] 最终结果:', result);
+            return result;
+        }
+
+        // 在截图区域绘制 YOLO 检测框，并返回 canvas 和 ctx 用于后续绘制
+        function drawYOLOBoxes(originalCanvas, boxes) {
+            const screenshotArea = document.getElementById('screenshotArea');
+
+            // 创建带框的canvas副本
+            const displayCanvas = document.createElement('canvas');
+            displayCanvas.width = originalCanvas.width;
+            displayCanvas.height = originalCanvas.height;
+            const ctx = displayCanvas.getContext('2d');
+
+            // 绘制原图
+            ctx.drawImage(originalCanvas, 0, 0);
+
+            // 绘制每个检测框（YOLO，橙色）
+            ctx.strokeStyle = '#FF5722';  // 橙色边框
+            ctx.lineWidth = 3;
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#FF5722';
+
+            boxes.forEach((box, i) => {
+                const w = box.x2 - box.x1;
+                const h = box.y2 - box.y1;
+
+                // 绘制矩形框
+                ctx.strokeRect(box.x1, box.y1, w, h);
+
+                // 标注置信度和类别
+                ctx.fillText(`YOLO#${i} cls${box.classId} ${box.confidence.toFixed(2)}`, box.x1 + 5, box.y1 - 5);
+            });
+
+            // 替换截图区域的显示
+            screenshotArea.innerHTML = '';
+            // 保持宽高比例，不拉伸
+            const displayScale = Math.min(1, 400 / displayCanvas.height);
+            displayCanvas.style.width = Math.round(displayCanvas.width * displayScale) + 'px';
+            displayCanvas.style.height = Math.round(displayCanvas.height * displayScale) + 'px';
+            displayCanvas.style.border = '2px solid #4CAF50';
+            screenshotArea.appendChild(displayCanvas);
+
+            // 返回 canvas 和 ctx 用于后续绘制 det 检测框
+            return { canvas: displayCanvas, ctx: ctx, screenshotArea: screenshotArea };
+        }
+
+        // 绘制 det.onnx 检测的行框（蓝色，加上 YOLO 框的偏移）
+        function drawDetLineBoxes(cropCanvas, lineBoxes, yoloBox) {
+            const screenshotArea = document.getElementById('screenshotArea');
+            const displayCanvas = screenshotArea.querySelector('canvas');
+            if (!displayCanvas) return;
+
+            const ctx = displayCanvas.getContext('2d');
+
+            // det.onnx 的坐标是相对于裁剪区域的，需要加上 YOLO 框的偏移
+            ctx.strokeStyle = '#2196F3';  // 蓝色边框
+            ctx.lineWidth = 2;
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#2196F3';
+
+            lineBoxes.forEach((lb, i) => {
+                // 加上 YOLO 框的偏移
+                const x1 = yoloBox.x1 + lb.x1;
+                const y1 = yoloBox.y1 + lb.y1;
+                const x2 = yoloBox.x1 + lb.x2;
+                const y2 = yoloBox.y1 + lb.y2;
+
+                const w = x2 - x1;
+                const h = y2 - y1;
+
+                ctx.strokeRect(x1, y1, w, h);
+                ctx.fillText(`det#${i}`, x1 + 2, y1 - 3);
+
+                console.log(`[det调试] 行#${i} 原图坐标: x1=${x1}, y1=${y1}, x2=${x2}, y2=${y2}`);
+            });
+        }
+
+        // ============ 水平分割：将大区域按行分割成单行 ============
+        function splitIntoLines(cropCanvas, minLineHeight = 30) {
+            const ctx = cropCanvas.getContext('2d');
+            const width = cropCanvas.width;
+            const height = cropCanvas.height;
+            const imageData = ctx.getImageData(0, 0, width, height);
+
+            // 计算每行的平均亮度
+            const rowBrightness = [];
+            for (let y = 0; y < height; y++) {
+                let sum = 0;
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    const gray = (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / 3;
+                    sum += gray;
+                }
+                rowBrightness.push(sum / width);
+            }
+
+            // 空白行阈值：亮度接近白色
+            const blankThreshold = 240;
+
+            console.log('[水平分割] 高度:', height, '空白阈值:', blankThreshold);
+
+            // 找空白行和文字行
+            const lines = [];
+            let inText = false;
+            let lineStart = 0;
+
+            for (let y = 0; y < height; y++) {
+                const isBlank = rowBrightness[y] > blankThreshold;
+
+                if (!isBlank && !inText) {
+                    inText = true;
+                    lineStart = y;
+                } else if (isBlank && inText) {
+                    const lineHeight = y - lineStart;
+                    if (lineHeight >= minLineHeight) {
+                        lines.push({ y1: lineStart, y2: y, height: lineHeight });
+                    }
+                    inText = false;
+                }
+            }
+
+            if (inText) {
+                const lineHeight = height - lineStart;
+                if (lineHeight >= minLineHeight) {
+                    lines.push({ y1: lineStart, y2: height, height: lineHeight });
+                }
+            }
+
+            console.log('[水平分割] 检测到', lines.length, '行:', lines.map(l => `y=${l.y1}-${l.y2} h=${l.height}px`).join(', '));
+            return lines;
+        }
+
+        // 从裁剪区域中提取单行
+        function extractLine(cropCanvas, lineInfo) {
+            const lineCanvas = document.createElement('canvas');
+            lineCanvas.width = cropCanvas.width;
+            lineCanvas.height = lineInfo.height;
+            const ctx = lineCanvas.getContext('2d');
+            ctx.drawImage(cropCanvas, 0, lineInfo.y1, cropCanvas.width, lineInfo.height, 0, 0, cropCanvas.width, lineInfo.height);
+            return lineCanvas;
+        }
+
+        // 加载题库
+        async function loadQuestions() {
+            try {
+                // 使用相对路径（页面在/dahu/static/下）
+                const resp = await fetch('./question_bank.json');
+                const data = await resp.json();
+                allQuestions = Array.isArray(data) ? data : [];
+                // 为每个题目添加分类信息
+                allQuestions.forEach(q => {
+                    const cat = CATEGORY_MAP[q.category] || { name: q.categoryName || q.category, level1: 'daily' };
+                    q.level1 = cat.level1;
+                    q.displayName = cat.name;
+                });
+                updateFilteredCount();
+                document.getElementById('questionCount').textContent = allQuestions.length;
+                console.log('题库加载完成，共', allQuestions.length, '题');
+            } catch (e) {
+                console.error('题库加载失败', e);
+                allQuestions = [];
+            }
+        }
+
+        // 更新二级分类筛选
+        function updateLevel2Filter() {
+            const level1 = document.getElementById('level1Filter').value;
+            const level2Select = document.getElementById('level2Filter');
+
+            if (level1 === 'all') {
+                level2Select.style.display = 'none';
+                updateFilteredCount();
+                return;
+            }
+
+            // 获取该一级分类下的所有二级分类
+            const cats = {};
+            allQuestions.forEach(q => {
+                if (q.level1 === level1) {
+                    cats[q.category] = q.displayName;
+                }
+            });
+
+            level2Select.innerHTML = '<option value="all">全部</option>';
+            for (const [key, name] of Object.entries(cats)) {
+                level2Select.innerHTML += `<option value="${key}">${name}</option>`;
+            }
+            level2Select.style.display = 'inline-block';
+            updateFilteredCount();
+        }
+
+        // 更新筛选后的题目数量
+        function updateFilteredCount() {
+            const level1 = document.getElementById('level1Filter').value;
+            const level2 = document.getElementById('level2Filter').value;
+            const filtered = getFilteredQuestions();
+            document.getElementById('filteredCount').textContent = `已选 ${filtered.length} 题`;
+        }
+
+        // 获取筛选后的题目
+        function getFilteredQuestions() {
+            const level1 = document.getElementById('level1Filter').value;
+            const level2 = document.getElementById('level2Filter').value;
+
+            return allQuestions.filter(q => {
+                if (level1 !== 'all' && q.level1 !== level1) return false;
+                if (level2 !== 'all' && q.category !== level2) return false;
+                return true;
+            });
+        }
+
+        // 监听二级分类变化
+        document.getElementById('level2Filter').addEventListener('change', updateFilteredCount);
+
+        // 刷新窗口列表
+        async function refreshWindows() {
+            try {
+                const resp = await fetch('http://localhost:8765/api/windows');
+                const data = await resp.json();
+                const select = document.getElementById('windowSelect');
+                select.innerHTML = '<option value="">请选择窗口...</option>';
+                // API 返回的是数组，不是 {windows: [...]}
+                const windows = Array.isArray(data) ? data : (data.windows || []);
+                windows.forEach(w => {
+                    const opt = document.createElement('option');
+                    opt.value = w.hwnd;
+                    opt.textContent = `${w.title} (${w.width}x${w.height})`;
+                    select.appendChild(opt);
+                });
+                updateStatus(windows.length > 0);
+            } catch (e) {
+                console.error('获取窗口失败', e);
+                updateStatus(false);
+            }
+        }
+
+        // 更新状态
+        function updateStatus(connected) {
+            document.getElementById('statusDot').className = 'status-dot ' + (connected ? 'active' : 'inactive');
+            document.getElementById('statusText').textContent = connected ? '已连接' : '未连接';
+        }
+
+        // OCR识别并搜索
+        async function ocrAndSearch(imageBase64) {
+            try {
+                let ocrText = '';
+
+                if (useLocalOCR && ocrReady) {
+                    // 使用本地ONNX OCR
+                    console.log('使用本地OCR识别');
+
+                    // 将base64转为canvas
+                    const canvas = await base64ToCanvas(imageBase64);
+
+                    // 本地OCR
+                    ocrText = await localOCR(canvas);
+
+                    console.log('本地OCR结果:', ocrText);
+                } else {
+                    // 使用后端PaddleOCR
+                    console.log('使用后端OCR识别');
+                    const resp = await fetch('http://localhost:8765/api/QuizOCR', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ img: imageBase64 })
+                    });
+                    const ocrData = await resp.json();
+                    ocrText = ocrData.text || '';
+                }
+
+                // 显示OCR结果
+                document.getElementById('ocrResult').textContent = ocrText || '未能识别出文字';
+
+                // 搜索答案
+                if (ocrText) {
+                    searchAnswers(ocrText);
+                }
+            } catch (e) {
+                console.error('OCR失败', e, '类型:', typeof e, '消息:', e?.message, '堆栈:', e?.stack);
+                document.getElementById('ocrResult').textContent = 'OCR识别失败: ' + (e?.message || e || '未知错误');
+            }
+        }
+
+        // base64转canvas
+        async function base64ToCanvas(base64Data) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas);
+                };
+                img.onerror = reject;
+                img.src = 'data:image/png;base64,' + base64Data;
+            });
+        }
+
+        // 搜索答案
+        function searchAnswers(text) {
+            // 使用筛选后的题目
+            const questions = getFilteredQuestions();
+
+            // 改进1：清理OCR文本（去除常见噪声字符，保留中文、英文、数字）
+            const cleanText = text.replace(/[^一-龥a-zA-Z0-9]/g, ' ').trim();
+            const keywords = cleanText.split(/\s+/).filter(k => k.length >= 2);
+
+            const results = [];
+
+            questions.forEach(q => {
+                // 改进2：Jaccard字符相似度（题目文本整体对比）
+                const qText = (q.q || '').replace(/[^一-龥a-zA-Z0-9]/g, '');
+                const jaccardScore = jaccardSimilarity(cleanText.replace(/\s/g, ''), qText);
+
+                // 关键词包含匹配（保留原有逻辑）
+                let keywordScore = 0;
+                keywords.forEach(kw => {
+                    if (kw.length < 2) return;
+                    if (q.q && q.q.includes(kw)) keywordScore += 10;
+                    if (q.a && q.a.includes(kw)) keywordScore += 5;
+                    if (q.p && q.p.toLowerCase().includes(kw.toLowerCase())) keywordScore += 3;
+                });
+
+                // 改进3：混合评分（关键词权重 + Jaccard相似度权重）
+                const finalScore = keywordScore + jaccardScore * 20;
+
+                if (finalScore > 5) {
+                    results.push({ ...q, score: Math.round(finalScore * 10) / 10, jaccard: Math.round(jaccardScore * 100) });
+                }
+            });
+
+            // 按分数排序
+            results.sort((a, b) => b.score - a.score);
+
+            // 显示结果（最多5条）
+            renderAnswers(results.slice(0, 5));
+        }
+
+        // Jaccard相似度（基于字符集合）
+        function jaccardSimilarity(str1, str2) {
+            if (!str1 || !str2) return 0;
+            const set1 = new Set(str1.split(''));
+            const set2 = new Set(str2.split(''));
+            const intersection = new Set([...set1].filter(x => set2.has(x)));
+            const union = new Set([...set1, ...set2]);
+            if (union.size === 0) return 0;
+            return intersection.size / union.size;
+        }
+
+        // 渲染答案列表
+        function renderAnswers(results) {
+            const listEl = document.getElementById('answerList');
+            currentAnswers = results;  // 保存当前答案
+
+            if (results.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center;color:#666;padding:40px;">未找到匹配答案</div>';
+                return;
+            }
+
+            let html = '';
+            results.forEach((r, i) => {
+                // 匹配度颜色（百分比越高越绿）
+                const matchPct = r.jaccard || 0;
+                const barColor = matchPct >= 50 ? '#4caf50' : (matchPct >= 30 ? '#FFD700' : '#ff9800');
+
+                html += `
+                    <div class="answer-item ${i === 0 ? 'best' : ''}">
+                        <div class="answer-question">${r.q}</div>
+                        <div class="answer-answer">✓ ${r.a}</div>
+                        <div class="answer-pinyin">拼音: ${r.p}</div>
+                        <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+                            <div style="flex:1;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
+                                <div style="width:${matchPct}%;height:100%;background:${barColor};transition:width 0.3s;"></div>
+                            </div>
+                            <span style="color:${barColor};font-size:11px;min-width:35px;text-align:right;">${matchPct}%</span>
+                        </div>
+                        <span class="answer-category">${r.categoryName || r.category}</span>
+                        <span class="answer-score">分数: ${r.score}</span>
+                    </div>
+                `;
+            });
+
+            listEl.innerHTML = html;
+
+            // 如果画中画窗口打开，自动更新
+            if (floatWindowOpen) {
+                updatePipWindow();
+            }
+        }
+
+        // 实时监控模式
+        function toggleAutoMode() {
+            const enabled = document.getElementById('autoMode').checked;
+            if (enabled) {
+                startAutoMonitor();
+            } else {
+                stopAutoMonitor();
+            }
+        }
+
+        function startAutoMonitor() {
+            const hwnd = document.getElementById('windowSelect').value;
+            if (!hwnd) {
+                alert('请先选择窗口');
+                document.getElementById('autoMode').checked = false;
+                return;
+            }
+
+            // 显示实时预览容器
+            document.getElementById('screenshotPlaceholder').style.display = 'none';
+            document.getElementById('livePreviewBox').style.display = 'block';
+            document.getElementById('monitorStatus').style.display = 'flex';
+
+            // 立即执行一次
+            doMonitorCycle();
+
+            // 启动定时循环
+            scheduleNextMonitor();
+        }
+
+        function stopAutoMonitor() {
+            if (autoModeTimer) {
+                clearTimeout(autoModeTimer);
+                autoModeTimer = null;
+            }
+            document.getElementById('monitorStatus').style.display = 'none';
+            // 恢复占位符显示
+            document.getElementById('screenshotPlaceholder').style.display = 'block';
+            document.getElementById('livePreviewBox').style.display = 'none';
+        }
+
+        function scheduleNextMonitor() {
+            if (!document.getElementById('autoMode').checked) return;
+
+            const interval = parseInt(document.getElementById('monitorInterval').value) || 2;
+            autoModeTimer = setTimeout(() => {
+                if (document.getElementById('autoMode').checked) {
+                    doMonitorCycle();
+                    scheduleNextMonitor();
+                }
+            }, interval * 1000);
+        }
+
+        async function doMonitorCycle() {
+            const hwnd = document.getElementById('windowSelect').value;
+            if (!hwnd) return;
+
+            const region = getCurrentRegionConfig();
+
+            try {
+                let imageData;
+                if (region) {
+                    // 使用相对坐标截图
+                    const resp = await fetch('http://localhost:8765/api/capture_region_relative', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ hwnd: parseInt(hwnd), region: region })
+                    });
+                    const data = await resp.json();
+
+                    if (data.success && data.image) {
+                        document.getElementById('livePreviewImg').src = 'data:image/png;base64,' + data.image;
+                        document.getElementById('livePreviewImg').style.border = '3px solid #FFD700';
+                        document.getElementById('livePreviewInfo').textContent = `(${region.x},${region.y}) ${region.width}x${region.height}`;
+                        imageData = data.image;
+                    }
+                } else {
+                    // 没有配置区域，截取整个窗口
+                    const resp = await fetch(`http://localhost:8765/api/ghost/capture_window?hwnd=${hwnd}`);
+                    const data = await resp.json();
+
+                    if (data.image) {
+                        document.getElementById('livePreviewImg').src = 'data:image/png;base64,' + data.image;
+                        document.getElementById('livePreviewImg').style.border = 'none';
+                        document.getElementById('livePreviewInfo').textContent = `窗口全图 ${data.width}x${data.height}`;
+                        imageData = data.image;
+                    }
+                }
+
+                // 自动OCR识别并搜索
+                if (imageData) {
+                    await ocrAndSearchWithCache(imageData);
+                }
+            } catch (e) {
+                console.error('监控循环失败', e);
+            }
+        }
+
+        // OCR识别并搜索（带缓存，避免重复处理相同内容）
+        async function ocrAndSearchWithCache(imageBase64) {
+            try {
+                let ocrText = '';
+
+                if (useLocalOCR && ocrReady) {
+                    // 使用本地ONNX OCR
+                    const canvas = await base64ToCanvas(imageBase64);
+                    ocrText = await localOCR(canvas);
+                } else {
+                    // 使用后端PaddleOCR
+                    const resp = await fetch('http://localhost:8765/api/QuizOCR', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ img: imageBase64 })
+                    });
+                    const ocrData = await resp.json();
+                    ocrText = ocrData.text || '';
+                }
+
+                // 如果OCR结果与上次相同，跳过处理
+                if (ocrText === lastOcrText) {
+                    return;
+                }
+                lastOcrText = ocrText;
+
+                // 显示OCR结果
+                document.getElementById('ocrResult').textContent = ocrText || '未能识别出文字';
+
+                // 搜索答案
+                if (ocrText) {
+                    searchAnswers(ocrText);
+                } else {
+                    document.getElementById('answerList').innerHTML = '<div style="text-align:center;color:#666;padding:40px;">未识别到题目文字</div>';
+                    currentAnswers = [];
+                }
+            } catch (e) {
+                console.error('OCR失败', e);
+            }
+        }
+
+        // 显示/隐藏加载状态
+        function showLoading(show) {
+            document.getElementById('loadingIndicator').style.display = show ? 'flex' : 'none';
+        }
+
+        // 清空结果
+        function clearResults() {
+            lastOcrText = '';  // 清空缓存
+            document.getElementById('ocrResult').textContent = '等待截图识别...';
+            document.getElementById('answerList').innerHTML = '<div style="text-align:center;color:#666;padding:40px;">截图后将自动搜索答案</div>';
+            currentAnswers = [];
+        }
+
+        // ============ 画中画功能 ============
+
+        // 生成样式化答案图片
+        function generateAnswerImage(answers) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                // 设置画布尺寸
+                canvas.width = 420;
+                const padding = 15;
+                const lineHeight = 75;
+                const headerHeight = 50;
+                canvas.height = headerHeight + answers.length * lineHeight + padding;
+
+                // 绘制深色背景
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // 绘制标题栏背景
+                ctx.fillStyle = '#16213e';
+                ctx.fillRect(0, 0, canvas.width, headerHeight);
+
+                // 绘制标题
+                ctx.fillStyle = '#4fc3f7';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.fillText('💡 答题助手', padding, 32);
+
+                // 绘制题目数量
+                ctx.fillStyle = '#888';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(`匹配 ${answers.length} 题`, canvas.width - 80, 32);
+
+                // 绘制每条答案
+                answers.forEach((ans, i) => {
+                    const y = headerHeight + i * lineHeight + padding;
+
+                    // 答案序号背景
+                    ctx.fillStyle = i === 0 ? '#ffa726' : '#4fc3f7';
+                    ctx.beginPath();
+                    ctx.arc(padding + 12, y + 25, 12, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // 序号
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(i + 1, padding + 12, y + 29);
+                    ctx.textAlign = 'left';
+
+                    // 题目（截取前25字）
+                    ctx.fillStyle = '#e0e0e0';
+                    ctx.font = '13px sans-serif';
+                    const questionText = ans.q.length > 25 ? ans.q.slice(0, 25) + '...' : ans.q;
+                    ctx.fillText(questionText, padding + 30, y + 18);
+
+                    // 答案
+                    ctx.fillStyle = '#4fc3f7';
+                    ctx.font = 'bold 15px sans-serif';
+                    const answerText = ans.a.length > 15 ? ans.a.slice(0, 15) + '...' : ans.a;
+                    ctx.fillText('✓ ' + answerText, padding + 30, y + 42);
+
+                    // 拼音
+                    ctx.fillStyle = '#666';
+                    ctx.font = '11px sans-serif';
+                    ctx.fillText(ans.p, padding + 30, y + 60);
+
+                    // 匹配度
+                    ctx.fillStyle = ans.score >= 20 ? '#4caf50' : '#888';
+                    ctx.font = '11px sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(ans.score + '分', canvas.width - padding, y + 42);
+                    ctx.textAlign = 'left';
+
+                    // 分类标签
+                    if (ans.categoryName) {
+                        ctx.fillStyle = '#7c4dff';
+                        ctx.font = '10px sans-serif';
+                        ctx.fillText(ans.categoryName, canvas.width - padding - 50, y + 60);
+                    }
+                });
+
+                // 返回 base64（不含前缀）
+                const dataUrl = canvas.toDataURL('image/png');
+                resolve(dataUrl.split(',')[1]);
+            });
+        }
+
+        // 切换画中画窗口
+        async function togglePip() {
+            if (!currentAnswers || currentAnswers.length === 0) {
+                alert('请先截图识别题目');
+                return;
+            }
+
+            const action = floatWindowOpen ? 'close' : 'show';
+
+            try {
+                let imageData = null;
+                if (action === 'show') {
+                    imageData = await generateAnswerImage(currentAnswers);
+                }
+
+                const resp = await fetch('http://localhost:8765/api/ghost/float_window', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, image_data: imageData, zoom: 1.0 })
+                });
+
+                const data = await resp.json();
+                if (data.success) {
+                    floatWindowOpen = (action === 'show');
+                    document.getElementById('pipBtn').textContent = floatWindowOpen ? '✖ 关闭置顶' : '🖼️ 画中画';
+                } else {
+                    alert('操作失败: ' + (data.error || '未知错误'));
+                }
+            } catch (e) {
+                console.error('画中画操作失败', e);
+                alert('请求失败: ' + e.message);
+            }
+        }
+
+        // 更新画中画窗口内容
+        async function updatePipWindow() {
+            if (!floatWindowOpen || currentAnswers.length === 0) return;
+
+            try {
+                const imageData = await generateAnswerImage(currentAnswers);
+                await fetch('http://localhost:8765/api/ghost/float_window', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'show', image_data: imageData, zoom: 1.0 })
+                });
+            } catch (e) {
+                console.error('更新画中画失败', e);
+            }
+        }
+
+        // 初始化
+        loadQuestions();
+        refreshWindows();
+        initLocalOCR();  // 异步初始化本地OCR模型
+
+        // ============ 相对坐标截图配置 ============
+
+        // 配置存储 key
+        const CONFIG_STORAGE_KEY = 'quizCaptureConfigs';
+
+        // 获取配置
+        function getCaptureConfigs() {
+            try {
+                return JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY) || '{}');
+            } catch { return {}; }
+        }
+
+        // 保存配置
+        function saveCaptureConfigs(configs) {
+            localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(configs));
+        }
+
+        // 获取当前选中分类的配置
+        function getCurrentRegionConfig() {
+            const configs = getCaptureConfigs();
+            const level2 = document.getElementById('level2Filter').value;
+            if (level2 !== 'all' && configs[level2]) {
+                return configs[level2];
+            }
+            return null;
+        }
+
+        // ============ 截图流程（使用相对坐标）============
+
+        // 截图识别 - 使用相对坐标
+        async function captureScreenshot() {
+            const hwnd = document.getElementById('windowSelect').value;
+            if (!hwnd) {
+                alert('请先选择窗口');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const region = getCurrentRegionConfig();
+
+                if (region) {
+                    // 使用相对坐标截图
+                    const resp = await fetch('http://localhost:8765/api/capture_region_relative', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ hwnd: parseInt(hwnd), region: region })
+                    });
+                    const data = await resp.json();
+
+                    if (data.success && data.image) {
+                        // 保持 livePreviewBox 不被删除
+                        const liveBox = document.getElementById('livePreviewBox');
+                        const placeholder = document.getElementById('screenshotPlaceholder');
+                        placeholder.style.display = 'none';
+                        liveBox.style.display = 'block';
+                        document.getElementById('livePreviewImg').src = 'data:image/png;base64,' + data.image;
+                        document.getElementById('livePreviewImg').style.border = '3px solid #FFD700';
+                        document.getElementById('livePreviewInfo').textContent = `(${region.x},${region.y}) ${region.width}x${region.height}`;
+
+                        // 重置缓存，强制识别
+                        lastOcrText = '';
+                        await ocrAndSearch(data.image);
+                    } else {
+                        alert('截图失败: ' + (data.error || '未知错误'));
+                    }
+                } else {
+                    // 没有配置区域，截取整个窗口
+                    const resp = await fetch(`http://localhost:8765/api/ghost/capture_window?hwnd=${hwnd}`);
+                    const data = await resp.json();
+
+                    if (data.image) {
+                        // 保持 livePreviewBox 不被删除
+                        const liveBox = document.getElementById('livePreviewBox');
+                        const placeholder = document.getElementById('screenshotPlaceholder');
+                        if (placeholder) placeholder.style.display = 'none';
+                        if (liveBox) {
+                            liveBox.style.display = 'block';
+                            const liveImg = document.getElementById('livePreviewImg');
+                            if (liveImg) {
+                                liveImg.src = 'data:image/jpeg;base64,' + data.image;
+                                liveImg.style.border = 'none';
+                            }
+                        }
+                        const infoEl = document.getElementById('livePreviewInfo');
+                        if (infoEl) infoEl.textContent = `窗口全图 ${data.width}x${data.height}`;
+
+                        // 重置缓存，强制识别
+                        lastOcrText = '';
+                        await ocrAndSearch(data.image);
+                    } else {
+                        alert('截图失败: ' + (data.error || '未知错误'));
+                    }
+                }
+            } catch (e) {
+                console.error('截图失败', e);
+                alert('截图失败，请确保抓鬼助手服务运行中 (localhost:8765)');
+            }
+
+            showLoading(false);
+        }
+
+        // ============ 区域配置面板 ============
+
+        function openRegionConfig() {
+            const hwnd = document.getElementById('windowSelect').value;
+            if (!hwnd) {
+                alert('请先选择窗口');
+                return;
+            }
+
+            // 创建配置面板
+            const panel = document.createElement('div');
+            panel.id = 'regionConfigPanel';
+            panel.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10000;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;';
+
+            panel.innerHTML = `
+                <div style="background:#1a1a2e;border:1px solid rgba(255,255,255,0.2);border-radius:16px;padding:20px;width:90vw;max-width:900px;max-height:90vh;overflow:auto;position:relative;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+                        <h3 style="color:#4fc3f7;">⚙️ 截图区域配置</h3>
+                        <button onclick="document.getElementById('regionConfigPanel').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">✕</button>
+                    </div>
+                    <p style="color:#888;font-size:13px;margin-bottom:15px;">
+                        在窗口截图上框选题目所在的区域。配置后截图将只截取该区域，提高 OCR 识别准确率。
+                    </p>
+                    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+                        <span style="color:#4fc3f7;font-size:14px;">当前分类:</span>
+                        <select id="configCategory" style="padding:6px 12px;background:#2a2a4a;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;min-width:150px;"></select>
+                        <span style="color:#888;font-size:12px;">区域:</span>
+                        <input id="cfgX" type="number" placeholder="X" style="width:60px;padding:4px 8px;background:#2a2a4a;border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#fff;">
+                        <input id="cfgY" type="number" placeholder="Y" style="width:60px;padding:4px 8px;background:#2a2a4a;border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#fff;">
+                        <input id="cfgW" type="number" placeholder="宽" style="width:70px;padding:4px 8px;background:#2a2a4a;border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#fff;">
+                        <input id="cfgH" type="number" placeholder="高" style="width:70px;padding:4px 8px;background:#2a2a4a;border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#fff;">
+                        <button onclick="saveCurrentConfig()" style="padding:6px 15px;background:#4fc3f7;border:none;border-radius:6px;color:#fff;cursor:pointer;">💾 保存</button>
+                        <button onclick="deleteCurrentConfig()" style="padding:6px 15px;background:#e94560;border:none;border-radius:6px;color:#fff;cursor:pointer;">🗑️ 删除</button>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <span id="configInfo" style="color:#888;font-size:12px;">正在加载截图...</span>
+                    </div>
+                    <div style="display:flex;gap:15px;">
+                        <div style="flex:1;position:relative;">
+                            <div style="position:relative;display:inline-block;background:#000;border-radius:8px;overflow:hidden;">
+                                <canvas id="configCanvas" style="max-width:100%;cursor:crosshair;"></canvas>
+                            </div>
+                        </div>
+                        <div style="width:200px;">
+                            <h4 style="color:#4fc3f7;margin-bottom:10px;font-size:13px;">已保存配置</h4>
+                            <div id="configList" style="color:#e0e0e0;font-size:12px;max-height:300px;overflow-y:auto;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(panel);
+
+            // 加载窗口截图
+            loadConfigScreenshot(parseInt(hwnd));
+        }
+
+        let configImg = null;      // 当前截图 Image 对象
+        let configImgW = 0;        // 截图原始宽度
+        let configImgH = 0;        // 截图原始高度
+        let configCanvasScale = 1; // Canvas 显示缩放比例
+        let cfgDragging = false, cfgResizing = false;
+        let cfgBox = { x: 0, y: 0, w: 200, h: 100 }; // 当前框选区域（原始像素坐标）
+
+        async function loadConfigScreenshot(hwnd) {
+            try {
+                const resp = await fetch(`http://localhost:8765/api/ghost/capture_window?hwnd=${hwnd}`);
+                const data = await resp.json();
+
+                if (!data.success) {
+                    document.getElementById('configInfo').textContent = '截图失败: ' + data.error;
+                    return;
+                }
+
+                // 加载图片
+                configImg = new Image();
+                configImg.onload = () => {
+                    configImgW = data.width;
+                    configImgH = data.height;
+                    initConfigCanvas();
+                    populateConfigCategories();
+                    loadConfigList();
+                };
+                configImg.src = 'data:image/png;base64,' + data.image;
+
+            } catch (e) {
+                document.getElementById('configInfo').textContent = '加载失败: ' + e.message;
+            }
+        }
+
+        function initConfigCanvas() {
+            const canvas = document.getElementById('configCanvas');
+            const maxW = 750;
+            configCanvasScale = Math.min(1.0, maxW / configImgW);
+            const displayW = Math.round(configImgW * configCanvasScale);
+            const displayH = Math.round(configImgH * configCanvasScale);
+
+            canvas.width = displayW;
+            canvas.height = displayH;
+
+            document.getElementById('configInfo').textContent = `窗口: ${configImgW}x${configImgH}, 显示缩放: ${(configCanvasScale*100).toFixed(0)}%`;
+
+            drawConfigCanvas();
+
+            // 鼠标事件
+            canvas.onmousedown = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const my = e.clientY - rect.top;
+
+                // 检查是否点击了框选区域的边角（用于调整大小）
+                const bx = cfgBox.x * configCanvasScale;
+                const by = cfgBox.y * configCanvasScale;
+                const bw = cfgBox.w * configCanvasScale;
+                const bh = cfgBox.h * configCanvasScale;
+                const edgeSize = 10;
+
+                // 右下角调整大小
+                if (Math.abs(mx - (bx + bw)) < edgeSize && Math.abs(my - (by + bh)) < edgeSize) {
+                    cfgResizing = true;
+                    return;
+                }
+
+                // 框内拖动
+                if (mx >= bx && mx <= bx + bw && my >= by && my <= by + bh) {
+                    cfgDragging = true;
+                    cfgBox._dragOffsetX = mx - bx;
+                    cfgBox._dragOffsetY = my - by;
+                    return;
+                }
+
+                // 框外拖拽新建
+                cfgBox.x = mx / configCanvasScale;
+                cfgBox.y = my / configCanvasScale;
+                cfgBox.w = 0;
+                cfgBox.h = 0;
+                cfgDragging = true;
+                cfgBox._dragOffsetX = 0;
+                cfgBox._dragOffsetY = 0;
+                cfgResizing = false;
+            };
+
+            canvas.onmousemove = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const my = e.clientY - rect.top;
+
+                if (cfgResizing) {
+                    cfgBox.w = Math.max(20, (mx / configCanvasScale) - cfgBox.x);
+                    cfgBox.h = Math.max(20, (my / configCanvasScale) - cfgBox.y);
+                    drawConfigCanvas();
+                    updateConfigInputs();
+                } else if (cfgDragging) {
+                    if (cfgBox._dragOffsetX !== undefined && cfgBox.w > 0) {
+                        // 移动已有框
+                        cfgBox.x = (mx - cfgBox._dragOffsetX) / configCanvasScale;
+                        cfgBox.y = (my - cfgBox._dragOffsetY) / configCanvasScale;
+                    } else {
+                        // 新建框
+                        cfgBox.w = (mx / configCanvasScale) - cfgBox.x;
+                        cfgBox.h = (my / configCanvasScale) - cfgBox.y;
+                    }
+                    drawConfigCanvas();
+                    updateConfigInputs();
+                }
+            };
+
+            canvas.onmouseup = () => {
+                cfgDragging = false;
+                cfgResizing = false;
+                // 确保框选区域有效
+                if (cfgBox.w < 0) { cfgBox.x += cfgBox.w; cfgBox.w = -cfgBox.w; }
+                if (cfgBox.h < 0) { cfgBox.y += cfgBox.h; cfgBox.h = -cfgBox.h; }
+                drawConfigCanvas();
+                updateConfigInputs();
+            };
+        }
+
+        function drawConfigCanvas() {
+            const canvas = document.getElementById('configCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // 清空
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制截图
+            if (configImg) {
+                ctx.drawImage(configImg, 0, 0, canvas.width, canvas.height);
+            }
+
+            // 获取当前选中的分类
+            const selectEl = document.getElementById('configCategory');
+            const currentCat = selectEl ? selectEl.value : '';
+            console.log('drawConfigCanvas - currentCat:', currentCat);
+
+            // 绘制已保存的所有配置区域
+            const configs = getCaptureConfigs();
+            for (const [key, region] of Object.entries(configs)) {
+                const rx = region.x * configCanvasScale;
+                const ry = region.y * configCanvasScale;
+                const rw = region.width * configCanvasScale;
+                const rh = region.height * configCanvasScale;
+
+                // 当前选中分类用黄色边框，其他用灰色虚线
+                const isSelected = (key === currentCat);
+                console.log('key:', key, 'isSelected:', isSelected);
+
+                if (isSelected) {
+                    // 黄色填充背景
+                    ctx.fillStyle = 'rgba(255,215,0,0.15)';
+                    ctx.fillRect(rx, ry, rw, rh);
+
+                    // 黄色边框 - 当前选中 (粗线条)
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 4;
+                    ctx.setLineDash([]);
+                    ctx.strokeRect(rx, ry, rw, rh);
+
+                    // 再画一层增强
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(rx + 2, ry + 2, rw - 4, rh - 4);
+
+                    // 标签背景 - 黄色
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(rx, ry - 20, rw, 20);
+                    ctx.fillStyle = '#000';
+                    ctx.font = 'bold 12px sans-serif';
+                    const catInfo = CATEGORY_MAP[key];
+                    ctx.fillText('★ ' + (catInfo ? catInfo.name : key), rx + 4, ry - 6);
+                } else {
+                    // 灰色虚线 - 其他配置
+                    ctx.strokeStyle = '#666';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeRect(rx, ry, rw, rh);
+                    ctx.setLineDash([]);
+
+                    // 标签背景
+                    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                    ctx.fillRect(rx, ry - 16, rw, 16);
+                    ctx.fillStyle = '#aaa';
+                    ctx.font = '11px sans-serif';
+                    const catInfo = CATEGORY_MAP[key];
+                    ctx.fillText(catInfo ? catInfo.name : key, rx + 4, ry - 4);
+                }
+            }
+
+            // 绘制当前框选区域
+            const bx = cfgBox.x * configCanvasScale;
+            const by = cfgBox.y * configCanvasScale;
+            const bw = cfgBox.w * configCanvasScale;
+            const bh = cfgBox.h * configCanvasScale;
+
+            // 半透明遮罩（框外区域变暗）
+            if (bw > 0 && bh > 0) {
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.fillRect(0, 0, canvas.width, by);
+                ctx.fillRect(0, by, bx, bh);
+                ctx.fillRect(bx + bw, by, canvas.width - bx - bw, bh);
+                ctx.fillRect(0, by + bh, canvas.width, canvas.height - by - bh);
+            }
+
+            // 框选边框
+            ctx.strokeStyle = '#4fc3f7';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+            ctx.strokeRect(bx, by, bw, bh);
+
+            // 尺寸标注
+            if (bw > 30 && bh > 20) {
+                ctx.fillStyle = 'rgba(79,195,247,0.8)';
+                ctx.font = 'bold 11px sans-serif';
+                ctx.fillText(`${Math.round(cfgBox.w)}x${Math.round(cfgBox.h)}`, bx + 4, by + bh - 4);
+            }
+
+            // 调整大小手柄
+            ctx.fillStyle = '#4fc3f7';
+            ctx.fillRect(bx + bw - 5, by + bh - 5, 8, 8);
+        }
+
+        function updateConfigInputs() {
+            document.getElementById('cfgX').value = Math.round(cfgBox.x);
+            document.getElementById('cfgY').value = Math.round(cfgBox.y);
+            document.getElementById('cfgW').value = Math.round(cfgBox.w);
+            document.getElementById('cfgH').value = Math.round(cfgBox.h);
+        }
+
+        function populateConfigCategories() {
+            const select = document.getElementById('configCategory');
+            select.innerHTML = '';
+
+            // 获取所有二级分类
+            const cats = {};
+            allQuestions.forEach(q => {
+                cats[q.category] = q.displayName || q.categoryName || q.category;
+            });
+
+            for (const [key, name] of Object.entries(cats)) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = name;
+                select.appendChild(opt);
+            }
+
+            // 默认选中当前筛选的分类
+            const level2 = document.getElementById('level2Filter').value;
+            if (level2 !== 'all' && select.querySelector(`option[value="${level2}"]`)) {
+                select.value = level2;
+            }
+
+            // 加载已保存的配置
+            loadConfigToBox();
+
+            select.onchange = loadConfigToBox;
+        }
+
+        function loadConfigToBox() {
+            const cat = document.getElementById('configCategory').value;
+            const configs = getCaptureConfigs();
+            if (configs[cat]) {
+                cfgBox.x = configs[cat].x;
+                cfgBox.y = configs[cat].y;
+                cfgBox.w = configs[cat].width;
+                cfgBox.h = configs[cat].height;
+            } else {
+                cfgBox = { x: 50, y: 50, w: 200, h: 100 };
+            }
+            updateConfigInputs();
+            drawConfigCanvas();
+        }
+
+        function saveCurrentConfig() {
+            const cat = document.getElementById('configCategory').value;
+            const x = parseInt(document.getElementById('cfgX').value) || 0;
+            const y = parseInt(document.getElementById('cfgY').value) || 0;
+            const w = parseInt(document.getElementById('cfgW').value) || 200;
+            const h = parseInt(document.getElementById('cfgH').value) || 100;
+
+            const configs = getCaptureConfigs();
+            configs[cat] = { x, y, width: w, height: h };
+            saveCaptureConfigs(configs);
+
+            loadConfigList();
+            drawConfigCanvas();
+
+            document.getElementById('configInfo').textContent = `✅ 已保存 ${CATEGORY_MAP[cat]?.name || cat}: (${x},${y}) ${w}x${h}`;
+        }
+
+        function deleteCurrentConfig() {
+            const cat = document.getElementById('configCategory').value;
+            const configs = getCaptureConfigs();
+            delete configs[cat];
+            saveCaptureConfigs(configs);
+
+            cfgBox = { x: 50, y: 50, w: 200, h: 100 };
+            updateConfigInputs();
+            loadConfigList();
+            drawConfigCanvas();
+
+            document.getElementById('configInfo').textContent = `🗑️ 已删除配置`;
+        }
+
+        function loadConfigList() {
+            const configs = getCaptureConfigs();
+            const listEl = document.getElementById('configList');
+
+            if (Object.keys(configs).length === 0) {
+                listEl.innerHTML = '<p style="color:#666;">暂无配置</p>';
+                return;
+            }
+
+            let html = '';
+            for (const [key, region] of Object.entries(configs)) {
+                const catInfo = CATEGORY_MAP[key];
+                const name = catInfo ? catInfo.name : key;
+                html += `
+                    <div style="padding:6px 8px;margin-bottom:6px;background:rgba(79,195,247,0.1);border-radius:6px;border-left:3px solid #4fc3f7;cursor:pointer;" onclick="document.getElementById('configCategory').value='${key}';loadConfigToBox();">
+                        <div style="font-weight:600;">${name}</div>
+                        <div style="color:#888;font-size:11px;">(${region.x},${region.y}) ${region.width}x${region.height}</div>
+                    </div>
+                `;
+            }
+            listEl.innerHTML = html;
+        }
+
+        // 手动输入坐标后更新画布
+        ['cfgX', 'cfgY', 'cfgW', 'cfgH'].forEach(id => {
+            document.addEventListener('input', (e) => {
+                if (e.target.id === id) {
+                    cfgBox.x = parseInt(document.getElementById('cfgX').value) || 0;
+                    cfgBox.y = parseInt(document.getElementById('cfgY').value) || 0;
+                    cfgBox.w = parseInt(document.getElementById('cfgW').value) || 200;
+                    cfgBox.h = parseInt(document.getElementById('cfgH').value) || 100;
+                    drawConfigCanvas();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

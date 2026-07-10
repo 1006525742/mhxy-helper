@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梦幻答题助手 - 题库搜索</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .search-page {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .search-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .search-header h2 {
+            font-size: 28px;
+            color: #ffa726;
+            margin-bottom: 10px;
+        }
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .search-input:focus {
+            border-color: #4fc3f7;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .search-input::placeholder {
+            color: #888;
+        }
+        .search-btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #4fc3f7, #7c4dff);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .search-btn:hover {
+            transform: scale(1.05);
+        }
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            background: rgba(79, 195, 247, 0.3);
+            border-color: #4fc3f7;
+            color: #4fc3f7;
+        }
+        .stats {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .result-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .result-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        .result-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(79, 195, 247, 0.3);
+        }
+        .result-question {
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .result-question .highlight {
+            color: #ffa726;
+            font-weight: 600;
+        }
+        .result-answer {
+            font-size: 16px;
+            color: #4fc3f7;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .result-answer::before {
+            content: "✓";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: rgba(79, 195, 247, 0.2);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+        }
+        .result-pinyin {
+            font-size: 14px;
+            color: #888;
+        }
+        .result-category {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(124, 77, 255, 0.2);
+            color: #7c4dff;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-top: 10px;
+            margin-right: 8px;
+        }
+        .no-result {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+        .no-result-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .page-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .page-btn:hover, .page-btn.active {
+            background: rgba(79, 195, 247, 0.3);
+            border-color: #4fc3f7;
+        }
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="navbar-brand">
+            <span class="logo">📚</span>
+            <h1>梦幻答题助手</h1>
+        </div>
+        <div class="navbar-info">
+            <a href="/" style="color: #4fc3f7;">返回首页</a>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="search-page">
+            <div class="search-header">
+                <h2>梦幻西游题库搜索</h2>
+                <p style="color: #888;">共 20770 题 | 支持题目、答案、拼音搜索</p>
+            </div>
+
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchInput" placeholder="输入题目关键词、答案或拼音缩写..." autofocus>
+                <button class="search-btn" onclick="search()">搜索</button>
+            </div>
+
+            <div class="filter-bar" id="level1Filters">
+                <button class="filter-btn active" data-level1="all">全部</button>
+                <button class="filter-btn" data-level1="daily">日常</button>
+                <button class="filter-btn" data-level1="activity">活动</button>
+                <button class="filter-btn" data-level1="dungeon">副本</button>
+                <button class="filter-btn" data-level1="festival">节日</button>
+            </div>
+
+            <div class="filter-bar" id="level2Filters" style="display:none;"></div>
+
+            <div class="stats" id="stats"></div>
+
+            <div class="result-list" id="resultList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>正在加载题库...</p>
+                </div>
+            </div>
+
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>题库来源: 浮游泡泡工具箱</p>
+    </footer>
+
+    <script>
+        // 分类配置 - 按你提供的一级二级分类
+        const CATEGORY_MAP = {
+            'riChangQianDao': { name: '每日签到', level1: 'daily' },
+            'sanJieShuYuan': { name: '三界书院', level1: 'daily' },
+            'kouDaiGuoZiJian': { name: '口袋-国子监', level1: 'daily' },
+            'kjds': { name: '科举大赛', level1: 'activity' },
+            'wenYunMoXiang': { name: '文韵墨香', level1: 'activity' },
+            'xunMengZhuiYi': { name: '寻梦追忆', level1: 'activity' },
+            'cheChiDouFa': { name: '车迟斗法', level1: 'dungeon' },
+            'tongTianHe': { name: '通天河', level1: 'dungeon' },
+            'daNaoTianGong': { name: '大闹天宫', level1: 'dungeon' },
+            'dunHuangYeTan': { name: '敦煌夜谭上部', level1: 'dungeon' },
+            'huJiPiPaXing': { name: '胡姬琵琶行', level1: 'dungeon' },
+            'yiGuanGuQiu': { name: '衣冠古丘', level1: 'dungeon' },
+            'jianLingMoYing': { name: '剑灵魔影', level1: 'dungeon' },
+            'siJi': { name: '四季', level1: 'dungeon' },
+            'jinDouDong': { name: '金兜洞兕大王', level1: 'dungeon' },
+            'kanTuShuoHua': { name: '教师节-看图说话', level1: 'festival' },
+            'shuiShiXueBa': { name: '教师节-谁是学霸', level1: 'festival' },
+            'yuanXiaoDengMi': { name: '元宵灯谜', level1: 'festival' },
+        };
+
+        const LEVEL1_NAMES = {
+            'daily': '日常',
+            'activity': '活动',
+            'dungeon': '副本',
+            'festival': '节日'
+        };
+
+        let allQuestions = [];
+        let filteredQuestions = [];
+        let currentPage = 1;
+        let currentLevel1 = 'all';
+        let currentLevel2 = 'all';
+        const pageSize = 20;
+
+        // 加载题库
+        async function loadQuestions() {
+            try {
+                const resp = await fetch('/static/question_bank.json');
+                allQuestions = await resp.json();
+                allQuestions.forEach(q => {
+                    const cat = CATEGORY_MAP[q.category] || { name: q.category, level1: 'daily' };
+                    q.categoryName = cat.name;
+                    q.level1 = cat.level1;
+                });
+                filteredQuestions = allQuestions;
+                renderResults();
+            } catch (e) {
+                document.getElementById('resultList').innerHTML = '<div class="no-result"><div class="no-result-icon">❌</div><p>题库加载失败</p></div>';
+            }
+        }
+
+        // 获取二级分类
+        function getLevel2Categories(level1) {
+            const cats = {};
+            allQuestions.forEach(q => {
+                if (level1 === 'all' || q.level1 === level1) {
+                    cats[q.category] = q.categoryName;
+                }
+            });
+            return cats;
+        }
+
+        // 更新二级分类
+        function updateLevel2Filters() {
+            const level2El = document.getElementById('level2Filters');
+            if (currentLevel1 === 'all') {
+                level2El.style.display = 'none';
+                return;
+            }
+            level2El.style.display = 'flex';
+            const cats = getLevel2Categories(currentLevel1);
+            let html = `<button class="filter-btn ${currentLevel2 === 'all' ? 'active' : ''}" data-category="all">全部</button>`;
+            for (const [key, name] of Object.entries(cats)) {
+                html += `<button class="filter-btn ${currentLevel2 === key ? 'active' : ''}" data-category="${key}">${name}</button>`;
+            }
+            level2El.innerHTML = html;
+            level2El.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    level2El.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentLevel2 = btn.dataset.category;
+                    search();
+                });
+            });
+        }
+
+        // 搜索
+        function search() {
+            const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+            currentPage = 1;
+            filteredQuestions = allQuestions.filter(q => {
+                const matchLevel1 = currentLevel1 === 'all' || q.level1 === currentLevel1;
+                const matchLevel2 = currentLevel2 === 'all' || q.category === currentLevel2;
+                if (!keyword) return matchLevel1 && matchLevel2;
+                const matchQ = q.q.toLowerCase().includes(keyword);
+                const matchA = q.a.toLowerCase().includes(keyword);
+                const matchP = q.p.toLowerCase().includes(keyword);
+                return matchLevel1 && matchLevel2 && (matchQ || matchA || matchP);
+            });
+            renderResults();
+        }
+
+        // 渲染结果
+        function renderResults() {
+            const listEl = document.getElementById('resultList');
+            document.getElementById('stats').textContent = `找到 ${filteredQuestions.length} 道题目`;
+
+            const totalPages = Math.ceil(filteredQuestions.length / pageSize);
+            const start = (currentPage - 1) * pageSize;
+            const pageQuestions = filteredQuestions.slice(start, start + pageSize);
+
+            if (pageQuestions.length === 0) {
+                listEl.innerHTML = '<div class="no-result"><div class="no-result-icon">🔍</div><p>没有找到相关题目</p></div>';
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            const keyword = document.getElementById('searchInput').value.trim();
+            let html = '';
+            pageQuestions.forEach(q => {
+                const questionText = highlightKeyword(q.q, keyword);
+                const answerText = highlightKeyword(q.a, keyword);
+                const pinyinText = highlightKeyword(q.p, keyword);
+                html += `<div class="result-item">
+                    <div class="result-question">${questionText}</div>
+                    <div class="result-answer">${answerText}</div>
+                    <div class="result-pinyin">拼音: ${pinyinText}</div>
+                    <span class="result-category">${q.categoryName}</span>
+                    <span class="result-category" style="background:rgba(255,167,38,0.2);color:#ffa726;">${LEVEL1_NAMES[q.level1]}</span>
+                </div>`;
+            });
+            listEl.innerHTML = html;
+            renderPagination(totalPages);
+        }
+
+        function highlightKeyword(text, keyword) {
+            if (!keyword) return text;
+            const regex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        function renderPagination(totalPages) {
+            const paginationEl = document.getElementById('pagination');
+            if (totalPages <= 1) { paginationEl.innerHTML = ''; return; }
+            let html = `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            if (startPage > 1) html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+            if (startPage > 2) html += `<span style="color:#888">...</span>`;
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+            if (endPage < totalPages - 1) html += `<span style="color:#888">...</span>`;
+            if (endPage < totalPages) html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+            paginationEl.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderResults();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 一级分类
+        document.querySelectorAll('#level1Filters .filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#level1Filters .filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLevel1 = btn.dataset.level1;
+                currentLevel2 = 'all';
+                updateLevel2Filters();
+                search();
+            });
+        });
+
+        document.getElementById('searchInput').addEventListener('keypress', e => { if (e.key === 'Enter') search(); });
+        document.getElementById('searchInput').addEventListener('input', () => search());
+
+        loadQuestions();
+    </script>
+</body>
+</html>

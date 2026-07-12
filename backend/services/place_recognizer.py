@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
-"""地名识别模块 - 使用训练好的 PP-OCRv5 模型
-
-识别逻辑：
-1. HSV 颜色过滤提取黄色文字
-2. 使用训练好的 place_v5 模型识别地名
-"""
+"""地名识别模块 - 使用训练好的 PP-OCRv4 ONNX 模型"""
 import logging
+import math
 import cv2
 import numpy as np
 from pathlib import Path
@@ -13,108 +9,131 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).parent.parent
-MODELS_DIR = BASE_DIR / "models"
-PLACE_MODEL_DIR = MODELS_DIR / "place_v5_onnx"
-PLACE_DICT_PATH = MODELS_DIR / "place_dict.txt"
+# 模型路径（新训练的 place_rec.onnx）
+PLACE_ONNX_PATH = BASE_DIR / "models" / "place.onnx"
+PLACE_DICT_PATH = BASE_DIR / "models" / "place_dict.txt"
 
-# 全局引擎实例（延迟加载）
-_place_engine = None
+# 全局模型实例
+_place_model = None
+_dict_chars = None
 
 
-def get_place_engine():
-    """获取地名识别引擎"""
-    global _place_engine
-    if _place_engine is None:
+def load_dict():
+    """加载字典"""
+    global _dict_chars
+    if _dict_chars is None:
+        with open(PLACE_DICT_PATH, 'r', encoding='utf-8') as f:
+            # PaddleOCR 格式：index 0 = blank，字符从 index 1 开始
+            _dict_chars = ['blank'] + [line.strip() for line in f if line.strip()]
+        logger.info(f"字典加载完成: {len(_dict_chars)} 字符 (含 blank)")
+    return _dict_chars
+
+
+def get_place_model():
+    """加载地名识别 ONNX 模型"""
+    global _place_model
+    if _place_model is None:
         try:
-            from paddleocr import PaddleOCR
-
-            _place_engine = PaddleOCR(
-                text_recognition_model_dir=str(PLACE_MODEL_DIR),
-                use_angle_cls=False,
-                lang="ch"
-            )
-            logger.info(f"地名识别引擎初始化完成 (模型: {PLACE_MODEL_DIR})")
+            import onnxruntime as ort
+            _place_model = ort.InferenceSession(str(PLACE_ONNX_PATH))
+            logger.info(f"地名识别模型加载成功: {PLACE_ONNX_PATH}")
         except Exception as e:
-            logger.error(f"地名引擎初始化失败: {e}")
+            logger.error(f"地名识别模型加载失败: {e}")
             return None
-    return _place_engine
+    return _place_model
 
 
-def get_yellow_text_mask(image):
-    """HSV 颜色过滤提取黄色文字"""
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    # 黄色范围
-    mask1 = cv2.inRange(hsv, np.array([20, 30, 120]), np.array([35, 255, 255]))
-    mask2 = cv2.inRange(hsv, np.array([35, 30, 180]), np.array([45, 255, 255]))
-    return cv2.bitwise_or(mask1, mask2)
+def resize_norm_img(img, image_shape=(3, 48, 320)):
+    """PaddleOCR 标准预处理：保持宽高比缩放 + 归一化到 [-1, 1]"""
+    imgC, imgH, imgW = image_shape
+    h, w = img.shape[:2]
+    ratio = w / float(h)
+    if math.ceil(imgH * ratio) > imgW:
+        resized_w = imgW
+    else:
+        resized_w = int(math.ceil(imgH * ratio))
+    resized_image = cv2.resize(img, (resized_w, imgH))
+    resized_image = resized_image.astype('float32')
+    resized_image = resized_image.transpose((2, 0, 1)) / 255
+    resized_image -= 0.5
+    resized_image /= 0.5  # 归一化到 [-1, 1]
+    # 右侧 padding 补零
+    padding_im = np.zeros((imgC, imgH, imgW), dtype=np.float32)
+    padding_im[:, :, 0:resized_w] = resized_image
+    return padding_im
 
 
-def recognize_place(image, debug=False):
+def recognize_place(image):
     """识别图片中的地名
 
     Args:
         image: BGR 图像
-        debug: 是否打印调试信息
 
     Returns:
-        str: 识别到的地名，失败返回空字符串
+        str: 识别出的地名，失败返回空字符串
     """
-    engine = get_place_engine()
-    if engine is None:
+    model = get_place_model()
+    dict_chars = load_dict()
+    if model is None or dict_chars is None:
         return ''
 
     try:
-        # 缩小图片加速识别
-        h, w = image.shape[:2]
-        if h > 300:
-            scale_factor = 300.0 / h
-            image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
+        # PaddleOCR 标准预处理
+        norm_img = resize_norm_img(image, (3, 48, 320))
+        tensor = np.expand_dims(norm_img, 0)
 
-        # 尝试黄色提取
-        mask = get_yellow_text_mask(image)
-        mask_bgr = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+        # 推理
+        input_name = model.get_inputs()[0].name
+        output = model.run(None, {input_name: tensor})[0]
 
-        # OCR 识别
-        result = engine.ocr(mask_bgr)
+        # output shape: (batch, seq_len, dict_size) → 取第一个 batch
+        if len(output.shape) == 3:
+            output = output[0]
 
-        if result is None or len(result) == 0:
-            # 尝试原图
-            result = engine.ocr(image)
+        # CTC 解码
+        result = ctc_decode(output, dict_chars)
 
-        if result is None or len(result) == 0:
-            return ''
-
-        # 提取识别结果
-        texts = []
-        for item in result:
-            if item and len(item) >= 1:
-                for sub_item in item:
-                    if len(sub_item) >= 2:
-                        text = sub_item[1][0] if isinstance(sub_item[1], tuple) else sub_item[1]
-                        texts.append(text)
-                        if debug:
-                            logger.debug(f"地名识别: '{text}'")
-
-        if not texts:
-            return ''
-
-        # 合并文本
-        full_text = ''.join(texts)
-
-        if debug:
-            logger.info(f"地名识别结果: '{full_text}'")
-
-        return full_text
+        logger.info(f"地名识别结果: '{result}'")
+        return result
 
     except Exception as e:
         logger.error(f"地名识别失败: {e}")
         return ''
 
 
+def ctc_decode(output, dict_chars):
+    """CTC 解码
+
+    Args:
+        output: 模型输出 (seq_len, dict_size)
+        dict_chars: 字符列表 (index 0 = blank)
+
+    Returns:
+        str: 解码后的文本
+    """
+    indices = output.argmax(axis=1)
+
+    text = []
+    last_idx = 0
+
+    for idx in indices:
+        idx = int(idx)
+        # 跳过 blank (索引 0) 和重复
+        if idx != 0 and idx != last_idx:
+            if idx < len(dict_chars):
+                text.append(dict_chars[idx])
+        last_idx = idx
+
+    return ''.join(text)
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    engine = get_place_engine()
-    if engine:
-        print("✅ 地名识别引擎初始化成功")
-        print(f"   模型目录: {PLACE_MODEL_DIR}")
-        print(f"   字典文件: {PLACE_DICT_PATH}")
+    # 测试
+    import sys
+    if len(sys.argv) > 1:
+        img = cv2.imread(sys.argv[1])
+        result = recognize_place(img)
+        print(f"识别结果: '{result}'")
+    else:
+        print("用法: python place_recognizer.py <图片路径>")

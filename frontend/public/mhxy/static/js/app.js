@@ -16,7 +16,7 @@ let activityDetailsCache = null;
 async function loadActivityDetails() {
     if (activityDetailsCache) return activityDetailsCache;
     try {
-        const res = await fetch('/static/activity_details.json');
+        const res = await fetch('/mhxy/static/activity_details.json');
         activityDetailsCache = await res.json();
         return activityDetailsCache;
     } catch (e) {
@@ -58,7 +58,7 @@ const activityBasicInfo = {
 
 async function loadCalendarData() {
     try {
-        const res = await fetch('/static/mhxy_calendar.json');
+        const res = await fetch('/mhxy/static/mhxy_calendar.json');
         return await res.json();
     } catch(e) {
         console.error('加载日历数据失败', e);

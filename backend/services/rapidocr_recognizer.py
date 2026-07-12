@@ -247,14 +247,19 @@ def recognize_coord_from_image(image, debug=False):
                 break
 
         # 如果 OCR 未识别到地图名，但坐标识别到了，调用地名识别模型兜底
-        if not map_name and x_val and y_val:
-            try:
-                from services.place_recognizer import recognize_place
-                map_name = recognize_place(image)
-                if map_name:
-                    logger.info(f"地名识别兜底: '{map_name}'")
-            except Exception as e:
-                logger.warning(f"地名识别兜底失败: {e}")
+        # 注意：地名模型预处理还有问题，暂时禁用
+        # if not map_name and x_val and y_val:
+        #     try:
+        #         from services.place_recognizer import recognize_place
+        #         map_name = recognize_place(image)
+        #         if map_name and map_name in ['傲来国', '宝象国', '长寿村', '大唐境外', '东海湾', '建邺城', '江南野外', '女儿村', '普陀山', '五庄观', '西梁女国', '朱紫国']:
+        #             logger.info(f"地名识别兜底: '{map_name}'")
+        #         else:
+        #             logger.warning(f"地名识别兜底失败: '{map_name}' 不是有效地图名")
+        #             map_name = ''
+        #     except Exception as e:
+        #         logger.warning(f"地名识别兜底失败: {e}")
+        pass
 
         logger.info(f"最终结果: map_name='{map_name}', x={x_val}, y={y_val}")
 
@@ -266,6 +271,75 @@ def recognize_coord_from_image(image, debug=False):
         logger.error(f"OCR失败: {e}")
 
     return '', 0, 0
+
+
+def recognize_text_from_image(image):
+    """使用 RapidOCR 进行通用文字识别
+
+    Args:
+        image: BGR 图像 (numpy array)
+
+    Returns:
+        str: 识别到的文字，用空格连接多行结果
+    """
+    engine = get_ocr_engine()
+    if engine is None:
+        logger.error("OCR引擎未初始化")
+        return ""
+
+    try:
+        result = engine(image)
+
+        if result is None:
+            return ""
+
+        texts = []
+
+        # 新版 RapidOCR 3.9+: RapidOCROutput 对象
+        if hasattr(result, 'txts') and hasattr(result, 'scores'):
+            txts = result.txts
+            if txts:
+                for text in txts:
+                    if text and isinstance(text, str) and text.strip():
+                        texts.append(text.strip())
+                        logger.info(f"OCR识别: '{text.strip()}'")
+
+        # 旧版 API: (boxes, scores)
+        elif isinstance(result, tuple) and len(result) == 2:
+            boxes, scores = result
+            if boxes and isinstance(boxes, list):
+                for item in boxes:
+                    if isinstance(item, list) and len(item) >= 3:
+                        text = str(item[1]).strip()
+                        if text:
+                            texts.append(text)
+                            logger.info(f"OCR识别: '{text}'")
+
+        # 按垂直位置排序 (从上到下)
+        try:
+            if hasattr(result, 'boxes') and result.boxes is not None:
+                boxes_data = result.boxes
+                # boxes 可能是 list 或 numpy array
+                if isinstance(boxes_data, np.ndarray):
+                    if boxes_data.size > 0 and len(boxes_data) == len(texts):
+                        pairs = list(zip(boxes_data, texts))
+                        pairs.sort(key=lambda x: float(x[0][0][1]) if len(x[0]) > 0 else 0)
+                        texts = [p[1] for p in pairs]
+                elif isinstance(boxes_data, list) and len(boxes_data) > 0:
+                    if len(boxes_data) == len(texts):
+                        pairs = list(zip(boxes_data, texts))
+                        pairs.sort(key=lambda x: x[0][0][1] if len(x[0]) > 0 else 0)
+                        texts = [p[1] for p in pairs]
+        except Exception as e:
+            logger.debug(f"OCR排序跳过: {e}")
+
+        full_text = ' '.join(texts)
+        logger.info(f"OCR结果: '{full_text}'")
+        return full_text
+
+    except Exception as e:
+        logger.error(f"OCR失败: {e}")
+        return ""
 
 
 if __name__ == "__main__":

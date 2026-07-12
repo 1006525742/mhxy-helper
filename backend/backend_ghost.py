@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-"""梦幻西游助手后端 - FastAPI 跨平台版
+"""梦幻西游助手 - 抓鬼后端
 
-只保留 OCR 识别 + 抓鬼预测
+独立进程，端口 8000。
+提供坐标识别 + 抓鬼预测功能。
 """
 import base64
 import io
 import json
 import logging
-import subprocess
-import tempfile
-import sys
-import os
 from pathlib import Path
 
 import cv2
@@ -24,7 +21,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s %(message)s'
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('ghost')
 
 # Paths
 BASE_DIR = Path(__file__).parent
@@ -38,14 +35,13 @@ from services.ghost_predictor import GhostPredictor
 # 初始化预测器
 ghost_predictor = GhostPredictor()
 
-# FastAPI 应用
+# ============ FastAPI 应用 ============
 app = FastAPI(
-    title="梦幻西游助手 API",
-    description="跨平台版 - OCR识别 + 抓鬼预测",
+    title="梦幻西游助手 - 抓鬼预测",
+    description="坐标识别 + 抓鬼预测服务",
     version="1.0.0"
 )
 
-# CORS 配置
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -62,11 +58,6 @@ class RecognizeRequest(BaseModel):
     image: str  # base64 编码的图片
 
 
-class OCRRequest(BaseModel):
-    """通用 OCR 请求"""
-    img: str  # base64 编码的图片 (纯base64，不含 data:image 前缀)
-
-
 class PredictRequest(BaseModel):
     """抓鬼预测请求"""
     map: str
@@ -75,6 +66,11 @@ class PredictRequest(BaseModel):
 
 
 # ============ API 端点 ============
+
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "ghost"}
+
 
 @app.get("/api/maps")
 async def get_maps():
@@ -135,7 +131,7 @@ async def ghost_capture(req: RecognizeRequest):
         cv2.imwrite(str(debug_path), img)
         logger.info(f"调试图片已保存: {debug_path}")
 
-        # OCR 识别
+        # OCR 识别坐标
         import time
         t_start = time.time()
         map_name, x, y = recognize_coord_from_image(img)
@@ -201,48 +197,6 @@ async def get_monster_list():
         }
     except Exception as e:
         return {"code": 0, "msg": str(e), "data": None}
-
-
-@app.get("/health")
-async def health():
-    """健康检查"""
-    return {"status": "ok"}
-
-
-@app.post("/api/ocr/general")
-async def ocr_general(req: OCRRequest):
-    """通用文字识别 — 转发到 OCR 微服务 (PP-OCRv6)
-
-    接收 base64 编码的图片，返回识别到的文本。
-    """
-    try:
-        import urllib.request
-        import time
-
-        # 绕过系统代理，直连 OCR 微服务
-        no_proxy_handler = urllib.request.ProxyHandler({})
-        opener = urllib.request.build_opener(no_proxy_handler)
-
-        t_start = time.time()
-        data = json.dumps({"img": req.img}).encode('utf-8')
-        http_req = urllib.request.Request('http://127.0.0.1:8001/ocr',
-            data=data, headers={'Content-Type': 'application/json'})
-        resp = opener.open(http_req, timeout=60)
-        result = json.loads(resp.read().decode('utf-8'))
-
-        t_ms = (time.time() - t_start) * 1000
-        result['time_ms'] = round(t_ms, 1)
-        return result
-
-    except Exception as e:
-        logger.error(f"OCR微服务调用失败: {e}")
-        return {"success": False, "error": f"OCR服务不可用: {str(e)}"}
-
-
-@app.post("/api/WatuOCR")
-async def watu_ocr(req: OCRRequest):
-    """WatuOCR 兼容端点 (同 /api/ocr/general)"""
-    return await ocr_general(req)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,50 @@
+# 依赖
+node_modules/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# 构建产物
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+logs/
+nohup.out
+
+# 调试文件
+debug_*.png
+/tmp/
+
+# 模型文件（太大，只保留训练的 place.onnx）
+backend/models/PP-OCRv6*.onnx
+backend/models/ch_PP-OCRv6*.onnx
+backend/models/**/*.pdiparams
+backend/models/**/*.pdmodel
+backend/models/**/inference.json
+backend/models/**/inference.pdiparams
+backend/models/place_v5_onnx/
+
+# 大文件
+mh-996cajd/
+backend/preprocess_test.py
+backend/error_analysis.py
+backend/analyze_failed.py

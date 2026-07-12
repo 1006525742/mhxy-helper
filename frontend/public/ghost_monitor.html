@@ -93,7 +93,7 @@ body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif;
   <button class="btn btn-primary" id="btnShare" onclick="startMonitor()" disabled>开始监控</button>
   <button class="btn btn-danger" id="btnStop" onclick="stopMonitor()" disabled>停止监控</button>
   <button class="btn btn-success" id="btnRecognize" onclick="manualRecognize()" disabled>🔍 手动识别</button>
-  <button class="btn btn-warning" id="btnPip" onclick="togglePip()" style="display:none">📍 地图画中画</button>
+  <button class="btn btn-warning" id="btnPip" onclick="togglePip()">📍 地图画中画</button>
   <span id="fpsDisplay" style="color:#4fc3f7;font-size:12px;"></span>
 </div>
 
@@ -133,6 +133,11 @@ body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif;
     </div>
   </div>
   <div class="right-panel">
+    <!-- 预测地图画中画 -->
+    <div class="pip-window" id="pipWindow">
+      <h3 style="color:#4fc3f7;font-size:12px;margin-bottom:8px">🗺️ 预测地图</h3>
+      <img id="pipMapImage" style="display:none;width:100%;border-radius:4px;">
+    </div>
     <!-- 截图预览 -->
     <div id="capturePreview" style="display:none; margin-top:20px; background:#16213e; border-radius:8px; padding:15px;">
       <h3 style="color:#4fc3f7;font-size:12px;margin-bottom:10px">📤 发送给后端的截图（PNG无损）</h3>
@@ -145,7 +150,8 @@ body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif;
 <script>
 const CONFIG = {
   yoloModelPath: '/models/zhuagui/model.json',
-  apiBaseUrl: 'https://api.mhwk.cloud',
+  yoloModelVersion: 'v1',
+  apiBaseUrl: '',
   confidenceThreshold: 0.8,
   inputSize: 480,
   classes: ['任务追踪', '钟馗', '黑无常', '店小二', '接引仙女', '左侧干扰', '驿站老板', '强盗对话'],
@@ -176,7 +182,37 @@ function addToHistory(result) {
   historyList.insertBefore(div, historyList.firstChild);
 }
 function setStatus(text, type = '') { const badge = document.getElementById('statusBadge'); badge.textContent = text; badge.className = 'status-badge ' + type; }
-async function initModels() { try { setStatus('加载YOLO...', 'loading'); console.log('加载YOLO模型...'); yoloModel = await tf.loadGraphModel(CONFIG.yoloModelPath); setStatus('就绪', 'ready'); console.log('YOLO模型加载完成'); document.getElementById('btnShare').disabled = false; } catch (e) { console.error('模型加载失败:', e.message); setStatus('加载失败', 'error'); } }
+async function initModels() {
+  try {
+    setStatus('加载YOLO...', 'loading');
+    console.log('加载YOLO模型...');
+    const DB_KEY = 'indexeddb://zhuagui-yolo';
+    // 检查模型版本，版本不匹配则清除旧缓存
+    const savedVer = localStorage.getItem('yoloModelVersion');
+    if (savedVer && savedVer !== CONFIG.yoloModelVersion) {
+      console.log('模型版本更新，清除旧缓存...');
+      try { await tf.io.removeModel(DB_KEY); } catch(e) {}
+    }
+    // 先尝试从 IndexedDB 加载（秒加载，不走网络）
+    try {
+      yoloModel = await tf.loadGraphModel(DB_KEY);
+      console.log('✅ 从浏览器缓存加载YOLO模型（秒加载）');
+    } catch (e) {
+      // 首次访问：从网络下载，然后存入 IndexedDB
+      console.log('首次加载，从网络获取模型...');
+      yoloModel = await tf.loadGraphModel(CONFIG.yoloModelPath);
+      await yoloModel.save(DB_KEY);
+      localStorage.setItem('yoloModelVersion', CONFIG.yoloModelVersion);
+      console.log('✅ 模型已缓存到浏览器，下次秒加载');
+    }
+    setStatus('就绪', 'ready');
+    console.log('YOLO模型加载完成');
+    document.getElementById('btnShare').disabled = false;
+  } catch (e) {
+    console.error('模型加载失败:', e.message);
+    setStatus('加载失败', 'error');
+  }
+}
 async function startMonitor() { try { videoStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'never' }, audio: false }); video = document.createElement('video'); video.srcObject = videoStream; await video.play(); canvas = document.createElement('canvas'); canvas.width = video.videoWidth; canvas.height = video.videoHeight; ctx = canvas.getContext('2d'); videoStream.getVideoTracks()[0].onended = () => stopMonitor(); isMonitoring = true; document.getElementById('btnShare').disabled = true; document.getElementById('btnStop').disabled = false; document.getElementById('btnRecognize').disabled = false; updateMonitorStatus('active', '🔍 监控中', '点击手动识别按钮'); setStatus('监控中', 'ready'); monitorLoop(); } catch (e) { console.error('无法启动监控:', e.message); } }
 function stopMonitor() { isMonitoring = false; if (monitorLoopId) { clearInterval(monitorLoopId); monitorLoopId = null; } if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; } video = null; canvas = null; document.getElementById('btnShare').disabled = false; document.getElementById('btnStop').disabled = true; document.getElementById('btnRecognize').disabled = true; updateMonitorStatus('inactive', '😴 已停止', '等待开始监控'); setStatus('就绪', 'ready'); hidePip(); }
 async function monitorLoop() {
@@ -323,6 +359,7 @@ async function onTrigger(imageData, taskTrack) {
       document.getElementById('resultGhost').textContent = '-';
 
       addToHistory(result);
+      showPip(result);  // 显示画中画
 
       setStatus('识别完成', 'ready');
       updateMonitorStatus('active', '🔍 监控中', `识别成功: ${result.map} (${result.x},${result.y})`);
@@ -348,7 +385,11 @@ async function onTrigger(imageData, taskTrack) {
 }
 function showPip(result) {
   lastPipData = result;
-  document.getElementById('btnPip').style.display = 'inline-block';
+
+  // 显示右侧预测地图窗口
+  const pipWindow = document.getElementById('pipWindow');
+  pipWindow.style.display = 'block';
+  pipWindow.classList.add('active');
 
   if (result.annotated_image) {
     const img = document.getElementById('pipMapImage');
@@ -508,7 +549,7 @@ function cleanupPip() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => { initModels(); initDraggable(); });
+document.addEventListener('DOMContentLoaded', () => { initModels(); });
 </script>
 </body>
 </html>

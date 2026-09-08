@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mhxy.baotu</string>
+
+    <!-- 启动命令 / 入口：系统 Python（带 cv2 4.13.0），在 backend 目录运行 uvicorn -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>-m</string>
+        <string>uvicorn</string>
+        <string>backend_baotu:app</string>
+        <string>--host</string>
+        <string>0.0.0.0</string>
+        <string>--port</string>
+        <string>8002</string>
+    </array>
+
+    <!-- 工作目录：必须指向 backend，否则 import services.* 会失败 -->
+    <key>WorkingDirectory</key>
+    <string>/Users/zhy/mhxy-helper/backend</string>
+
+    <!-- 登录自启 + 崩溃自动重启 -->
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- 日志：独立文件，与抓鬼后端分离 -->
+    <key>StandardOutPath</key>
+    <string>/Users/zhy/mhxy-helper/backend/logs/baotu.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/zhy/mhxy-helper/backend/logs/baotu.stdout.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+</dict>
+</plist>

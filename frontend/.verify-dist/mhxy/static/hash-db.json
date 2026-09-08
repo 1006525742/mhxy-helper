@@ -1,0 +1,1003 @@
+[
+  {
+    "stemHash": "ffffc003c003c003ffffffe3fee3c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "下面装备特技中，是对自身产生效果的技能是？",
+    "answer": "凝气决",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600067006700",
+      "rowHash": "fffe0000",
+      "columnHash": "07f81ee300000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff83ff83c003:f000f380:f80000000000003f",
+    "optionHash": "",
+    "questionText": "中医将五脏与五行相对应，其中肾脏属",
+    "answer": "水",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009000d000",
+      "rowHash": "fffe0000",
+      "columnHash": "fe03800000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff03fb03c003:f000f300:f80000000000003f",
+    "optionHash": "",
+    "questionText": "象棋术语里的“平”是怎样走？",
+    "answer": "横着走",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009e00de00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe07b98000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff83ff03c003:f000f300:f80000000000003f",
+    "optionHash": "",
+    "questionText": "孔子登东山而小鲁，登（）而小天下。”",
+    "answer": "泰山",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009800d800",
+      "rowHash": "fffe0000",
+      "columnHash": "fe07d40000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffee03ee03c003:f000f000:f80000000000003f",
+    "optionHash": "",
+    "questionText": "围棋术语中，“提子”指的是",
+    "answer": "把无气之子取出盘外",
+    "correctOptionHashes": {
+      "gridHash": "c000c000ffffffffffffffffc0009ff8",
+      "rowHash": "007ff800",
+      "columnHash": "fe00000000020000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff03df03c003:f000f380:f80000000000003f",
+    "optionHash": "",
+    "questionText": "唐卡是（）富有民族特色的卷轴画",
+    "answer": "藏族",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009c00dc00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe07bc0000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffde3fde3c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "中医常说人有“奇经八脉”，以下哪个说法是对的",
+    "answer": "奇经有八条",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff700060006fe067c0",
+      "rowHash": "fffe0000",
+      "columnHash": "07f80ea703800000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffffe3ffe3c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "诗人屈原运用楚国方言和民歌创造的诗歌体裁是",
+    "answer": "楚辞",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600066006600",
+      "rowHash": "fffe0000",
+      "columnHash": "07f80ea000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffe03f603c003:f000f200:f80000000000003f",
+    "optionHash": "",
+    "questionText": "下列不属于中医的“五术”的是？",
+    "answer": "地",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009800d000",
+      "rowHash": "fffe0000",
+      "columnHash": "fe07800000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff83ff83c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "下列宝石中，可以镶嵌在头盔上的是？",
+    "answer": "月亮石",
+    "correctOptionHashes": {
+      "gridHash": "60007000ffffffffffffffff70006700",
+      "rowHash": "007ff800",
+      "columnHash": "07f8000000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffffc3ffc3c003:f000f380:f80000000000003f",
+    "optionHash": "",
+    "questionText": "《清明上河图》泄露了宋朝怎样的军事秘密？",
+    "answer": "宋朝缺乏行军必备的马和羊",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000dfff9fffd800",
+      "rowHash": "fffe0000",
+      "columnHash": "fe03a0800c870008"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff03ff03c003:f000f380:f80000000000003f",
+    "optionHash": "",
+    "questionText": "下面哪种理论是《本草纲目》的首创？",
+    "answer": "首次提出水银有毒的观点",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600067ff67ff",
+      "rowHash": "fffe0000",
+      "columnHash": "07f8020321215c00"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003ffffffffffffffffc43b:f0071e70:f80000000000003f",
+    "optionHash": "",
+    "questionText": "“凡吾画兰、画竹、画石，用以慰天下之劳人，非以供天下之安享人也。”这句话是“扬州八怪”中的哪位画家谁说的？",
+    "answer": "郑燮",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600066006600",
+      "rowHash": "fffe0000",
+      "columnHash": "07f80ee000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003fffffff7ffffffc3cc03:f0079c60:f80000000000003f",
+    "optionHash": "",
+    "questionText": "被称赞为“天下一人绝世墨宝”，中华十大传世名帖中唯一一位帝王手书之作出自赵佶，他写的内容是",
+    "answer": "千字文",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600067006300",
+      "rowHash": "fffe0000",
+      "columnHash": "07f8046700000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffe03fe03c003:f000f100:f80000000000003f",
+    "optionHash": "",
+    "questionText": "不属于十全大补丸成份的是",
+    "answer": "枸杞",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009c00d800",
+      "rowHash": "fffe0000",
+      "columnHash": "fe07b40000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffc03fc03c003:f000f000:f80000000000003f",
+    "optionHash": "",
+    "questionText": "蜡染是以下哪个民族特有的",
+    "answer": "苗族",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009c00dc00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe07bc0000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003fffffffffffffffbe213:f0071e70:f80000000001003f",
+    "optionHash": "",
+    "questionText": "《人物龙凤图》是战国时期佚名创作的一幅绢本淡设色画，表现的是龙凤引导墓主人的灵魂升天的情景。这幅画属于",
+    "answer": "旌幡",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009c00dc00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe07bc0000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffffc3efc3c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "我们常说的“十八般武艺”最初指的是什么？",
+    "answer": "使用十八种兵器的技能",
+    "correctOptionHashes": {
+      "gridHash": "de00c000ffffffffffffffffc0009ffe",
+      "rowHash": "007ff800",
+      "columnHash": "fe04300000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffffe3ffe3c003:f000f380:f80000000000003f",
+    "optionHash": "",
+    "questionText": "下面哪一句作为“梨花院落溶溶月”的对句最好？",
+    "answer": "柳絮池塘淡淡风",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009fe0dfe0",
+      "rowHash": "fffe0000",
+      "columnHash": "fe07b89e62900000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffe03fe03c003:f000f300:f80000000000003f",
+    "optionHash": "",
+    "questionText": "以下菩萨代表的意义错误的是",
+    "answer": "普贤代表大喜",
+    "correctOptionHashes": {
+      "gridHash": "c000c000ffffffffffffffffc0009fc0",
+      "rowHash": "007ff800",
+      "columnHash": "fe00000800000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffffbff73c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "“飞来岭下三生石，青洞岩边一线天”是描写哪座寺庙？",
+    "answer": "灵隐寺",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600067006700",
+      "rowHash": "fffe0000",
+      "columnHash": "07f80ef700000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "f803f803fc03ffff7fff7fff7fff7fff:000f79e7:07fff0000000007f",
+    "optionHash": "",
+    "questionText": "“髣髴兮若轻云之蔽月，飘飖兮若流风之回雪”，“凌波微步，罗袜生尘”，这些美好的词句都在形容图中的女子，她是",
+    "answer": "洛神",
+    "correctOptionHashes": {
+      "gridHash": "1fff5fe0bfccffccffe0ffe0ffffffff",
+      "rowHash": "800010ff",
+      "columnHash": "0007ffffffc00000"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff03ff03c003:f000f300:f80000000000003f",
+    "optionHash": "",
+    "questionText": "“青红皂白”的“皂”是什么颜色？",
+    "answer": "黑色",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff700060006e006600",
+      "rowHash": "fffe0000",
+      "columnHash": "07f81ee000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffffc3ffc3c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "《清明上河图》泄露了宋朝怎样的军事秘密？",
+    "answer": "宋朝缺乏行军必备的马和羊",
+    "correctOptionHashes": {
+      "gridHash": "d800c000ffffffffffffffffdfff9fff",
+      "rowHash": "007ff800",
+      "columnHash": "fc03a00004870008"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffffc3ff83c003:f000f380:f80000000000003f",
+    "optionHash": "",
+    "questionText": "好友栏第一位的梦幻精灵，有什么作用",
+    "answer": "快速回答游戏疑问",
+    "correctOptionHashes": {
+      "gridHash": "60007000ffffffffffffffff700067fc",
+      "rowHash": "007ff800",
+      "columnHash": "07f8000000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffffffffffc003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "玩家调整家具布局，需要使用什么收回房间内的家具到物品栏？",
+    "answer": "如意符",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff700060006f006700",
+      "rowHash": "fffe0000",
+      "columnHash": "07f81cfb00000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffffbfff3c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "《梦幻西游》口袋版“幻境节日”是每个月的哪一天？",
+    "answer": "9日",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009c00d800",
+      "rowHash": "fffe0000",
+      "columnHash": "fe03a40000000000"
+    },
+    "categoryName": "寻梦追忆",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffe03fe03c003:f000f380:f80000000000003f",
+    "optionHash": "",
+    "questionText": "门派首席弟子的竞选周期是",
+    "answer": "一周",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0008c00cc00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe007c0000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff7fff77c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "岳飞《满江红》中“三十功名尘与土，八千里路云和月”下一句是",
+    "answer": "莫等闲，白了少年头，空悲切",
+    "correctOptionHashes": {
+      "gridHash": "df00c000ffffffffffffffffdefb9fff",
+      "rowHash": "007ff800",
+      "columnHash": "fc03bbc020000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffbff03ff03c003:f000f300:f80000000000003f",
+    "optionHash": "",
+    "questionText": "“一波三折”最适合形容哪种书体？",
+    "answer": "隶书",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009c00d800",
+      "rowHash": "fffe0000",
+      "columnHash": "fe03980000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "fffffcfbfffbfffffffffffffffffff3:f1861c70:f88000008801003f",
+    "optionHash": "",
+    "questionText": "“一座恭王府，半部清代史”，恭王府位于北京的风水宝地什刹海地区，占地6万多平方米，有“99间半”之称的后罩楼拦腰将之隔为府邸和花园，府邸堂皇庄重花园优美繁华，被称作“城中第一佳山水”，恭王府最初的主人是",
+    "answer": "和珅",
+    "correctOptionHashes": {
+      "gridHash": "c000c000ffffffffffffffffc0009c00",
+      "rowHash": "007ff800",
+      "columnHash": "fe02000000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "f803d803d803dfdfffffffff9fffffff:0001ef3c:d807f0000000007f",
+    "optionHash": "",
+    "questionText": "“乌纱掷去不为官，囊橐萧萧两袖寒。写取一枝清瘦竹，秋风江上作渔杆。”左图名为",
+    "answer": "竹石图",
+    "correctOptionHashes": {
+      "gridHash": "33ff7fe037cf33cfe3e0fbe07bffdbff",
+      "rowHash": "800000ff",
+      "columnHash": "0044007fffc00000"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "f803f803f803f803ffffefffffffff83:e00079e7:ffebf0000000007f",
+    "optionHash": "",
+    "questionText": "左图为北宋年间的风俗画作品，它的名字是",
+    "answer": "清明上河图",
+    "correctOptionHashes": {
+      "gridHash": "ffff0700e67ce67e06000700ffffffff",
+      "rowHash": "800000ff",
+      "columnHash": "090003f80e000100"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "f803fffffffffffffdffffffffffffff:03cf79e7:fffff0000000007f",
+    "optionHash": "",
+    "questionText": "图中的文物名为“鸭形玻璃注”，淡绿色玻璃所制，光亮透明。它口如鸭嘴，长颈鼓腹，拖一细长尾，重心在前，只有腹部充水到一半时，后身加重才能放稳。它是研究草原丝绸之路的重要物证，应是由西域经柔然传进",
+    "answer": "北燕",
+    "correctOptionHashes": {
+      "gridHash": "ffffe0e080cc00ce00e003e003ff01ff",
+      "rowHash": "e00000ff",
+      "columnHash": "00000000ffe0ff80"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003fffffefffeffffc3e403:f0079c60:f80000000000003f",
+    "optionHash": "",
+    "questionText": "被称赞为“天下一人绝世墨宝”，中华十大传世名帖中唯一一位帝王手书之作出自赵佶，他写的内容是",
+    "answer": "千字文",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600067006300",
+      "rowHash": "fffe0000",
+      "columnHash": "07f8046700000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "f803f803ffffffffffffffff7fff7fff:0079ef3c:1ffff0000000007f",
+    "optionHash": "",
+    "questionText": "图中左面是迦业，右面是胁侍菩萨。菩萨像以一曲三折的姿态出现，比例和肌肤处理极佳，予人优雅的美感。这两座塑像出自莫高窟第45窟，塑造时期为",
+    "answer": "盛唐",
+    "correctOptionHashes": {
+      "gridHash": "ffff0700066006e006000700ffffffff",
+      "rowHash": "800000ff",
+      "columnHash": "000003fb1ff00000"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffff3fff3c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "紫砂壶作为茶具和工艺品已有悠久历史，它的原产地是：",
+    "answer": "宜兴",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600066006600",
+      "rowHash": "fffe0000",
+      "columnHash": "07f80e8000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003fffffffffffffff3c7a3:f0079c70:f80000000800003f",
+    "optionHash": "",
+    "questionText": "元代高明在《琵琶记》中说:“十年寒窗无人问，一朝成名天下知。”与这句话反映的社会现象相关的制度是",
+    "answer": "科举制",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009e00de00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe07bbc000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003ffffffffffffff83dd83:f0079e60:f88000000000003f",
+    "optionHash": "",
+    "questionText": "以“贾者力生，儒者力学”为基点，竭力发挥“贾为厚利，儒为名高”的社会功能的商人集团指的是",
+    "answer": "徽商",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009c00dc00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe07bc0000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffe03fc03c003:f000f300:f80000000000003f",
+    "optionHash": "",
+    "questionText": "下列哪种中药对眼睛有好处",
+    "answer": "决明子",
+    "correctOptionHashes": {
+      "gridHash": "60007000ffffffffffffffff70006700",
+      "rowHash": "007ff800",
+      "columnHash": "07f8000000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffbff03ff03c003:f000f240:f80000000000003f",
+    "optionHash": "",
+    "questionText": "“一生二，二生三，三生万物”是",
+    "answer": "道家思想",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009f00df00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe03bbde00000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "f803f803f803f803ffffffffefffeffb:000079e7:f3f9f0000000007f",
+    "optionHash": "",
+    "questionText": "左图描摹了南唐巨宦韩熙载开夜宴行乐的场景，这幅画的作者是",
+    "answer": "顾闳中",
+    "correctOptionHashes": {
+      "gridHash": "ffff0700067006f006000700ffffffff",
+      "rowHash": "800000ff",
+      "columnHash": "000003f81ed20000"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffe03fe03c003:f000f000:f80000000000003f",
+    "optionHash": "",
+    "questionText": "被称为“中国百戏之师”的是",
+    "answer": "昆曲",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600066006600",
+      "rowHash": "fffe0000",
+      "columnHash": "07f80ef000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003fffffffffffff803c003:f0079e00:f80840000000003f",
+    "optionHash": "",
+    "questionText": "福建土楼古是我国民居的杰出代表，其中有“土楼之王”“国之瑰宝”美誉的是",
+    "answer": "二宜楼",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009f00df00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe03399e00000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffffe3ffc3c003:f000f380:f80000000000003f",
+    "optionHash": "",
+    "questionText": "下列哪种情况，可以用“弄璋之喜”祝贺他人？",
+    "answer": "生子",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009c00d800",
+      "rowHash": "fffe0000",
+      "columnHash": "fe03180000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003ffffffffffffc003c003:f0079e00:f80000000000003f",
+    "optionHash": "",
+    "questionText": "朱元璋“高筑墙，广积粮，缓称王”的战争策略是谁提出的？",
+    "answer": "朱升",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600066006600",
+      "rowHash": "fffe0000",
+      "columnHash": "07f80ea000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "fe9bffffffffffffffffffffffffffff:1e79c73c:fffff0000000007f",
+    "optionHash": "",
+    "questionText": "图中为中国汉代青铜器，出土于中山靖王刘胜之妻窦绾墓。宫灯灯体为一通体鎏金、双手执灯跽坐的宫女，神态恬静优雅。此宫灯设计十分巧妙，宫女一手执灯，另一手似在挡风，实为虹管以吸收油烟，既防止了空气污染，又有审美价值。此宫灯名为",
+    "answer": "长信宫灯",
+    "correctOptionHashes": {
+      "gridHash": "ffff0700c678c67806000700ffffffff",
+      "rowHash": "800000ff",
+      "columnHash": "480003f804e75000"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffffe3ffc3c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "北魏末年贾思勰编写的《齐民要术》所总结的是",
+    "answer": "农业生产技术",
+    "correctOptionHashes": {
+      "gridHash": "c000c000ffffffffffffffffc0009fc0",
+      "rowHash": "007ff800",
+      "columnHash": "fe00000004000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffffbfef3c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "中国象棋术语中“二鬼拍门”的“二鬼”指的是哪两个棋子？",
+    "answer": "兵（卒）或車中的任意两个棋子",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000657f67ff6700",
+      "rowHash": "fffe0000",
+      "columnHash": "07f80ea701100008"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff03fe03c003:f000f200:f80000000000003f",
+    "optionHash": "",
+    "questionText": "绘画的“画”字属于汉字哪类结构",
+    "answer": "半包围结构",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600067e067c0",
+      "rowHash": "fffe0000",
+      "columnHash": "07f80e9753800000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff03f703c003:f000f300:f80000000000003f",
+    "optionHash": "",
+    "questionText": "“五彩斑斓”的“五彩”原是指：",
+    "answer": "青、黄、赤、白、黑",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009facdea8",
+      "rowHash": "fffe0000",
+      "columnHash": "fe0381c0e0907800"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffffbff7bc003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "“东风不与周郎便，铜雀春深锁二乔”中的“东风”指的是",
+    "answer": "火烧赤壁",
+    "correctOptionHashes": {
+      "gridHash": "c000c000ffffffffffffffffc0009f00",
+      "rowHash": "007ff800",
+      "columnHash": "fe00200400000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003ffffffffffffffffffffe003:f03cf3c0:f82000000000003f",
+    "optionHash": "",
+    "questionText": "我国迄今为止发现的最大的铁足铜鼎，也是铭文字数最多的一件战国青铜器。铭文字体瘦长，清秀挺拔，有所谓悬针篆风格，它是",
+    "answer": "中山王铁足铜鼎",
+    "correctOptionHashes": {
+      "gridHash": "c000c000ffffffffffffffffc0009fe0",
+      "rowHash": "007ff800",
+      "columnHash": "fe00000000600000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "f803d803d803dfffffffffff9fffffff:0001ef3c:d807f0000000007f",
+    "optionHash": "",
+    "questionText": "“乌纱掷去不为官，囊橐萧萧两袖寒。写取一枝清瘦竹，秋风江上作渔杆。”左图名为",
+    "answer": "竹石图",
+    "correctOptionHashes": {
+      "gridHash": "ffff07000670067006000700ffffffff",
+      "rowHash": "800000ff",
+      "columnHash": "000003f80ad70000"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffbc3fbc3c003:f000f380:f80000000800003f",
+    "optionHash": "",
+    "questionText": "古代书画按风格来讲，“工笔”绘画注重",
+    "answer": "细致写实",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff700060006f806780",
+      "rowHash": "fffe0000",
+      "columnHash": "07f816e720000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003ffffffffffffffffc203:f0071e70:f80000000000003f",
+    "optionHash": "",
+    "questionText": "以下哪个著作，是我国文学发达很早的标志，它所表现的“饥者歌其食，劳者歌其事”的现实主义精神对后世文学影响很大",
+    "answer": "《诗经》",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600067806780",
+      "rowHash": "fffe0000",
+      "columnHash": "07f802eb40000000"
+    },
+    "categoryName": "寻梦追忆",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffdf3fff3c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "中国古代十大传世名画之一。《富春山居图》的作者是",
+    "answer": "黄公望",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600067006700",
+      "rowHash": "fffe0000",
+      "columnHash": "07f80eaf00000000"
+    },
+    "categoryName": "寻梦追忆",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffff803f003c003:f000f000:f80000000000003f",
+    "optionHash": "",
+    "questionText": "王维擅长的诗体是",
+    "answer": "山水田园诗",
+    "correctOptionHashes": {
+      "gridHash": "c000c000ffffffffffffffffc0009f80",
+      "rowHash": "007ff800",
+      "columnHash": "fe00100000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffefbff73c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "道教以报恩为重，故以四恩应报。以下不在四恩之列的是？",
+    "answer": "同窗恩",
+    "correctOptionHashes": {
+      "gridHash": "c000c000ffffffffffffffffc0009e00",
+      "rowHash": "007ff800",
+      "columnHash": "fe01004000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff73ff73c003:f000f380:f80000000000003f",
+    "optionHash": "",
+    "questionText": "“年年岁岁花相似，岁岁年年人不同。”这句诗的作者是",
+    "answer": "刘希夷",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009e00de00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe02bfc000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003fffffffffffff003e003:f0079e00:f80000000000003f",
+    "optionHash": "",
+    "questionText": "“烙花”工艺是中国民间传统工艺，历史上以那个地方的烙花工艺最为有名",
+    "answer": "河南南阳",
+    "correctOptionHashes": {
+      "gridHash": "c000c000ffffffffffffffffc0009f00",
+      "rowHash": "007ff800",
+      "columnHash": "fe00008000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffe03f603c003:f000f300:f80000000000003f",
+    "optionHash": "",
+    "questionText": "二十四节气的“芒种”如何得名？",
+    "answer": "有芒作物成熟时期",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009ff0dbf0",
+      "rowHash": "fffe0000",
+      "columnHash": "fe03a09c6e160000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003fffffffffff7ffe3d883:f0079e60:f80000000000003f",
+    "optionHash": "",
+    "questionText": "东汉汉章帝建初四年，召开了白虎观会议“讲议五经异同”，形成了《白虎通德论》一书，该书的编撰者是",
+    "answer": "班固",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009c00dc00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe07bc0000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffffc3ff83c003:f000f300:f80000000000003f",
+    "optionHash": "",
+    "questionText": "按照戏曲界的行话，以下哪个表示最后一出？",
+    "answer": "大轴戏",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600067006700",
+      "rowHash": "fffe0000",
+      "columnHash": "07f804e700000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffc03fc03c003:f000f300:f80000000000003f",
+    "optionHash": "",
+    "questionText": "以下不是夫妻技能的是？",
+    "answer": "生死与共",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009f00de00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe0128d400000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "78037803780338033fffffff7fff7fff:00007de7:00fff0000000007f",
+    "optionHash": "",
+    "questionText": "左图为候风地动仪，是世界上第一架探测地震的仪器，它的制造人是",
+    "answer": "张衡",
+    "correctOptionHashes": {
+      "gridHash": "ffffffe0ffccffceffe0ffe0ffffdaff",
+      "rowHash": "c02e00f8",
+      "columnHash": "ffffffffff800000"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffc03d403c003:f000f000:f80000000000003f",
+    "optionHash": "",
+    "questionText": "名医（）编创了“五禽戏”。",
+    "answer": "华佗",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600066006600",
+      "rowHash": "fffe0000",
+      "columnHash": "07f806c000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003ffffffffffffe003c003:f0079e00:f80000000000003f",
+    "optionHash": "",
+    "questionText": "在游戏中开店出售各类物品和召唤兽，申请玩家需要满足多少等级？",
+    "answer": "≥30级",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009e00d600",
+      "rowHash": "fffe0000",
+      "columnHash": "fe032fc000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003fffbfffff5fff803c003:f0079e00:f80800000000003f",
+    "optionHash": "",
+    "questionText": "（）的“寡欲”、“养心”、“养气”的修养方法直接为宋明理学家所继承？",
+    "answer": "孟子",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffff7000600066006600",
+      "rowHash": "fffe0000",
+      "columnHash": "07f81e6000000000"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003ffffff03fe03c003:f000f380:f80000000000003f",
+    "optionHash": "",
+    "questionText": "道教信奉老子为道祖，尊称其为",
+    "answer": "太上老君",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009f00df00",
+      "rowHash": "fffe0000",
+      "columnHash": "fe0311de00000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffc03fc03c003:f000f200:f80000000000003f",
+    "optionHash": "",
+    "questionText": "中国戏剧主要包括哪二类？",
+    "answer": "戏曲和话剧",
+    "correctOptionHashes": {
+      "gridHash": "ffffffffffffffffc000c0009f80df80",
+      "rowHash": "fffe0000",
+      "columnHash": "fe03bdcdc0000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffffbfffbc003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "唐诗“日暮乡关何处是？烟波江上使人愁”中的“江”是指？",
+    "answer": "长江",
+    "correctOptionHashes": {
+      "gridHash": "60007000ffffffffffffffff70006600",
+      "rowHash": "007ff800",
+      "columnHash": "07f8000000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "f803f803f803f803ffffffffff7ffff3:00007de7:fffff0000000007f",
+    "optionHash": "",
+    "questionText": "“人咸知修其容，莫知饰其性”是本图的主题，它摘选自",
+    "answer": "女史箴图",
+    "correctOptionHashes": {
+      "gridHash": "ffff0701e679e67806000700ffffffff",
+      "rowHash": "800000ff",
+      "columnHash": "010003f808473001"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "f803f803ffffffffffffffffffffbfff:007bef30:fffff0000000007f",
+    "optionHash": "",
+    "questionText": "图中的大型面具造型极度夸张，方形的脸看起来似人非人，似兽非兽，角尺形的大耳高耸，长长的眼球向外凸出，其面容十分狰狞、怪诞，可谓青铜艺术中的极品。它出土于",
+    "answer": "三星堆",
+    "correctOptionHashes": {
+      "gridHash": "ffff0700c670c67006000700ffffffff",
+      "rowHash": "800000ff",
+      "columnHash": "780003f800e30000"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "f803f803f803ffdffffffffffffffff7:ffc1ef3c:fffff0000000007f",
+    "optionHash": "",
+    "questionText": "图中的经卷出自敦煌莫高窟，卷后题有“咸通九年四月十五日”字样。此经卷名为",
+    "answer": "金刚经",
+    "correctOptionHashes": {
+      "gridHash": "ffff07000660066006000700ffffffff",
+      "rowHash": "800000ff",
+      "columnHash": "000003f800a00000"
+    },
+    "categoryName": "科举大赛",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003ffffffffffffff83c603:f0079e00:f80000000000003f",
+    "optionHash": "",
+    "questionText": "李白经典诗句“戍客望边色，思归多苦颜。高楼当此夜，叹息未应闲”中，你认为是谁在“叹息”？",
+    "answer": "高楼中的思妇",
+    "correctOptionHashes": {
+      "gridHash": "60007000ffffffffffffffff700067f0",
+      "rowHash": "007ff800",
+      "columnHash": "07f8000000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  },
+  {
+    "stemHash": "ffffc003c003c003fffffff3ffe3c003:f000f3c0:f80000000000003f",
+    "optionHash": "",
+    "questionText": "我国第一部系统分析字形和考求字的本义的字典是",
+    "answer": "说文解字",
+    "correctOptionHashes": {
+      "gridHash": "60007000ffffffffffffffff70006780",
+      "rowHash": "007ff800",
+      "columnHash": "07f8000000000000"
+    },
+    "categoryName": "口袋国子监",
+    "collectedAt": 0
+  }
+]

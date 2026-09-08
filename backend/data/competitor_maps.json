@@ -1,0 +1,223 @@
+{
+  "source": "https://mhxyai.com/v2/zhuagui (zhuaguiItemCityMap-*.js chunk)",
+  "note": "x/y 为游戏逻辑坐标边界(非像素尺寸); 每图含原版(.jpg)与投影(2.jpg)两种; 墨家村未在图片配置a中注册但服务器上两图均可访问(已验证200)",
+  "count": 27,
+  "maps": [
+    {
+      "name": "傲来国",
+      "x": 224,
+      "y": 151,
+      "color_image": "/v2/images/傲来国.jpg",
+      "bw_image": "/v2/images/傲来国2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "宝象国",
+      "x": 160,
+      "y": 120,
+      "color_image": "/v2/images/宝象国.jpg",
+      "bw_image": "/v2/images/宝象国2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "建邺城",
+      "x": 288,
+      "y": 144,
+      "color_image": "/v2/images/建邺城.jpg",
+      "bw_image": "/v2/images/建邺城2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "女儿村",
+      "x": 128,
+      "y": 144,
+      "color_image": "/v2/images/女儿村.jpg",
+      "bw_image": "/v2/images/女儿村2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "普陀山",
+      "x": 96,
+      "y": 72,
+      "color_image": "/v2/images/普陀山.jpg",
+      "bw_image": "/v2/images/普陀山2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "五庄观",
+      "x": 100,
+      "y": 75,
+      "color_image": "/v2/images/五庄观.jpg",
+      "bw_image": "/v2/images/五庄观2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "长寿村",
+      "x": 160,
+      "y": 210,
+      "color_image": "/v2/images/长寿村.jpg",
+      "bw_image": "/v2/images/长寿村2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "朱紫国",
+      "x": 192,
+      "y": 120,
+      "color_image": "/v2/images/朱紫国.jpg",
+      "bw_image": "/v2/images/朱紫国2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "江南野外",
+      "x": 160,
+      "y": 120,
+      "color_image": "/v2/images/江南野外.jpg",
+      "bw_image": "/v2/images/江南野外2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "西梁女国",
+      "x": 164,
+      "y": 124,
+      "color_image": "/v2/images/西梁女国.jpg",
+      "bw_image": "/v2/images/西梁女国2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "大唐境外",
+      "x": 640,
+      "y": 120,
+      "color_image": "/v2/images/大唐境外.jpg",
+      "bw_image": "/v2/images/大唐境外2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "北俱芦洲",
+      "x": 228,
+      "y": 170,
+      "color_image": "/v2/images/北俱芦洲.jpg",
+      "bw_image": "/v2/images/北俱芦洲2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "波月洞",
+      "x": 96,
+      "y": 144,
+      "color_image": "/v2/images/波月洞.jpg",
+      "bw_image": "/v2/images/波月洞2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "地狱迷宫",
+      "x": 120,
+      "y": 90,
+      "color_image": "/v2/images/地狱迷宫.jpg",
+      "bw_image": "/v2/images/地狱迷宫2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "海底迷宫",
+      "x": 64,
+      "y": 48,
+      "color_image": "/v2/images/海底迷宫.jpg",
+      "bw_image": "/v2/images/海底迷宫2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "花果山",
+      "x": 160,
+      "y": 120,
+      "color_image": "/v2/images/花果山.jpg",
+      "bw_image": "/v2/images/花果山2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "女娲神迹",
+      "x": 192,
+      "y": 144,
+      "color_image": "/v2/images/女娲神迹.jpg",
+      "bw_image": "/v2/images/女娲神迹2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "麒麟山",
+      "x": 191,
+      "y": 143,
+      "color_image": "/v2/images/麒麟山.jpg",
+      "bw_image": "/v2/images/麒麟山2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "天宫",
+      "x": 253,
+      "y": 168,
+      "color_image": "/v2/images/天宫.jpg",
+      "bw_image": "/v2/images/天宫2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "碗子山",
+      "x": 96,
+      "y": 192,
+      "color_image": "/v2/images/碗子山.jpg",
+      "bw_image": "/v2/images/碗子山2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "地府",
+      "x": 160,
+      "y": 120,
+      "color_image": "/v2/images/地府.jpg",
+      "bw_image": "/v2/images/地府2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "化生寺",
+      "x": 128,
+      "y": 96,
+      "color_image": "/v2/images/化生寺.jpg",
+      "bw_image": "/v2/images/化生寺2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "狮驼岭",
+      "x": 132,
+      "y": 99,
+      "color_image": "/v2/images/狮驼岭.jpg",
+      "bw_image": "/v2/images/狮驼岭2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "东海湾",
+      "x": 120,
+      "y": 120,
+      "color_image": "/v2/images/东海湾.jpg",
+      "bw_image": "/v2/images/东海湾2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "大唐国境",
+      "x": 352,
+      "y": 336,
+      "color_image": "/v2/images/大唐国境.jpg",
+      "bw_image": "/v2/images/大唐国境2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "长寿郊外",
+      "x": 192,
+      "y": 168,
+      "color_image": "/v2/images/长寿郊外.jpg",
+      "bw_image": "/v2/images/长寿郊外2.jpg",
+      "registered_in_image_config": true
+    },
+    {
+      "name": "墨家村",
+      "x": 300,
+      "y": 200,
+      "color_image": "/v2/images/墨家村.jpg",
+      "bw_image": "/v2/images/墨家村2.jpg",
+      "registered_in_image_config": false
+    }
+  ]
+}

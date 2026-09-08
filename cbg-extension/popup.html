@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --bg: #1f1f23;
+        --panel: #2a2a30;
+        --text: #e8e8ea;
+        --muted: #9a9aa2;
+        --accent: #f0883e;
+        --green: #4caf50;
+        --red: #e05555;
+        --border: #3a3a42;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        width: 340px;
+        font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 13px;
+      }
+      .wrap { padding: 14px 16px 18px; }
+      h1 { font-size: 15px; margin: 0 0 4px; }
+      h2 { font-size: 13px; margin: 16px 0 8px; color: var(--muted); font-weight: 600; }
+      #status {
+        font-size: 12px;
+        padding: 6px 8px;
+        border-radius: 6px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+      }
+      #status.ok { color: var(--green); }
+      #status.no { color: var(--red); }
+      .login-box {
+        margin-top: 10px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+      }
+      .login-info { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+      .login-info #loginBackupInfo { color: var(--text); }
+      #backupLoginBtn { border-color: var(--accent); color: var(--accent); }
+      #restoreLoginBtn { border-color: var(--green); color: var(--green); }
+      .row { display: flex; gap: 8px; margin-top: 10px; }
+      button {
+        flex: 1;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--panel);
+        color: var(--text);
+        cursor: pointer;
+        font-size: 12px;
+      }
+      button:hover { border-color: var(--accent); }
+      #msg { min-height: 16px; margin-top: 8px; color: var(--accent); font-size: 12px; }
+      #subscribeRow { display: none; align-items: center; gap: 8px; margin-top: 10px; }
+      #subscribeRow input {
+        flex: 1;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--panel);
+        color: var(--text);
+        font-size: 12px;
+        min-width: 0;
+      }
+      #subscribeRow.show { display: flex; }
+      #subscribeBtn { flex: none; border-color: var(--accent); color: var(--accent); }
+      #captureRow { display: none; align-items: center; gap: 8px; margin-top: 10px; }
+      #captureRow input {
+        flex: 1;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--panel);
+        color: var(--text);
+        font-size: 12px;
+        min-width: 0;
+      }
+      #captureRow.show { display: flex; }
+      #captureBtn { flex: none; border-color: var(--green); color: var(--green); }
+      ul { list-style: none; margin: 0; padding: 0; }
+      li {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px 10px;
+        margin-bottom: 8px;
+      }
+      li .name { font-weight: 600; }
+      li .meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
+      li .price { color: var(--green); }
+      li .lo { color: var(--accent); }
+      .hint { color: var(--muted); font-size: 11px; line-height: 1.5; margin-top: 12px; }
+      .empty { color: var(--muted); font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>藏宝阁助手</h1>
+      <div id="status">状态：检测中…</div>
+      <div class="login-box">
+        <div class="login-info">
+          <span class="muted">登录备份：</span><span id="loginBackupInfo">未备份</span>
+        </div>
+        <div class="login-info">
+          <span class="muted">上次保活：</span><span id="keepAliveInfo">—</span>
+        </div>
+        <div class="row">
+          <button id="backupLoginBtn">备份当前登录</button>
+          <button id="restoreLoginBtn">恢复登录态</button>
+        </div>
+        <div class="row">
+          <button id="keepAliveBtn">立即保活</button>
+        </div>
+      </div>
+      <div class="row">
+        <button id="scan">扫描当前页</button>
+        <button id="refresh">刷新清单</button>
+      </div>
+      <div id="subscribeRow">
+        <input id="targetPrice" type="number" placeholder="目标价(选填)" />
+        <button id="subscribeBtn">订阅本装备</button>
+      </div>
+      <div id="captureRow">
+        <input id="captureLabel" placeholder="标签(如:高伤武器)" />
+        <button id="captureBtn">采集本页全部物品</button>
+      </div>
+      <div class="row">
+        <button id="refreshStatusBtn">刷新藏品库状态</button>
+      </div>
+      <div id="msg"></div>
+      <h2>我的订阅</h2>
+      <ul id="list"></ul>
+      <h2>自动订阅（定时采集）</h2>
+      <ul id="subList"></ul>
+      <p class="hint">
+        在藏宝阁页面登录后，浏览装备/角色详情或"我的装备"即可自动记录价格与成交。
+        数据仅存于本机对应账号，互不可见。
+      </p>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

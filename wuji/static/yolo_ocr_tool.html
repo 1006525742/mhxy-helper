@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLO测试 + OCR标注工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00d4ff;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: #16213e;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .toolbar button {
+            padding: 10px 20px;
+            background: #0f0f23;
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .toolbar button:hover {
+            background: #00d4ff;
+            color: #1a1a2e;
+        }
+
+        .toolbar button.active {
+            background: #00ff00;
+            color: #000;
+            border-color: #00ff00;
+        }
+
+        .toolbar button.primary {
+            background: #00aa00;
+            color: white;
+            border-color: #00aa00;
+        }
+
+        .toolbar button.primary:hover {
+            background: #00cc00;
+        }
+
+        .toolbar input, .toolbar select {
+            padding: 8px 12px;
+            background: #0f0f23;
+            border: 1px solid #333;
+            color: #eee;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+        }
+
+        .canvas-panel {
+            flex: 1;
+            background: #16213e;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #16213e;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .canvas-container {
+            position: relative;
+            display: inline-block;
+            overflow: auto;
+            max-width: 100%;
+            max-height: 70vh;
+        }
+
+        #mainCanvas {
+            border: 2px solid #333;
+            border-radius: 5px;
+            cursor: crosshair;
+            /* 保持原始清晰度，可以滚动查看 */
+            max-width: none;
+            max-height: 70vh;
+        }
+
+        .mode-indicator {
+            padding: 10px 15px;
+            background: #0f0f23;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .mode-indicator .mode {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .detection-result {
+            background: #0f0f23;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .detection-result h4 {
+            color: #00d4ff;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .detection-result .box-info {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .detection-result .box-info span {
+            color: #00ff00;
+        }
+
+        .ocr-preview {
+            background: #0f0f23;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .ocr-preview h4 {
+            color: #ffd700;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        #ocrCanvas {
+            max-width: 100%;
+            border: 1px solid #333;
+            border-radius: 3px;
+            background: white;
+        }
+
+        .ocr-text-input {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            background: #0f0f23;
+            border: 1px solid #ffd700;
+            color: #ffd700;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .ocr-text-input:focus {
+            outline: none;
+            border-color: #00ff00;
+        }
+
+        .stats {
+            background: #0f0f23;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .stats h4 {
+            color: #00d4ff;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin: 4px 0;
+        }
+
+        .image-list {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .image-item {
+            background: #0f0f23;
+            padding: 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+
+        .image-item:hover {
+            border-color: #00d4ff;
+        }
+
+        .image-item.current {
+            border-color: #ff6600;
+            box-shadow: 0 0 5px #ff6600;
+        }
+
+        .image-item.labeled {
+            background: #1a4a1a;
+            border-color: #00ff00;
+        }
+
+        .export-panel {
+            margin-top: 15px;
+        }
+
+        .export-panel button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .help-box {
+            background: #0f0f23;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .help-box p {
+            margin: 3px 0;
+        }
+
+        .help-box b {
+            color: #00d4ff;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            background: #0f0f23;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .status-bar span.highlight {
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 YOLO测试 + OCR区域标注</h1>
+
+        <div class="toolbar">
+            <button id="loadBtn">📁 加载图片</button>
+            <button id="detectBtn">🔍 YOLO检测</button>
+            <button id="autoYoloOcrBtn" style="background: #ff6600; border-color: #ff6600;">🤖 一键YOLO+OCR标注</button>
+            <button id="ocrModeBtn">✏️ OCR标注模式</button>
+            <button id="clearOcrBtn">🗑 清除OCR框</button>
+            <span style="color: #888;">|</span>
+            <button id="skipBtn" style="background: #9900ff; border-color: #9900ff;">⏭ 跳过（非抓鬼）</button>
+            <button id="prevBtn" style="background: #666; border-color: #666;">◀ 上一张</button>
+            <button id="nextBtn" style="background: #666; border-color: #666;">下一张 ▶</button>
+            <span style="color: #888;">|</span>
+            <button id="saveOcrBtn" class="primary">💾 保存OCR数据</button>
+            <span style="color: #888;">|</span>
+            <select id="confidenceSelect">
+                <option value="0.01">置信度: 1%</option>
+                <option value="0.05">置信度: 5%</option>
+                <option value="0.10" selected>置信度: 10%</option>
+                <option value="0.25">置信度: 25%</option>
+                <option value="0.50">置信度: 50%</option>
+            </select>
+            <span id="statusText">等待操作...</span>
+        </div>
+
+        <div class="main-content">
+            <div class="canvas-panel">
+                <div class="mode-indicator">
+                    当前模式: <span class="mode" id="currentMode">检测模式</span>
+                    <span style="margin-left: 15px; color: #888;">| A/D切换图片 | 拖拽绘制OCR框</span>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="mainCanvas"></canvas>
+                </div>
+                <div class="status-bar" id="statusBar">
+                    图片: <span class="highlight">无</span> | 检测框: <span class="highlight">0</span> | OCR框: <span class="highlight">0</span>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="detection-result">
+                    <h4>📊 YOLO检测结果</h4>
+                    <div class="box-info" id="detectInfo">
+                        未检测到任务栏
+                    </div>
+                </div>
+
+                <div class="ocr-preview">
+                    <h4>📝 黄字识别区域</h4>
+                    <canvas id="ocrCanvas" width="250" height="50"></canvas>
+                    <div style="margin-top: 8px; padding: 8px; background: #2a2a3e; border-radius: 5px;">
+                        <div style="color: #ffd700; font-size: 12px; margin-bottom: 5px;">🟡 黄字识别结果：</div>
+                        <div id="yellowTextPreview" style="color: #00ff00; font-size: 13px; min-height: 20px;">-</div>
+                    </div>
+                    <input type="text" class="ocr-text-input" id="ocrTextInput" placeholder="修改黄字内容（仅标注黄色文字）..." />
+                </div>
+
+                <div class="stats">
+                    <h4>📈 标注进度</h4>
+                    <div class="stats-item">
+                        <span>已标注:</span>
+                        <span id="labeledCount">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <span>总数:</span>
+                        <span id="totalCount">0</span>
+                    </div>
+                </div>
+
+                <div class="help-box">
+                    <p><b>使用步骤:</b></p>
+                    <p>1. 加载图片 → YOLO检测任务栏</p>
+                    <p>2. 在任务栏下方拖拽绘制OCR框</p>
+                    <p>3. 输入该区域文字内容</p>
+                    <p>4. 保存 → 下一张</p>
+                    <p><b>快捷键:</b> A/D切换 | Enter保存</p>
+                </div>
+
+                <div class="export-panel">
+                    <button id="autoYoloOcrAllBtn" style="background: #ff6600; border-color: #ff6600; width:100%;">🤖 一键标注所有图片</button>
+                    <button id="exportBtn" class="primary" style="margin-top: 8px;">📦 保存到服务器</button>
+                    <button id="exportCropBtn" style="margin-top: 8px; background: #666; border-color: #666;">裁剪所有OCR区域图片</button>
+                </div>
+
+                <h4 style="margin-top: 15px; color: #00d4ff; font-size: 13px;">📷 图片列表</h4>
+                <div class="image-list" id="imageList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 全局变量 ==========
+        const mainCanvas = document.getElementById('mainCanvas');
+        const mainCtx = mainCanvas.getContext('2d');
+        const ocrCanvas = document.getElementById('ocrCanvas');
+        const ocrCtx = ocrCanvas.getContext('2d');
+
+        let images = [];
+        let currentIndex = 0;
+        let currentImage = null;
+        let originalImage = null; // 原始图片数据
+
+        let yoloBox = null; // YOLO检测到的任务栏框
+        let ocrBox = null; // OCR标注框
+        let isDrawing = false;
+        let startX, startY;
+
+        let ocrData = {}; // { imageName: { box: {x,y,w,h}, text: "..." } }
+
+        let isOCRMode = false;
+
+        // ========== 加载图片 ==========
+        document.getElementById('loadBtn').addEventListener('click', async () => {
+            // 从后端API动态获取图片列表
+            document.getElementById('statusText').textContent = '加载图片列表...';
+
+            try {
+                // 获取图片列表
+                const imgResponse = await fetch('/api/label_images');
+                const imgData = await imgResponse.json();
+
+                // 获取已标注数据
+                const labelResponse = await fetch('/api/ocr_labels');
+                const labelData = await labelResponse.json();
+
+                // 恢复已标注数据
+                for (const [imgName, text] of Object.entries(labelData.labels || {})) {
+                    ocrData[imgName] = { text: text, box: null };
+                }
+
+                images = imgData.images.map(name => ({
+                    name: name,
+                    url: `/static/label_images/${name}`
+                }));
+
+                if (images.length > 0) {
+                    // 找第一个已标注的图片位置
+                    let startIndex = 0;
+                    for (let i = 0; i < images.length; i++) {
+                        if (ocrData[images[i].name]?.text) {
+                            startIndex = i;
+                            break;
+                        }
+                    }
+
+                    currentIndex = startIndex;
+                    await loadImage(startIndex);
+                    updateUI();
+                    document.getElementById('statusText').textContent = `已加载 ${images.length} 张，已标注 ${labelData.count} 张`;
+                }
+            } catch (e) {
+                document.getElementById('statusText').textContent = '加载失败: ' + e.message;
+            }
+        });
+
+        async function loadImage(index) {
+            if (index < 0 || index >= images.length) return;
+
+            // 切换前保存当前图片的输入框文字
+            if (images[currentIndex] && ocrData[images[currentIndex].name]?.box) {
+                const currentInput = document.getElementById('ocrTextInput').value;
+                ocrData[images[currentIndex].name].text = currentInput;
+            }
+
+            currentIndex = index;
+
+            const img = new Image();
+            img.onload = () => {
+                originalImage = img;
+                currentImage = img;
+
+                // 保持原始尺寸，不缩放
+                mainCanvas.width = img.width;
+                mainCanvas.height = img.height;
+
+                yoloBox = null;
+                ocrBox = ocrData[images[index].name]?.box || null;
+
+                // 恢复已标注的文字
+                const savedText = ocrData[images[index].name]?.text;
+                document.getElementById('ocrTextInput').value = savedText || '';
+
+                drawCanvas();
+                updateUI();
+            };
+            img.src = images[index].url;
+        }
+
+        // ========== 绘制Canvas ==========
+        function drawCanvas() {
+            if (!currentImage) return;
+
+            // 不再缩放，直接绘制原始尺寸
+            mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+            mainCtx.drawImage(currentImage, 0, 0, mainCanvas.width, mainCanvas.height);
+
+            // 绘制YOLO检测框（绿色，只显示边框）
+            if (yoloBox) {
+                const x = yoloBox.x1;
+                const y = yoloBox.y1;
+                const w = yoloBox.x2 - yoloBox.x1;
+                const h = yoloBox.y2 - yoloBox.y1;
+
+                // 只绘制边框，不填充蒙版
+                mainCtx.strokeStyle = '#00ff00';
+                mainCtx.lineWidth = 3;
+                mainCtx.strokeRect(x, y, w, h);
+
+                // 标签
+                mainCtx.fillStyle = '#00ff00';
+                mainCtx.font = 'bold 16px Arial';
+                const label = `任务栏 ${yoloBox.conf.toFixed(1)}%`;
+                const labelWidth = mainCtx.measureText(label).width + 10;
+                mainCtx.fillRect(x, y - 24, labelWidth, 24);
+                mainCtx.fillStyle = '#000';
+                mainCtx.fillText(label, x + 5, y - 7);
+            }
+
+            // 绘制OCR标注框（蓝色，避免干扰黄字识别）
+            const imageName = images[currentIndex]?.name;
+            const savedOcrBox = ocrData[imageName]?.box;
+            if (savedOcrBox) {
+                drawOcrBox(savedOcrBox, 1, '#00aaff', 'OCR区域');
+            }
+
+            // 绘制正在绘制的OCR框
+            if (ocrBox && isDrawing) {
+                drawOcrBox(ocrBox, 1, '#ff6600', '绘制中...');
+            }
+        }
+
+        function drawOcrBox(box, scale, color, label) {
+            const x = box.x * scale;
+            const y = box.y * scale;
+            const w = box.w * scale;
+            const h = box.h * scale;
+
+            // 只绘制边框，不填充蒙版（避免影响OCR识别）
+            mainCtx.strokeStyle = color;
+            mainCtx.lineWidth = 2;
+            mainCtx.strokeRect(x, y, w, h);
+
+            // 标签
+            mainCtx.fillStyle = color;
+            mainCtx.font = '12px Arial';
+            mainCtx.fillText(label, x + 2, y - 5);
+        }
+
+        // ========== YOLO检测 ==========
+        document.getElementById('detectBtn').addEventListener('click', async () => {
+            if (!currentImage) {
+                alert('请先加载图片');
+                return;
+            }
+
+            document.getElementById('statusText').textContent = '正在YOLO检测...';
+
+            try {
+                // 直接调用后端YOLO API
+                const response = await fetch('/api/yolo_detect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_url: images[currentIndex].url,
+                        confidence: parseFloat(document.getElementById('confidenceSelect').value)
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.boxes && result.boxes.length > 0) {
+                    // 取置信度最高的框
+                    yoloBox = result.boxes[0];
+                    drawCanvas();
+                    updateDetectInfo();
+                    document.getElementById('statusText').textContent = `检测到 ${result.boxes.length} 个任务栏`;
+                } else {
+                    yoloBox = null;
+                    drawCanvas();
+                    document.getElementById('detectInfo').innerHTML = '未检测到任务栏';
+                    document.getElementById('statusText').textContent = '未检测到';
+                }
+            } catch (e) {
+                console.error('检测失败:', e);
+                document.getElementById('statusText').textContent = '检测失败，请检查后端服务';
+            }
+        });
+
+        function updateDetectInfo() {
+            if (yoloBox) {
+                document.getElementById('detectInfo').innerHTML = `
+                    位置: <span>x1=${Math.round(yoloBox.x1)}, y1=${Math.round(yoloBox.y1)}</span><br>
+                    尺寸: <span>${Math.round(yoloBox.x2-yoloBox.x1)} × ${Math.round(yoloBox.y2-yoloBox.y1)}</span><br>
+                    置信度: <span>${yoloBox.conf.toFixed(2)}%</span>
+                `;
+            }
+        }
+
+        // ========== 一键YOLO+OCR标注（当前图片）==========
+        document.getElementById('autoYoloOcrBtn').addEventListener('click', async () => {
+            if (!currentImage) {
+                alert('请先加载图片');
+                return;
+            }
+
+            document.getElementById('statusText').textContent = '正在YOLO检测...';
+
+            try {
+                // 1. YOLO检测任务栏
+                const response = await fetch('/api/yolo_detect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_url: images[currentIndex].url,
+                        confidence: 0.25
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.boxes && result.boxes.length > 0) {
+                    // 取置信度最高的框
+                    yoloBox = result.boxes[0];
+
+                    // 2. 根据任务栏位置自动计算OCR区域
+                    // OCR区域：任务栏正下方，宽度相同，高度为任务栏高度的2.7倍
+                    const taskBarHeight = yoloBox.y2 - yoloBox.y1;
+                    const ocrBox = {
+                        x: yoloBox.x1,
+                        y: yoloBox.y2,  // 任务栏底部开始
+                        w: yoloBox.x2 - yoloBox.x1,
+                        h: taskBarHeight * 2.7  // 高度为任务栏的2.7倍
+                    };
+
+                    // 3. 保存OCR标注
+                    const imageName = images[currentIndex].name;
+                    ocrData[imageName] = {
+                        box: ocrBox,
+                        text: ''
+                    };
+
+                    drawCanvas();
+                    updateDetectInfo();
+                    updateOcrPreview();
+                    updateUI();
+
+                    document.getElementById('statusText').textContent = `YOLO已标注！置信度: ${yoloBox.conf.toFixed(1)}%`;
+
+                    // 4. 自动OCR识别
+                    document.getElementById('statusText').textContent = '正在PaddleOCR识别...';
+                    await autoOCRRecognize(imageName, ocrBox);
+                } else {
+                    yoloBox = null;
+                    document.getElementById('statusText').textContent = '未检测到任务栏，请手动标注';
+                }
+            } catch (e) {
+                console.error('检测失败:', e);
+                document.getElementById('statusText').textContent = '检测失败';
+            }
+        });
+
+        // ========== 自动OCR识别 ==========
+        async function autoOCRRecognize(imageName, box) {
+            try {
+                const response = await fetch('/api/auto_ocr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_url: images[currentIndex].url,
+                        box: box
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success && result.text) {
+                    // 检查是否已有保存的文字，如果有则不覆盖
+                    const existingText = ocrData[imageName]?.text;
+                    if (!existingText) {
+                        // 只在没有已保存文字时才填充OCR识别结果
+                        document.getElementById('ocrTextInput').value = result.text;
+                        ocrData[imageName].text = result.text;
+                    } else {
+                        // 已有保存文字，恢复显示
+                        document.getElementById('ocrTextInput').value = existingText;
+                    }
+
+                    // 解析提取关键信息
+                    const parseResponse = await fetch('/api/parse_ghost_task', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: result.text })
+                    });
+                    const parseResult = await parseResponse.json();
+
+                    if (parseResult.success) {
+                        const data = parseResult.data;
+                        const infoHtml = `
+                            <b>解析结果:</b><br>
+                            地图: <span style="color:#00ff00">${data.map || '未识别'}</span><br>
+                            坐标: <span style="color:#00ff00">${data.x || '?'}, ${data.y || '?'}</span><br>
+                            鬼名: <span style="color:#00ff00">${data.ghost_name || '未识别'}</span>
+                        `;
+                        document.getElementById('detectInfo').innerHTML += '<hr>' + infoHtml;
+                        document.getElementById('statusText').textContent = 'OCR识别并解析完成！';
+                    } else {
+                        document.getElementById('statusText').textContent = 'OCR识别完成！';
+                    }
+                } else {
+                    document.getElementById('statusText').textContent = 'OCR识别失败，请手动输入';
+                }
+            } catch (e) {
+                console.error('OCR识别失败:', e);
+                document.getElementById('statusText').textContent = 'OCR识别失败';
+            }
+        }
+
+        // ========== 一键标注所有图片 ==========
+        document.getElementById('autoYoloOcrAllBtn').addEventListener('click', async () => {
+            if (images.length === 0) {
+                alert('请先加载图片');
+                return;
+            }
+
+            document.getElementById('statusText').textContent = '正在批量标注...';
+
+            let yoloCount = 0;
+            let ocrCount = 0;
+
+            for (let i = 0; i < images.length; i++) {
+                const imageName = images[i].name;
+
+                // 跳过已有OCR标注的
+                if (ocrData[imageName]?.box) {
+                    continue;
+                }
+
+                try {
+                    // YOLO检测
+                    const response = await fetch('/api/yolo_detect', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            image_url: images[i].url,
+                            confidence: 0.25
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.boxes && result.boxes.length > 0) {
+                        const box = result.boxes[0];
+
+                        // 自动计算OCR区域（高度2.7倍）
+                        const taskBarHeight = box.y2 - box.y1;
+                        const ocrBox = {
+                            x: box.x1,
+                            y: box.y2,
+                            w: box.x2 - box.x1,
+                            h: taskBarHeight * 2.7
+                        };
+
+                        // 保留已有文字，只更新box
+                        const existingText = ocrData[imageName]?.text || '';
+                        ocrData[imageName] = {
+                            box: ocrBox,
+                            text: existingText
+                        };
+                        ocrCount++;
+
+                        // 只在没有已保存文字时才自动OCR识别
+                        if (!existingText) {
+                            const ocrResponse = await fetch('/api/auto_ocr', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    image_url: images[i].url,
+                                    box: ocrBox
+                                })
+                            });
+                            const ocrResult = await ocrResponse.json();
+                            if (ocrResult.success && ocrResult.text) {
+                                ocrData[imageName].text = ocrResult.text;
+                            }
+                        }
+                    }
+
+                    yoloCount++;
+                } catch (e) {
+                    console.error(`标注失败 ${imageName}:`, e);
+                }
+
+                document.getElementById('statusText').textContent = `正在标注... ${i + 1}/${images.length} (YOLO:${ocrCount}已标注)`;
+                updateUI();
+            }
+
+            document.getElementById('statusText').textContent = `完成！YOLO检测: ${yoloCount}, OCR标注: ${ocrCount}`;
+
+            alert(`一键标注完成！\n\nYOLO检测: ${yoloCount} 张\nOCR标注: ${ocrCount} 张\n\n请检查文字识别是否正确，然后点击"保存到服务器"`);
+        });
+
+        // ========== OCR标注模式 ==========
+        document.getElementById('ocrModeBtn').addEventListener('click', () => {
+            isOCRMode = !isOCRMode;
+            document.getElementById('ocrModeBtn').classList.toggle('active', isOCRMode);
+            document.getElementById('currentMode').textContent = isOCRMode ? 'OCR标注模式' : '检测模式';
+            mainCanvas.style.cursor = isOCRMode ? 'crosshair' : 'default';
+        });
+
+        // ========== 鼠标绘制OCR框 ==========
+        mainCanvas.addEventListener('mousedown', (e) => {
+            if (!isOCRMode || !currentImage) return;
+
+            const rect = mainCanvas.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+            isDrawing = true;
+        });
+
+        mainCanvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+
+            const rect = mainCanvas.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+
+            ocrBox = {
+                x: Math.min(startX, currentX),
+                y: Math.min(startY, currentY),
+                w: Math.abs(currentX - startX),
+                h: Math.abs(currentY - startY)
+            };
+
+            drawCanvas();
+        });
+
+        mainCanvas.addEventListener('mouseup', (e) => {
+            if (!isDrawing || !ocrBox) return;
+            isDrawing = false;
+
+            if (ocrBox.w > 10 && ocrBox.h > 10) {
+                // 不需要缩放转换，直接使用canvas坐标
+                const finalBox = {
+                    x: ocrBox.x,
+                    y: ocrBox.y,
+                    w: ocrBox.w,
+                    h: ocrBox.h
+                };
+
+                const imageName = images[currentIndex].name;
+                ocrData[imageName] = {
+                    box: finalBox,
+                    text: document.getElementById('ocrTextInput').value || ''
+                };
+
+                ocrBox = null;
+                drawCanvas();
+                updateOcrPreview();
+                updateUI();
+            }
+        });
+
+        // ========== 更新OCR预览 ==========
+        function updateOcrPreview() {
+            const imageName = images[currentIndex]?.name;
+            const data = ocrData[imageName];
+
+            if (!data || !data.box || !currentImage) {
+                ocrCtx.fillStyle = '#333';
+                ocrCtx.fillRect(0, 0, ocrCanvas.width, ocrCanvas.height);
+                document.getElementById('yellowTextPreview').textContent = '-';
+                return;
+            }
+
+            const box = data.box;
+
+            // 使用当前显示的图片（currentImage）裁剪OCR区域
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = box.w;
+            tempCanvas.height = box.h;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // 从当前canvas截取OCR区域（使用canvas坐标，图片未缩放）
+            tempCtx.drawImage(
+                mainCanvas,
+                box.x, box.y, box.w, box.h,
+                0, 0, box.w, box.h
+            );
+
+            // 显示在预览canvas上（缩放）
+            const maxWidth = 250;
+            const maxHeight = 100;
+            const previewScale = Math.min(maxWidth / box.w, maxHeight / box.h, 1);
+            ocrCanvas.width = Math.min(box.w, maxWidth);
+            ocrCanvas.height = Math.min(box.h, maxHeight);
+            ocrCtx.drawImage(tempCanvas, 0, 0, ocrCanvas.width, ocrCanvas.height);
+
+            // 自动识别黄字
+            recognizeYellowText(tempCanvas, box);
+        }
+
+        // ========== 识别黄字 ==========
+        async function recognizeYellowText(canvas, box) {
+            try {
+                // 将canvas转为base64发送到后端
+                const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+                const response = await fetch('/api/yellow_text_detect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_data: imageData
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // 显示黄字识别结果
+                    document.getElementById('yellowTextPreview').textContent = result.yellow_text || '未检测到黄字';
+
+                    // 如果OCR结果为空，自动填充黄字
+                    const currentText = document.getElementById('ocrTextInput').value;
+                    if (!currentText && result.yellow_text) {
+                        document.getElementById('ocrTextInput').value = result.yellow_text;
+                        const imageName = images[currentIndex]?.name;
+                        if (imageName && ocrData[imageName]) {
+                            ocrData[imageName].text = result.yellow_text;
+                        }
+                    }
+                } else {
+                    document.getElementById('yellowTextPreview').textContent = '识别失败';
+                }
+            } catch (e) {
+                console.error('黄字识别失败:', e);
+                document.getElementById('yellowTextPreview').textContent = '-';
+            }
+        }
+
+        // ========== 跳过/翻页 ==========
+        document.getElementById('skipBtn').addEventListener('click', () => {
+            const imageName = images[currentIndex]?.name;
+            if (!imageName) return;
+            // 标记为跳过（非抓鬼图片）
+            ocrData[imageName] = { box: null, text: '', skipped: true };
+            document.getElementById('statusText').textContent = `已跳过 ${imageName}`;
+            // 自动下一张
+            if (currentIndex + 1 < images.length) {
+                loadImage(currentIndex + 1);
+            }
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentIndex > 0) {
+                loadImage(currentIndex - 1);
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentIndex + 1 < images.length) {
+                loadImage(currentIndex + 1);
+            }
+        });
+
+        // ========== 保存OCR数据 ==========
+        document.getElementById('saveOcrBtn').addEventListener('click', () => {
+            const imageName = images[currentIndex]?.name;
+            if (!imageName) return;
+
+            const box = ocrData[imageName]?.box;
+            if (!box) {
+                alert('请先绘制OCR区域框');
+                return;
+            }
+
+            ocrData[imageName].text = document.getElementById('ocrTextInput').value;
+            updateUI();
+            document.getElementById('statusText').textContent = '已保存当前标注';
+
+            // 自动下一张
+            if (currentIndex < images.length - 1) {
+                loadImage(currentIndex + 1);
+            }
+        });
+
+        document.getElementById('clearOcrBtn').addEventListener('click', () => {
+            const imageName = images[currentIndex]?.name;
+            if (imageName) {
+                delete ocrData[imageName];
+                ocrBox = null;
+                document.getElementById('ocrTextInput').value = '';
+                drawCanvas();
+                updateOcrPreview();
+                updateUI();
+            }
+        });
+
+        // ========== 保存OCR数据到服务器 ==========
+        document.getElementById('exportBtn').addEventListener('click', async () => {
+            const labeledCount = Object.keys(ocrData).length;
+            if (labeledCount === 0) {
+                alert('没有标注数据');
+                return;
+            }
+
+            document.getElementById('statusText').textContent = '正在保存到服务器...';
+
+            try {
+                const response = await fetch('/api/save_ocr_labels', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ocrData)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('statusText').textContent = `已保存 ${result.count} 条OCR数据`;
+                    alert(`保存成功！\n\nOCR标注: ${result.count} 条\n保存位置: ${result.folder}`);
+                } else {
+                    alert('保存失败: ' + result.error);
+                }
+            } catch (e) {
+                console.error('保存失败:', e);
+                document.getElementById('statusText').textContent = '保存失败';
+                alert('保存失败，请检查后端服务');
+            }
+        });
+
+        document.getElementById('exportCropBtn').addEventListener('click', async () => {
+            const labeledCount = Object.keys(ocrData).length;
+            if (labeledCount === 0) {
+                alert('没有标注数据');
+                return;
+            }
+
+            document.getElementById('statusText').textContent = '正在裁剪图片...';
+
+            // 请求后端裁剪所有OCR区域
+            const response = await fetch('/api/crop_ocr_regions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ocrData)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('statusText').textContent = `已裁剪 ${result.count} 张OCR图片`;
+                alert(`裁剪完成！图片保存到: ${result.folder}`);
+            } else {
+                document.getElementById('statusText').textContent = '裁剪失败';
+            }
+        });
+
+        // ========== 更新UI ==========
+        function updateUI() {
+            const labeledCount = Object.keys(ocrData).filter(k => ocrData[k]?.box).length;
+            document.getElementById('labeledCount').textContent = labeledCount;
+            document.getElementById('totalCount').textContent = images.length;
+
+            const imageName = images[currentIndex]?.name;
+            // 恢复当前图片保存的文字
+            const savedText = ocrData[imageName]?.text || '';
+            document.getElementById('ocrTextInput').value = savedText;
+
+            const statsHtml = `图片: <span class="highlight">${imageName || '无'}</span> | 检测框: <span class="highlight">${yoloBox ? 1 : 0}</span> | OCR框: <span class="highlight">${ocrData[imageName]?.box ? 1 : 0}</span>`;
+            document.getElementById('statusBar').innerHTML = statsHtml;
+
+            // 图片列表
+            const listHtml = images.map((img, i) => {
+                const isLabeled = ocrData[img.name]?.box;
+                const isCurrent = i === currentIndex;
+                const classes = ['image-item'];
+                if (isLabeled) classes.push('labeled');
+                if (isCurrent) classes.push('current');
+                return `<div class="${classes.join(' ')}" onclick="loadImage(${i})">${img.name.slice(6, 11)}</div>`;
+            }).join('');
+            document.getElementById('imageList').innerHTML = listHtml;
+
+            // 更新OCR预览
+            updateOcrPreview();
+        }
+
+        // ========== 快捷键 ==========
+        document.addEventListener('keydown', (e) => {
+            // 如果焦点在输入框中，不处理快捷键
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                loadImage(currentIndex - 1);
+            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                loadImage(currentIndex + 1);
+            } else if (e.key === 'Enter' && isOCRMode) {
+                document.getElementById('saveOcrBtn').click();
+            }
+        });
+
+        // 默认加载图片
+        document.getElementById('loadBtn').click();
+    </script>
+</body>
+</html>

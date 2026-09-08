@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useBaotuStore } from '@/stores/baotuStore'
 import { initYOLO, runYOLO, isModelLoaded } from '@/services/onnxYolo'
 import ScreenShare from '@/components/common/ScreenShare.vue'
+import HelpDrawer from '@/components/common/HelpDrawer.vue'
 import InventoryGrid from '@/components/baotu/InventoryGrid.vue'
 import CoordList from '@/components/baotu/CoordList.vue'
 
@@ -142,7 +143,7 @@ onUnmounted(() => {
     <!-- 左侧面板 -->
     <div class="left-panel">
       <!-- 屏幕共享 -->
-      <ScreenShare ref="screenShareRef" />
+      <ScreenShare ref="screenShareRef" label="宝图监控" />
 
       <!-- 模型加载 -->
       <div class="model-section card">
@@ -225,6 +226,7 @@ onUnmounted(() => {
       <!-- 坐标列表 -->
       <CoordList :coords="store.coords" @clear="store.clearCoords" />
     </div>
+    <HelpDrawer moduleKey="baotu" />
   </div>
 </template>
 

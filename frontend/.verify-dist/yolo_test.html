@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YOLO 检测测试</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0d12;
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #4fc3f7; color: #000; }
+    .btn-success { background: #4caf50; color: #fff; }
+    .btn-danger { background: #f44336; color: #fff; }
+    .btn-warning { background: #ff9800; color: #000; }
+    button:hover { opacity: 0.9; transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    input[type="file"] { display: none; }
+
+    .preview-area {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .preview-box {
+      background: #1a1f2e;
+      border-radius: 8px;
+      padding: 15px;
+      border: 1px solid #2a3040;
+    }
+    .preview-box h3 { margin-bottom: 10px; font-size: 14px; color: #4fc3f7; }
+    .canvas-container {
+      position: relative;
+      width: 480px;
+      height: 360px;
+      background: #000;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    #videoElement, #imageElement, #outputCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    #outputCanvas { z-index: 10; }
+
+    .status-bar {
+      text-align: center;
+      padding: 15px;
+      background: #1a1f2e;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #2a3040;
+    }
+    .status-bar.error { border-color: #f44336; background: rgba(244,67,54,0.1); }
+    .status-bar.success { border-color: #4caf50; background: rgba(76,175,80,0.1); }
+
+    .detections {
+      background: #1a1f2e;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+      border: 1px solid #2a3040;
+    }
+    .detections h3 { margin-bottom: 10px; font-size: 14px; color: #4fc3f7; }
+    .det-list { font-size: 13px; line-height: 1.8; }
+    .det-item { padding: 4px 8px; background: #2a3040; border-radius: 4px; margin: 4px 0; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+    }
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 YOLO 检测测试</h1>
+
+    <div class="status-bar" id="statusBar">正在加载模型...</div>
+
+    <div class="controls">
+      <button class="btn-primary" id="btnCamera" disabled>📷 开启摄像头</button>
+      <button class="btn-danger" id="btnStopCamera" style="display:none">⏹ 停止摄像头</button>
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      <button class="btn-success" id="btnUpload">📁 上传图片</button>
+      <button class="btn-warning" id="btnDetect" disabled>🎯 执行检测</button>
+    </div>
+
+    <div class="preview-area">
+      <div class="preview-box">
+        <h3>输入</h3>
+        <div class="canvas-container">
+          <video id="videoElement" autoplay muted playsinline></video>
+          <img id="imageElement" style="display:none">
+        </div>
+      </div>
+      <div class="preview-box">
+        <h3>检测结果</h3>
+        <div class="canvas-container">
+          <canvas id="outputCanvas" width="480" height="360"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-color" style="background:#ff6b6b"></div>钟馗</div>
+      <div class="legend-item"><div class="legend-color" style="background:#4ecdc4"></div>黑无常</div>
+      <div class="legend-item"><div class="legend-color" style="background:#45b7d1"></div>店小二</div>
+      <div class="legend-item"><div class="legend-color" style="background:#96ceb4"></div>接引仙女</div>
+      <div class="legend-item"><div class="legend-color" style="background:#ffeaa7"></div>驿站老板</div>
+      <div class="legend-item"><div class="legend-color" style="background:#dfe6e9"></div>强盗对话</div>
+      <div class="legend-item"><div class="legend-color" style="background:#a29bfe"></div>任务追踪</div>
+    </div>
+
+    <div class="detections" id="detectionsBox" style="display:none">
+      <h3>检测到的对象</h3>
+      <div class="det-list" id="detList"></div>
+    </div>
+  </div>
+
+  <script>
+    // 类别配置
+    const CLASSES = [
+      { name: '任务追踪', color: '#a29bfe' },
+      { name: '钟馗', color: '#ff6b6b' },
+      { name: '黑无常', color: '#4ecdc4' },
+      { name: '店小二', color: '#45b7d1' },
+      { name: '接引仙女', color: '#96ceb4' },
+      { name: '左侧干扰', color: '#636e72' },
+      { name: '驿站老板', color: '#ffeaa7' },
+      { name: '强盗对话', color: '#dfe6e9' }
+    ];
+
+    const CONF_THRESHOLD = 0.4;
+    const IOU_THRESHOLD = 0.45;
+    const INPUT_SIZE = 480;
+
+    let model = null;
+    let video = null;
+    let stream = null;
+    let currentImage = null;
+    let isWebcamMode = false;
+
+    const statusBar = document.getElementById('statusBar');
+    const btnCamera = document.getElementById('btnCamera');
+    const btnStopCamera = document.getElementById('btnStopCamera');
+    const btnUpload = document.getElementById('btnUpload');
+    const btnDetect = document.getElementById('btnDetect');
+    const fileInput = document.getElementById('fileInput');
+    const videoElement = document.getElementById('videoElement');
+    const imageElement = document.getElementById('imageElement');
+    const outputCanvas = document.getElementById('outputCanvas');
+    const detectionsBox = document.getElementById('detectionsBox');
+    const detList = document.getElementById('detList');
+
+    // 加载模型
+    async function loadModel() {
+      try {
+        statusBar.textContent = '正在加载 YOLO 模型...';
+        statusBar.className = 'status-bar';
+
+        model = await tf.loadGraphModel('/models/zhuagui/model.json');
+        console.log('模型加载成功:', model);
+
+        statusBar.textContent = '✅ 模型加载成功！可以开始检测';
+        statusBar.className = 'status-bar success';
+        btnCamera.disabled = false;
+        btnDetect.disabled = false;
+
+      } catch (e) {
+        console.error('模型加载失败:', e);
+        statusBar.textContent = '❌ 模型加载失败: ' + e.message;
+        statusBar.className = 'status-bar error';
+      }
+    }
+
+    // 开启摄像头
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480 }
+        });
+        videoElement.srcObject = stream;
+        videoElement.style.display = 'block';
+        imageElement.style.display = 'none';
+        isWebcamMode = true;
+
+        btnCamera.style.display = 'none';
+        btnStopCamera.style.display = 'inline-block';
+
+        statusBar.textContent = '摄像头已开启，点击「执行检测」';
+      } catch (e) {
+        alert('无法访问摄像头: ' + e.message);
+      }
+    }
+
+    // 停止摄像头
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      videoElement.srcObject = null;
+      isWebcamMode = false;
+
+      btnCamera.style.display = 'inline-block';
+      btnStopCamera.style.display = 'none';
+    }
+
+    // 上传图片
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        currentImage = new Image();
+        currentImage.onload = () => {
+          imageElement.src = currentImage.src;
+          imageElement.style.display = 'block';
+          videoElement.style.display = 'none';
+          isWebcamMode = false;
+          stopCamera();
+          statusBar.textContent = '图片已加载，点击「执行检测」';
+        };
+        currentImage.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // NMS 非极大值抑制
+    function nms(boxes, scores, iouThreshold) {
+      const indices = [];
+      const sorted = scores.map((s, i) => ({ score: s, idx: i }))
+        .sort((a, b) => b.score - a.score);
+
+      const used = new Set();
+
+      for (const { idx } of sorted) {
+        if (used.has(idx)) continue;
+        indices.push(idx);
+
+        for (const { idx: otherIdx } of sorted) {
+          if (used.has(otherIdx) || idx === otherIdx) continue;
+
+          const iou = computeIOU(boxes[idx], boxes[otherIdx]);
+          if (iou > iouThreshold) {
+            used.add(otherIdx);
+          }
+        }
+      }
+
+      return indices;
+    }
+
+    function computeIOU(box1, box2) {
+      const x1 = Math.max(box1.x, box2.x);
+      const y1 = Math.max(box1.y, box2.y);
+      const x2 = Math.min(box1.x + box1.w, box2.x + box2.w);
+      const y2 = Math.min(box1.y + box1.h, box2.y + box2.h);
+
+      const inter = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+      const area1 = box1.w * box1.h;
+      const area2 = box2.w * box2.h;
+      const union = area1 + area2 - inter;
+
+      return inter / union;
+    }
+
+    // 执行检测
+    async function detect() {
+      if (!model) {
+        alert('模型尚未加载');
+        return;
+      }
+
+      let inputTensor;
+      const ctx = outputCanvas.getContext('2d');
+      const origWidth = isWebcamMode ? videoElement.videoWidth : currentImage?.width || 480;
+      const origHeight = isWebcamMode ? videoElement.videoHeight : currentImage?.height || 360;
+
+      // 准备输入张量
+      if (isWebcamMode) {
+        inputTensor = tf.browser.fromPixels(videoElement)
+          .resizeBilinear([INPUT_SIZE, INPUT_SIZE])
+          .expandDims(0)
+          .toFloat()
+          .div(255);
+      } else if (currentImage) {
+        // 先画到临时 canvas
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = origWidth;
+        tempCanvas.height = origHeight;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(currentImage, 0, 0);
+
+        inputTensor = tf.browser.fromPixels(tempCanvas)
+          .resizeBilinear([INPUT_SIZE, INPUT_SIZE])
+          .expandDims(0)
+          .toFloat()
+          .div(255);
+      } else {
+        alert('请先开启摄像头或上传图片');
+        return;
+      }
+
+      statusBar.textContent = '正在检测...';
+
+      try {
+        const startTime = performance.now();
+        const output = await model.executeAsync({ images: inputTensor });
+        const endTime = performance.now();
+
+        // 输出形状 [1, 12, 4725]
+        const outputData = await output.data();
+        const [batch, channels, numAnchors] = output.shape;
+
+        console.log('输出形状:', output.shape);
+
+        // 解析输出
+        const boxes = [];
+        const scores = [];
+        const classIds = [];
+
+        for (let i = 0; i < numAnchors; i++) {
+          // 找到最大置信度的类别
+          let maxScore = 0;
+          let maxClassId = 0;
+
+          for (let c = 4; c < channels; c++) {
+            const score = outputData[c * numAnchors + i];
+            if (score > maxScore) {
+              maxScore = score;
+              maxClassId = c - 4;
+            }
+          }
+
+          if (maxScore > CONF_THRESHOLD) {
+            const cx = outputData[0 * numAnchors + i];
+            const cy = outputData[1 * numAnchors + i];
+            const w = outputData[2 * numAnchors + i];
+            const h = outputData[3 * numAnchors + i];
+
+            boxes.push({
+              x: (cx - w / 2) * origWidth / INPUT_SIZE,
+              y: (cy - h / 2) * origHeight / INPUT_SIZE,
+              w: w * origWidth / INPUT_SIZE,
+              h: h * origHeight / INPUT_SIZE
+            });
+            scores.push(maxScore);
+            classIds.push(maxClassId);
+          }
+        }
+
+        // NMS
+        const keepIndices = nms(boxes, scores, IOU_THRESHOLD);
+
+        // 绘制结果
+        outputCanvas.width = origWidth;
+        outputCanvas.height = origHeight;
+
+        // 先绘制原图
+        if (isWebcamMode) {
+          ctx.drawImage(videoElement, 0, 0, origWidth, origHeight);
+        } else {
+          ctx.drawImage(currentImage, 0, 0, origWidth, origHeight);
+        }
+
+        // 绘制检测框
+        const detections = [];
+        for (const idx of keepIndices) {
+          const box = boxes[idx];
+          const score = scores[idx];
+          const classId = classIds[idx];
+          const cls = CLASSES[classId];
+
+          // 绘制框
+          ctx.strokeStyle = cls.color;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(box.x, box.y, box.w, box.h);
+
+          // 绘制标签背景
+          const label = `${cls.name} ${(score * 100).toFixed(0)}%`;
+          ctx.font = '12px sans-serif';
+          const textWidth = ctx.measureText(label).width;
+          ctx.fillStyle = cls.color;
+          ctx.fillRect(box.x, box.y - 18, textWidth + 8, 18);
+
+          // 绘制标签文字
+          ctx.fillStyle = '#000';
+          ctx.fillText(label, box.x + 4, box.y - 5);
+
+          detections.push({ class: cls.name, score, box });
+        }
+
+        // 显示检测结果列表
+        if (detections.length > 0) {
+          detectionsBox.style.display = 'block';
+          detList.innerHTML = detections.map(d => `
+            <div class="det-item">
+              <strong>${d.class}</strong> - ${(d.score * 100).toFixed(1)}%
+              <span style="color:#888"> [${d.box.x.toFixed(0)}, ${d.box.y.toFixed(0)}, ${d.box.w.toFixed(0)}, ${d.box.h.toFixed(0)}]</span>
+            </div>
+          `).join('');
+        } else {
+          detectionsBox.style.display = 'block';
+          detList.innerHTML = '<div style="color:#888">未检测到对象</div>';
+        }
+
+        statusBar.textContent = `✅ 检测完成，耗时 ${(endTime - startTime).toFixed(1)}ms，检测到 ${detections.length} 个对象`;
+        statusBar.className = 'status-bar success';
+
+        // 清理
+        inputTensor.dispose();
+        output.dispose();
+
+      } catch (e) {
+        console.error('检测失败:', e);
+        statusBar.textContent = '❌ 检测失败: ' + e.message;
+        statusBar.className = 'status-bar error';
+        inputTensor.dispose();
+      }
+    }
+
+    // 事件绑定
+    btnCamera.addEventListener('click', startCamera);
+    btnStopCamera.addEventListener('click', stopCamera);
+    btnUpload.addEventListener('click', () => fileInput.click());
+    btnDetect.addEventListener('click', detect);
+
+    // 初始化
+    loadModel();
+  </script>
+</body>
+</html>

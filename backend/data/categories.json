@@ -1,0 +1,942 @@
+{
+  "source": "mhxyai.com/v2/api/admin/price/categories",
+  "serverType": "time",
+  "categories": [
+    {
+      "categoryId": 1,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "宝石",
+      "displayName": "宝石"
+    },
+    {
+      "categoryId": 2,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "打造",
+      "displayName": "打造"
+    },
+    {
+      "categoryId": 3,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "进阶召唤兽",
+      "displayName": "进阶召唤兽"
+    },
+    {
+      "categoryId": 4,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "灵饰",
+      "displayName": "灵饰"
+    },
+    {
+      "categoryId": 5,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "灵饰指南书",
+      "displayName": "灵饰指南书"
+    },
+    {
+      "categoryId": 6,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "杂货",
+      "displayName": "杂货"
+    },
+    {
+      "categoryId": 7,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "制作指南书",
+      "displayName": "制作指南书"
+    },
+    {
+      "categoryId": 151,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "环装",
+      "displayName": "环装"
+    },
+    {
+      "categoryId": 152,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "乐器和花",
+      "displayName": "乐器和花"
+    },
+    {
+      "categoryId": 153,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "命魂之玉",
+      "displayName": "命魂之玉"
+    },
+    {
+      "categoryId": 154,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "魔兽要诀",
+      "displayName": "魔兽要诀"
+    },
+    {
+      "categoryId": 155,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "山河画境",
+      "displayName": "山河画境"
+    },
+    {
+      "categoryId": 156,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "召唤兽内丹",
+      "displayName": "召唤兽内丹"
+    },
+    {
+      "categoryId": 157,
+      "serverType": "time",
+      "levelNo": 1,
+      "parentCategoryId": null,
+      "categoryName": "装备点化",
+      "displayName": "装备点化"
+    },
+    {
+      "categoryId": 8,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "翡翠石",
+      "displayName": "翡翠石"
+    },
+    {
+      "categoryId": 9,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "光芒石",
+      "displayName": "光芒石"
+    },
+    {
+      "categoryId": 10,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "黑宝石",
+      "displayName": "黑宝石"
+    },
+    {
+      "categoryId": 11,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "红宝石",
+      "displayName": "红宝石"
+    },
+    {
+      "categoryId": 12,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "红玛瑙",
+      "displayName": "红玛瑙"
+    },
+    {
+      "categoryId": 13,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "黄宝石",
+      "displayName": "黄宝石"
+    },
+    {
+      "categoryId": 14,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "蓝宝石",
+      "displayName": "蓝宝石"
+    },
+    {
+      "categoryId": 15,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "绿宝石",
+      "displayName": "绿宝石"
+    },
+    {
+      "categoryId": 16,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "舍利子",
+      "displayName": "舍利子"
+    },
+    {
+      "categoryId": 17,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "神秘石",
+      "displayName": "神秘石"
+    },
+    {
+      "categoryId": 18,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "太阳石",
+      "displayName": "太阳石"
+    },
+    {
+      "categoryId": 19,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "星辉石",
+      "displayName": "星辉石"
+    },
+    {
+      "categoryId": 20,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "玄灵珠-回春",
+      "displayName": "玄灵珠-回春"
+    },
+    {
+      "categoryId": 21,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "玄灵珠-破军",
+      "displayName": "玄灵珠-破军"
+    },
+    {
+      "categoryId": 22,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "月亮石",
+      "displayName": "月亮石"
+    },
+    {
+      "categoryId": 23,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 2,
+      "categoryName": "百炼精铁",
+      "displayName": "百炼精铁"
+    },
+    {
+      "categoryId": 24,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 2,
+      "categoryName": "元灵晶石",
+      "displayName": "元灵晶石"
+    },
+    {
+      "categoryId": 25,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 2,
+      "categoryName": "战魄",
+      "displayName": "战魄"
+    },
+    {
+      "categoryId": 26,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 3,
+      "categoryName": "初级清灵仙露",
+      "displayName": "初级清灵仙露"
+    },
+    {
+      "categoryId": 27,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 3,
+      "categoryName": "高级清灵仙露",
+      "displayName": "高级清灵仙露"
+    },
+    {
+      "categoryId": 28,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 3,
+      "categoryName": "清灵净瓶",
+      "displayName": "清灵净瓶"
+    },
+    {
+      "categoryId": 29,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 3,
+      "categoryName": "中级清灵仙露",
+      "displayName": "中级清灵仙露"
+    },
+    {
+      "categoryId": 30,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 4,
+      "categoryName": "耳饰",
+      "displayName": "耳饰"
+    },
+    {
+      "categoryId": 31,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 4,
+      "categoryName": "戒指",
+      "displayName": "戒指"
+    },
+    {
+      "categoryId": 32,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 4,
+      "categoryName": "佩饰",
+      "displayName": "佩饰"
+    },
+    {
+      "categoryId": 33,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 4,
+      "categoryName": "任意位置",
+      "displayName": "任意位置"
+    },
+    {
+      "categoryId": 34,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 4,
+      "categoryName": "手镯",
+      "displayName": "手镯"
+    },
+    {
+      "categoryId": 35,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 5,
+      "categoryName": "耳饰",
+      "displayName": "耳饰"
+    },
+    {
+      "categoryId": 36,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 5,
+      "categoryName": "戒指",
+      "displayName": "戒指"
+    },
+    {
+      "categoryId": 37,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 5,
+      "categoryName": "佩饰",
+      "displayName": "佩饰"
+    },
+    {
+      "categoryId": 38,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 5,
+      "categoryName": "手镯",
+      "displayName": "手镯"
+    },
+    {
+      "categoryId": 39,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "分解符",
+      "displayName": "分解符"
+    },
+    {
+      "categoryId": 40,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "符石卷轴",
+      "displayName": "符石卷轴"
+    },
+    {
+      "categoryId": 41,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "海马",
+      "displayName": "海马"
+    },
+    {
+      "categoryId": 42,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "炼兽珍经",
+      "displayName": "炼兽珍经"
+    },
+    {
+      "categoryId": 43,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "炼妖石",
+      "displayName": "炼妖石"
+    },
+    {
+      "categoryId": 44,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "强化石",
+      "displayName": "强化石"
+    },
+    {
+      "categoryId": 45,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "染色",
+      "displayName": "染色"
+    },
+    {
+      "categoryId": 46,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "如意丹",
+      "displayName": "如意丹"
+    },
+    {
+      "categoryId": 47,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "山河画境",
+      "displayName": "山河画境"
+    },
+    {
+      "categoryId": 48,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "上古锻造图策",
+      "displayName": "上古锻造图策"
+    },
+    {
+      "categoryId": 49,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "神兽涎",
+      "displayName": "神兽涎"
+    },
+    {
+      "categoryId": 50,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "神通",
+      "displayName": "神通"
+    },
+    {
+      "categoryId": 51,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "特赦令牌",
+      "displayName": "特赦令牌"
+    },
+    {
+      "categoryId": 52,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "五宝",
+      "displayName": "五宝"
+    },
+    {
+      "categoryId": 53,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "洗宝宝",
+      "displayName": "洗宝宝"
+    },
+    {
+      "categoryId": 54,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "修炼果",
+      "displayName": "修炼果"
+    },
+    {
+      "categoryId": 55,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "摇钱树树苗",
+      "displayName": "摇钱树树苗"
+    },
+    {
+      "categoryId": 56,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "元宵",
+      "displayName": "元宵"
+    },
+    {
+      "categoryId": 57,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 6,
+      "categoryName": "珍珠",
+      "displayName": "珍珠"
+    },
+    {
+      "categoryId": 58,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "宝珠",
+      "displayName": "宝珠"
+    },
+    {
+      "categoryId": 59,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "鞭",
+      "displayName": "鞭"
+    },
+    {
+      "categoryId": 60,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "锤",
+      "displayName": "锤"
+    },
+    {
+      "categoryId": 61,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "刀",
+      "displayName": "刀"
+    },
+    {
+      "categoryId": 62,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "灯笼",
+      "displayName": "灯笼"
+    },
+    {
+      "categoryId": 63,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "发钗",
+      "displayName": "发钗"
+    },
+    {
+      "categoryId": 64,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "法杖",
+      "displayName": "法杖"
+    },
+    {
+      "categoryId": 65,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "斧",
+      "displayName": "斧"
+    },
+    {
+      "categoryId": 66,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "弓",
+      "displayName": "弓"
+    },
+    {
+      "categoryId": 67,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "棍",
+      "displayName": "棍"
+    },
+    {
+      "categoryId": 68,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "剑",
+      "displayName": "剑"
+    },
+    {
+      "categoryId": 69,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "巨剑",
+      "displayName": "巨剑"
+    },
+    {
+      "categoryId": 70,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "铠甲",
+      "displayName": "铠甲"
+    },
+    {
+      "categoryId": 71,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "魔棒",
+      "displayName": "魔棒"
+    },
+    {
+      "categoryId": 72,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "女衣",
+      "displayName": "女衣"
+    },
+    {
+      "categoryId": 73,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "飘带",
+      "displayName": "飘带"
+    },
+    {
+      "categoryId": 74,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "枪",
+      "displayName": "枪"
+    },
+    {
+      "categoryId": 75,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "伞",
+      "displayName": "伞"
+    },
+    {
+      "categoryId": 76,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "扇",
+      "displayName": "扇"
+    },
+    {
+      "categoryId": 77,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "双环",
+      "displayName": "双环"
+    },
+    {
+      "categoryId": 78,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "双剑",
+      "displayName": "双剑"
+    },
+    {
+      "categoryId": 79,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "头盔",
+      "displayName": "头盔"
+    },
+    {
+      "categoryId": 80,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "项链",
+      "displayName": "项链"
+    },
+    {
+      "categoryId": 81,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "靴",
+      "displayName": "靴"
+    },
+    {
+      "categoryId": 82,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "腰带",
+      "displayName": "腰带"
+    },
+    {
+      "categoryId": 83,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 7,
+      "categoryName": "爪刺",
+      "displayName": "爪刺"
+    },
+    {
+      "categoryId": 158,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 151,
+      "categoryName": "60环",
+      "displayName": "60环"
+    },
+    {
+      "categoryId": 159,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 151,
+      "categoryName": "70环",
+      "displayName": "70环"
+    },
+    {
+      "categoryId": 160,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 151,
+      "categoryName": "80环",
+      "displayName": "80环"
+    },
+    {
+      "categoryId": 161,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 152,
+      "categoryName": "花",
+      "displayName": "花"
+    },
+    {
+      "categoryId": 162,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 152,
+      "categoryName": "乐器",
+      "displayName": "乐器"
+    },
+    {
+      "categoryId": 163,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 153,
+      "categoryName": "女娲灵契",
+      "displayName": "女娲灵契"
+    },
+    {
+      "categoryId": 164,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 153,
+      "categoryName": "女娲祝符",
+      "displayName": "女娲祝符"
+    },
+    {
+      "categoryId": 165,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 153,
+      "categoryName": "五色灵尘",
+      "displayName": "五色灵尘"
+    },
+    {
+      "categoryId": 166,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 154,
+      "categoryName": "低级魔兽要诀",
+      "displayName": "低级魔兽要诀"
+    },
+    {
+      "categoryId": 167,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 154,
+      "categoryName": "高级魔兽要诀",
+      "displayName": "高级魔兽要诀"
+    },
+    {
+      "categoryId": 168,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "徽记",
+      "displayName": "徽记"
+    },
+    {
+      "categoryId": 169,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "奖杯碎片",
+      "displayName": "奖杯碎片"
+    },
+    {
+      "categoryId": 170,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "粮草",
+      "displayName": "粮草"
+    },
+    {
+      "categoryId": 171,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "妙计-摧城",
+      "displayName": "妙计-摧城"
+    },
+    {
+      "categoryId": 172,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "妙计-会心",
+      "displayName": "妙计-会心"
+    },
+    {
+      "categoryId": 173,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "妙计-疾驰",
+      "displayName": "妙计-疾驰"
+    },
+    {
+      "categoryId": 174,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "妙计-坚步",
+      "displayName": "妙计-坚步"
+    },
+    {
+      "categoryId": 175,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "妙计-破敌",
+      "displayName": "妙计-破敌"
+    },
+    {
+      "categoryId": 176,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "妙计-强弓",
+      "displayName": "妙计-强弓"
+    },
+    {
+      "categoryId": 177,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "妙计-铁骑",
+      "displayName": "妙计-铁骑"
+    },
+    {
+      "categoryId": 178,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "妙计-无双",
+      "displayName": "妙计-无双"
+    },
+    {
+      "categoryId": 179,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 155,
+      "categoryName": "战书",
+      "displayName": "战书"
+    },
+    {
+      "categoryId": 180,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 156,
+      "categoryName": "低级内丹",
+      "displayName": "低级内丹"
+    },
+    {
+      "categoryId": 181,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 156,
+      "categoryName": "高级内丹",
+      "displayName": "高级内丹"
+    },
+    {
+      "categoryId": 182,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 157,
+      "categoryName": "附魔宝珠",
+      "displayName": "附魔宝珠"
+    },
+    {
+      "categoryId": 183,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 157,
+      "categoryName": "原初魔石",
+      "displayName": "原初魔石"
+    },
+    {
+      "categoryId": 184,
+      "serverType": "time",
+      "levelNo": 2,
+      "parentCategoryId": 1,
+      "categoryName": "钟灵石",
+      "displayName": "钟灵石"
+    }
+  ]
+}

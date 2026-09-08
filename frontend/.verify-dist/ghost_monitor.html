@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>抓鬼助手 - 画中画监控</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; overflow: hidden; }
+.header { background: #16213e; padding: 10px 20px; display: flex; align-items: center; gap: 12px; border: 1px solid #0f3460; border-radius: 8px; max-width: 1388px; margin: 12px auto 0; }
+.header h1 { font-size: 16px; color: #e94560; }
+.btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+.btn:hover { opacity: 0.85; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: #0f3460; color: #eee; }
+.btn-success { background: #1b5e20; color: #eee; }
+.btn-danger { background: #b71c1c; color: #eee; }
+.btn-warning { background: #e65100; color: #eee; }
+.status-badge { padding: 3px 10px; border-radius: 10px; font-size: 11px; background: #0f3460; }
+.status-badge.loading { background: #e65100; animation: pulse 1s infinite; }
+.status-badge.ready { background: #1b5e20; }
+.status-badge.triggered { background: #ffc107; color: #000; animation: pulse 0.5s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+.main { display: flex; gap: 12px; max-width: 1388px; margin: 12px auto; padding: 0 12px; height: calc(100vh - 130px); }
+.left-panel { width: 300px; padding: 0; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; background: transparent; }
+.section { background: #1a1f2e; padding: 12px; border-radius: 8px; border: 1px solid #2a3040; }
+.section h2 { font-size: 14px; color: #4fc3f7; margin-bottom: 8px; }
+.info-item { background: #16213e; padding: 8px; border-radius: 4px; margin-bottom: 6px; }
+.info-item .label { color: #888; font-size: 11px; }
+.info-item .value { color: #4fc3f7; font-size: 14px; font-weight: bold; }
+
+/* 条件状态显示 */
+.condition-item { background: #16213e; padding: 8px; border-radius: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+.cond-label { color: #888; font-size: 12px; }
+.cond-value { font-size: 12px; font-weight: bold; }
+.cond-value.success { color: #4caf50; }
+.cond-value.fail { color: #e94560; }
+.cond-value.pending { color: #888; }
+.monitor-status { padding: 20px; text-align: center; border-radius: 8px; background: #1a1f2e; margin-bottom: 10px; border: 3px solid #2a3040; transition: border-color 0.3s; }
+.monitor-status.active { border-color: #1b5e20; }
+.monitor-status.triggered { border-color: #ffc107; animation: glow 0.5s infinite; }
+@keyframes glow { 0%,100% { box-shadow: 0 0 10px #ffc107; } 50% { box-shadow: 0 0 20px #ffc107; } }
+.monitor-status .icon { font-size: 40px; margin-bottom: 10px; }
+.monitor-status .text { font-size: 14px; color: #888; }
+.monitor-status.triggered .text { color: #ffc107; font-weight: bold; }
+.detect-count { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+.detect-item { padding: 8px 12px; background: #16213e; border-radius: 4px; text-align: center; }
+.detect-item .name { font-size: 11px; color: #888; }
+.detect-item .count { font-size: 18px; font-weight: bold; }
+.detect-item.active .count { color: #4fc3f7; }
+.detect-item.triggered .count { color: #ffc107; }
+.right-panel { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 16px; }
+.pip-window { width: 300px; background: #16213e; border-radius: 8px; border: 2px solid #2a3040; padding: 10px; display: none; position: fixed; top: 60px; right: 20px; overflow: hidden; }
+.pip-window.active { display: block; }
+.pip-window img { display: block; transform-origin: top left; }
+.pip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.pip-header h3 { font-size: 14px; color: #4fc3f7; }
+.pip-close { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; }
+.pip-close:hover { color: #e94560; }
+.map-display { background: #0f0f23; border-radius: 8px; padding: 10px; text-align: center; }
+.map-display img { max-width: 100%; max-height: 300px; border-radius: 4px; }
+.map-name { font-size: 16px; color: #4fc3f7; margin-bottom: 5px; font-weight: bold; }
+.map-coord { font-size: 14px; color: #e0e0e0; }
+.map-areas { margin-top: 10px; display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+.area-tag { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+.area-tag.position { background: #e94560; color: #fff; }
+.area-tag.corner { background: #ff9800; color: #000; }
+.log-section { max-height: 200px; overflow-y: auto; }
+.log-item { font-size: 11px; color: #888; margin-bottom: 2px; padding: 2px 4px; border-radius: 2px; }
+.log-item.error { color: #e94560; background: rgba(233,69,96,0.1); }
+.log-item.success { color: #4caf50; background: rgba(76,175,80,0.1); }
+.log-item.trigger { color: #ffc107; background: rgba(255,193,7,0.1); }
+
+/* 识别历史 */
+.history-section { max-height: 300px; overflow-y: auto; }
+.history-item { background: #1a1f2e; padding: 8px; border-radius: 4px; margin-bottom: 6px; border-left: 3px solid #4fc3f7; }
+.history-item.template-success { border-left-color: #4caf50; }
+.history-item.ocr-success { border-left-color: #ff9800; }
+.history-item .time { font-size: 10px; color: #888; }
+.history-item .map { font-size: 14px; color: #4fc3f7; font-weight: bold; }
+.history-item .coord { font-size: 12px; color: #e0e0e0; }
+.history-item .compare { font-size: 10px; color: #888; margin-top: 4px; }
+
+/* 画中画可拖拽 */
+.pip-window { position: absolute; cursor: move; }
+.pip-window.dragging { cursor: grabbing; }
+
+/* 左侧监控竖条（与挖图助手 ScreenShare.vue 一致） */
+.monitor-rail {
+  position: fixed; left: 0; top: 50%; transform: translateY(-50%);
+  z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 26px; padding: 12px 4px; cursor: pointer; user-select: none;
+  background: #16213e; border: 1px solid #0f3460; border-left: none; border-radius: 0 8px 8px 0;
+}
+.monitor-rail:hover { background: rgba(255,255,255,0.07); border-color: #4fc3f7; }
+.monitor-rail.active { border-color: #f5c518; box-shadow: 0 0 0 1px rgba(245,197,24,0.3); }
+.rail-dot { width: 9px; height: 9px; border-radius: 50%; background: #888; flex-shrink: 0; }
+.monitor-rail.active .rail-dot { background: #ff4d4f; box-shadow: 0 0 8px #ff4d4f; animation: pulse 1s infinite; }
+.rail-label { writing-mode: vertical-rl; text-orientation: upright; font-size: 11px; letter-spacing: 2px; color: #888; }
+.monitor-rail.active .rail-label { color: #f5c518; }
+.rail-actions { position: fixed; left: 32px; top: 50%; transform: translateY(-50%); z-index: 60; display: none; flex-direction: column; gap: 4px; }
+.mini-btn { width: 30px; height: 30px; border-radius: 6px; border: 1px solid #0f3460; background: #16213e; color: #4fc3f7; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+.mini-btn:hover { background: rgba(255,255,255,0.07); border-color: #4fc3f7; }
+/* 返回首页（与其他静态页一致） */
+.return-home{display:inline-flex;align-items:center;gap:4px;color:#9aa3b2;font-size:13px;padding:6px 12px;border-radius:4px;text-decoration:none;transition:all .2s;background:transparent}
+.return-home:hover{color:#fff;background:rgba(255,255,255,.08)}
+
+/* 使用说明（A方案：右下角悬浮「图片+文字」+ 右侧抽屉，沿用抓鬼页配色） */
+.help-fab{position:fixed;right:22px;bottom:22px;z-index:80;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:22px;border:1px solid rgba(79,195,247,.45);background:rgba(22,33,62,.94);color:#e6f6ff;font-size:14px;font-weight:600;letter-spacing:1px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .2s,background .2s;backdrop-filter:blur(4px)}
+.help-fab:hover{transform:scale(1.05);background:rgba(79,195,247,.18)}
+.help-fab img{width:22px;height:22px;display:block;object-fit:contain}
+.help-fab .help-fab-text{white-space:nowrap}
+.help-panel{position:fixed;right:0;top:0;bottom:0;z-index:90;width:360px;max-width:92vw;height:100vh;background:#16213e;border-left:2px solid #4fc3f7;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s ease;box-shadow:-10px 0 40px rgba(0,0,0,.4)}
+.help-panel.open{transform:translateX(0)}
+.help-header{display:flex;align-items:center;gap:8px;padding:14px 16px;background:#0f3460;border-bottom:1px solid #16213e}
+.help-header h3{margin:0;font-size:15px;color:#fff;font-weight:500}
+.help-close{margin-left:auto;background:none;border:none;color:#9aa3b2;font-size:22px;cursor:pointer;line-height:1}
+.help-close:hover{color:#fff}
+.help-body{flex:1;overflow-y:auto;padding:16px;color:#e0e0e0;font-size:13px;line-height:1.65}
+.help-body h4{color:#4fc3f7;font-size:14px;margin:14px 0 8px;font-weight:500}
+.help-body h4:first-child{margin-top:0}
+.help-body p{color:#b8c0cc;margin:0 0 8px}
+.help-steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.help-steps li{position:relative;padding-left:30px;margin-bottom:10px;color:#b8c0cc}
+.help-steps li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:0;width:20px;height:20px;border-radius:50%;background:#4fc3f7;color:#0f0f23;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center}
+.help-tip{background:rgba(255,193,7,.08);border-left:3px solid #ffc107;padding:8px 10px;border-radius:4px;color:#d4b455;font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+<!-- 左侧监控竖条（与挖图助手一致） -->
+<div class="monitor-rail" id="monitorRail" onclick="toggleMonitorRail()" title="点击开始抓鬼监控">
+  <span class="rail-dot"></span>
+  <span class="rail-label" id="railLabel">开始监控</span>
+</div>
+<div class="rail-actions" id="railActions">
+  <button class="mini-btn" onclick="manualRecognize()" title="手动识别">🔍</button>
+  <button class="mini-btn" onclick="stopMonitor()" title="停止监控">✕</button>
+</div>
+<div class="header">
+  <a href="/" class="return-home" target="_top">⬅ 返回首页</a>
+  <h1>👻 抓鬼助手 - 画中画监控</h1>
+  <span class="status-badge" id="statusBadge">加载模型...</span>
+  <button class="btn btn-warning" id="btnPip" onclick="togglePip()">📍 地图画中画</button>
+  <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#aaa;margin-left:12px;">
+    <input type="checkbox" id="chkLowPower" onchange="toggleLowPower()" checked> 🎮 低占用模式
+  </label>
+  <span id="fpsDisplay" style="color:#4fc3f7;font-size:12px;"></span>
+</div>
+
+<!-- 隐藏的 canvas 用于绘制地图（PiP 源） -->
+<canvas id="mapCanvas" width="380" height="300" style="position:fixed;top:-9999px;left:-9999px;"></canvas>
+
+<!-- 隐藏的 video 元素（PiP 必须挂在 video 上） -->
+<video id="pipVideo" muted playsinline style="position:fixed;top:-9999px;left:-9999px;"></video>
+<div class="main">
+  <div class="left-panel">
+    <div class="monitor-status" id="monitorStatus">
+      <div class="icon" id="monitorIcon">😴</div>
+      <div class="text" id="monitorText">等待开始监控</div>
+    </div>
+
+    <!-- 条件状态显示 -->
+    <div class="section" id="conditionStatus" style="display:none">
+      <h2>📊 检测状态</h2>
+      <div class="condition-item" id="condTaskTrack">
+        <span class="cond-label">任务追踪</span>
+        <span class="cond-value">❌ 未检测</span>
+      </div>
+      <div class="condition-item" id="condZhongKui">
+        <span class="cond-label">钟馗</span>
+        <span class="cond-value">❌ 未检测</span>
+      </div>
+    </div>
+    <div class="section">
+      <h2>🎯 识别结果</h2>
+      <div class="info-item"><div class="label">地图</div><div class="value" id="resultMap">-</div></div>
+      <div class="info-item"><div class="label">坐标</div><div class="value" id="resultCoord">-</div></div>
+      <div class="info-item"><div class="label">鬼名</div><div class="value" id="resultGhost">-</div></div>
+    </div>
+    <div class="section history-section" id="historySection">
+      <h2>📜 识别历史</h2>
+      <div id="historyList"></div>
+    </div>
+  </div>
+  <div class="right-panel">
+    <!-- 预测地图画中画 -->
+    <div class="pip-window" id="pipWindow">
+      <div class="pip-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="color:#4fc3f7;font-size:12px;margin:0;">🗺️ 预测地图</h3>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button class="pip-zoom" onclick="pipZoomOut()" title="缩小" style="width:22px;height:22px;border-radius:4px;border:1px solid #2a3040;background:#16213e;color:#4fc3f7;cursor:pointer;font-size:14px;">−</button>
+          <span id="pipZoomLevel" style="font-size:11px;color:#4fc3f7;min-width:36px;text-align:center;">100%</span>
+          <button class="pip-zoom" onclick="pipZoomIn()" title="放大" style="width:22px;height:22px;border-radius:4px;border:1px solid #2a3040;background:#16213e;color:#4fc3f7;cursor:pointer;font-size:14px;">+</button>
+        </div>
+      </div>
+      <img id="pipMapImage" style="display:none;width:100%;border-radius:4px;">
+    </div>
+    <!-- 截图预览 -->
+    <div id="capturePreview" style="display:none; margin-top:20px; background:#16213e; border-radius:8px; padding:15px;">
+      <h3 style="color:#4fc3f7;font-size:12px;margin-bottom:10px">📤 发送给后端的截图（PNG无损）</h3>
+      <img id="captureImage" style="border-radius:4px; border:1px solid #2a3040; image-rendering: pixelated;">
+      <div id="captureInfo" style="color:#888;font-size:11px;margin-top:5px"></div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0"></script>
+<script>
+const CONFIG = {
+  yoloModelPath: '/models/zhuagui/model.json',
+  yoloModelVersion: 'v1',
+  apiBaseUrl: '',
+  confidenceThreshold: 0.8,
+  // 模型固定 480x480 输入，不可修改
+  inputSize: 480,
+  classes: ['任务追踪', '钟馗', '黑无常', '店小二', '接引仙女', '左侧干扰', '驿站老板', '强盗对话'],
+  monitorInterval: 800
+};
+let isLowPower = true;
+function toggleLowPower() {
+  isLowPower = document.getElementById('chkLowPower').checked;
+  if (isLowPower) {
+    // 低占用模式：降低检测频率（200ms → 800ms），GPU 负担约为原来的 1/4
+    CONFIG.monitorInterval = 800;
+  } else {
+    CONFIG.monitorInterval = 200;
+  }
+  console.log(`性能模式: ${isLowPower ? '🎮 低占用 (interval=800ms)' : '🚀 高性能 (interval=200ms)'}`);
+}
+let yoloModel = null, videoStream = null, video = null, canvas = null, ctx = null, isMonitoring = false, monitorLoopId = null, recognizeHistory = [];
+let triggerCooldownUntil = 0;  // 触发冷却：同一次对话不重复触发，对话关闭后自动重置
+let zeroCoordRetried = false;  // 标记是否已因坐标为0重试过一次
+
+// 左侧竖条：开始/停止监控的状态同步
+function toggleMonitorRail() { if (!isMonitoring) startMonitor(); }
+function updateRail(active) {
+  const rail = document.getElementById('monitorRail');
+  const label = document.getElementById('railLabel');
+  const actions = document.getElementById('railActions');
+  if (active) {
+    rail.classList.add('active');
+    label.textContent = '抓鬼监控·监控中';
+    actions.style.display = 'flex';
+  } else {
+    rail.classList.remove('active');
+    label.textContent = '开始监控';
+    actions.style.display = 'none';
+  }
+}
+function addToHistory(result) {
+  const time = new Date().toLocaleTimeString();
+  const item = {
+    time: time,
+    map: result.map,
+    x: result.x,
+    y: result.y,
+    success: result.ocr?.map
+  };
+  recognizeHistory.unshift(item);
+  if (recognizeHistory.length > 20) recognizeHistory.pop();
+
+  const historyList = document.getElementById('historyList');
+  const div = document.createElement('div');
+  div.className = 'history-item ' + (item.success ? 'ocr-success' : '');
+
+  div.innerHTML = '<div class="time">' + time + '</div>' +
+    '<div class="map">' + (item.map || '-') + '</div>' +
+    '<div class="coord">坐标: ' + item.x + ', ' + item.y + '</div>' +
+    '<div class="compare">OCR识别</div>';
+
+  historyList.insertBefore(div, historyList.firstChild);
+}
+function setStatus(text, type = '') { const badge = document.getElementById('statusBadge'); badge.textContent = text; badge.className = 'status-badge ' + type; }
+async function initModels() {
+  try {
+    setStatus('加载YOLO...', 'loading');
+    console.log('加载YOLO模型...');
+    const DB_KEY = 'indexeddb://zhuagui-yolo';
+    // 检查模型版本，版本不匹配则清除旧缓存
+    const savedVer = localStorage.getItem('yoloModelVersion');
+    if (savedVer && savedVer !== CONFIG.yoloModelVersion) {
+      console.log('模型版本更新，清除旧缓存...');
+      try { await tf.io.removeModel(DB_KEY); } catch(e) {}
+    }
+    // 先尝试从 IndexedDB 加载（秒加载，不走网络）
+    try {
+      yoloModel = await tf.loadGraphModel(DB_KEY);
+      console.log('✅ 从浏览器缓存加载YOLO模型（秒加载）');
+    } catch (e) {
+      // 首次访问：从网络下载，然后存入 IndexedDB
+      console.log('首次加载，从网络获取模型...');
+      yoloModel = await tf.loadGraphModel(CONFIG.yoloModelPath);
+      await yoloModel.save(DB_KEY);
+      localStorage.setItem('yoloModelVersion', CONFIG.yoloModelVersion);
+      console.log('✅ 模型已缓存到浏览器，下次秒加载');
+    }
+    setStatus('就绪', 'ready');
+    console.log('YOLO模型加载完成');
+  } catch (e) {
+    console.error('模型加载失败:', e.message);
+    setStatus('加载失败', 'error');
+  }
+}
+async function startMonitor() { try { videoStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'never' }, audio: false }); video = document.createElement('video'); video.srcObject = videoStream; await video.play(); canvas = document.createElement('canvas'); canvas.width = video.videoWidth; canvas.height = video.videoHeight; ctx = canvas.getContext('2d'); videoStream.getVideoTracks()[0].onended = () => stopMonitor(); isMonitoring = true; updateRail(true); updateMonitorStatus('active', '🔍 监控中', '点击左侧竖条手动识别/停止'); setStatus('监控中', 'ready'); monitorLoop(); } catch (e) { console.error('无法启动监控:', e.message); } }
+function stopMonitor() { isMonitoring = false; if (monitorLoopId) { clearInterval(monitorLoopId); monitorLoopId = null; } if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; } video = null; canvas = null; updateRail(false); updateMonitorStatus('inactive', '😴 已停止', '点击左侧竖条开始监控'); setStatus('就绪', 'ready'); hidePip(); }
+async function monitorLoop() {
+  if (!isMonitoring || !video || !yoloModel) return;
+  const t0 = performance.now();
+  try {
+    ctx.drawImage(video, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const detections = await runYOLO(imageData);
+
+    // 检测任务追踪和钟馗
+    const taskTrack = detections.filter(d => d.classId === 0 && d.conf > CONFIG.confidenceThreshold);
+    const zhongKui = detections.filter(d => d.classId === 1 && d.conf > CONFIG.confidenceThreshold);
+
+    // 更新条件状态显示
+    updateConditionStatus(taskTrack.length > 0, zhongKui.length > 0);
+
+    // 检测到任务追踪和钟馗后延迟触发
+    if (taskTrack.length > 0 && zhongKui.length > 0) {
+      const now = Date.now();
+      if (now >= triggerCooldownUntil) {
+        // 延迟1秒后触发（等待画面稳定）
+        triggerCooldownUntil = now + 1000;
+        setTimeout(() => {
+          if (isMonitoring && video) {
+            onTrigger(imageData, taskTrack[0], zhongKui[0]);
+          }
+        }, 1000);
+        updateMonitorStatus('triggered', '⚡ 检测到抓鬼任务', '延迟1秒后识别...');
+      }
+    } else {
+      // 条件不满足时重置冷却和重试计数
+      triggerCooldownUntil = 0;
+      retryCount = 0;
+      updateMonitorStatus('active', '🔍 监控中', '');
+    }
+
+    const fps = Math.round(1000 / (performance.now() - t0));
+    document.getElementById('fpsDisplay').textContent = fps + ' FPS' + (isLowPower ? ' 🎮' : '');
+  } catch (e) {
+    console.error('检测错误:', e.message);
+  }
+  if (isMonitoring) {
+    monitorLoopId = setTimeout(monitorLoop, CONFIG.monitorInterval);
+  }
+}
+
+// 手动识别
+async function manualRecognize() {
+  if (!video || !ctx || !yoloModel) {
+    alert('请先开始监控');
+    return;
+  }
+
+  setStatus('识别中...', 'loading');
+
+  try {
+    ctx.drawImage(video, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const detections = await runYOLO(imageData);
+
+    const taskTrack = detections.filter(d => d.classId === 0 && d.conf > CONFIG.confidenceThreshold);
+
+    if (taskTrack.length === 0) {
+      alert('未检测到任务追踪');
+      setStatus('就绪', 'ready');
+      return;
+    }
+
+    await onTrigger(imageData, taskTrack[0]);
+
+  } catch (e) {
+    console.error('识别失败:', e.message);
+    setStatus('识别失败', 'error');
+  }
+}
+
+// 更新条件状态显示
+function updateConditionStatus(hasTaskTrack, hasZhongKui) {
+  // 显示条件状态区域
+  document.getElementById('conditionStatus').style.display = 'block';
+
+  // 任务追踪
+  const ttEl = document.getElementById('condTaskTrack').querySelector('.cond-value');
+  if (hasTaskTrack) {
+    ttEl.textContent = '✅ 检测到';
+    ttEl.className = 'cond-value success';
+  } else {
+    ttEl.textContent = '❌ 未检测';
+    ttEl.className = 'cond-value fail';
+  }
+
+  // 钟馗
+  const zkEl = document.getElementById('condZhongKui').querySelector('.cond-value');
+  if (hasZhongKui) {
+    zkEl.textContent = '✅ 检测到';
+    zkEl.className = 'cond-value success';
+  } else {
+    zkEl.textContent = '❌ 未检测';
+    zkEl.className = 'cond-value fail';
+  }
+}
+
+async function runYOLO(imageData) { const { width, height, data } = imageData; const inputSize = CONFIG.inputSize; const inputTensor = tf.tidy(() => { let tensor = tf.tensor3d(new Uint8Array(data), [height, width, 4]); tensor = tensor.slice([0, 0, 0], [-1, -1, 3]); tensor = tf.image.resizeBilinear(tensor, [inputSize, inputSize]); tensor = tensor.toFloat().div(255); return tensor.expandDims(0); }); const output = await yoloModel.executeAsync({ images: inputTensor }); const outputData = await output.data(); const dims = output.shape; inputTensor.dispose(); output.dispose(); const numAnchors = dims[2]; const boxes = []; for (let i = 0; i < numAnchors; i++) { const cx = outputData[0 * numAnchors + i]; const cy = outputData[1 * numAnchors + i]; const w = outputData[2 * numAnchors + i]; const h = outputData[3 * numAnchors + i]; let maxConf = 0, classId = 0; for (let c = 4; c < 12; c++) { const conf = outputData[c * numAnchors + i]; if (conf > maxConf) { maxConf = conf; classId = c - 4; } } if (maxConf > CONFIG.confidenceThreshold) { boxes.push({ x1: (cx - w/2) * width / inputSize, y1: (cy - h/2) * height / inputSize, x2: (cx + w/2) * width / inputSize, y2: (cy + h/2) * height / inputSize, conf: maxConf, classId, className: CONFIG.classes[classId] }); } } return boxes; }
+async function onTrigger(imageData, taskTrack) {
+  setStatus('识别中...', 'triggered');
+  console.log(`触发识别: 任务追踪置信=${taskTrack.conf.toFixed(2)}`);
+
+  try {
+    // 裁剪：任务追踪 bbox 正下方区域
+    const bbox = taskTrack;
+    const bx = bbox.x1;
+    const by = bbox.y1;
+    const bw = bbox.x2 - bbox.x1;
+    const bh = bbox.y2 - bbox.y1;
+
+    // 裁剪起点：bbox 底部
+    const cropX = Math.max(0, bx);
+    const cropY = Math.max(0, by + bh);
+    const cropW = bw + 10;
+
+    // 高度 ×4，限制 100-280px
+    let cropH = bh * 4;
+    cropH = Math.max(100, Math.min(280, cropH));
+    cropH = Math.min(canvas.height - cropY, cropH);
+
+    // 创建裁剪 canvas
+    const cropCanvas = document.createElement('canvas');
+    cropCanvas.width = cropW;
+    cropCanvas.height = cropH;
+    const cropCtx = cropCanvas.getContext('2d');
+    cropCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+    // 无损 PNG
+    const pngData = cropCanvas.toDataURL('image/png');
+
+    // 显示截图预览
+    document.getElementById('capturePreview').style.display = 'block';
+    document.getElementById('capturePreview').innerHTML = `
+      <h3 style="color:#4fc3f7;font-size:12px;margin-bottom:10px">📤 发送给后端的截图（PNG无损）</h3>
+      <img id="captureImage" src="${pngData}" style="border-radius:4px; border:1px solid #2a3040; image-rendering: pixelated;">
+      <div id="captureInfo" style="color:#888;font-size:11px;margin-top:5px">尺寸: ${cropW}x${cropH}</div>
+    `;
+
+    // 调用后端 API
+    const response = await fetch(CONFIG.apiBaseUrl + '/api/ghost/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: pngData.split(',')[1] })
+    });
+    const result = await response.json();
+
+    if (result.success) {
+      // 识别成功
+      document.getElementById('resultMap').textContent = result.map || '-';
+      document.getElementById('resultCoord').textContent = result.x + ', ' + result.y;
+      document.getElementById('resultGhost').textContent = '-';
+
+      addToHistory(result);
+      showPip(result);  // 显示画中画
+
+      setStatus('识别完成', 'ready');
+      updateMonitorStatus('active', '🔍 监控中', `识别成功: ${result.map} (${result.x},${result.y})`);
+
+      // 成功后设置8秒冷却（防止同一对话重复触发）
+      triggerCooldownUntil = Date.now() + 8000;
+    } else {
+      // 识别失败，不重试
+      console.log('识别失败:', result.error);
+
+      document.getElementById('resultMap').textContent = '识别失败';
+      document.getElementById('resultCoord').textContent = '-';
+      setStatus('识别失败', 'error');
+      updateMonitorStatus('active', '🔍 监控中', '识别失败，继续监控');
+
+      // 设置8秒冷却，等待下次对话
+      triggerCooldownUntil = Date.now() + 8000;
+    }
+  } catch (e) {
+    console.error('API调用失败:', e.message);
+    document.getElementById('resultMap').textContent = '网络错误';
+    document.getElementById('resultCoord').textContent = '-';
+    setStatus('网络错误', 'error');
+    updateMonitorStatus('active', '🔍 监控中', '网络错误，继续监控');
+    triggerCooldownUntil = Date.now() + 8000;
+  }
+}
+function showPip(result) {
+  lastPipData = result;
+
+  // 显示右侧预测地图窗口
+  const pipWindow = document.getElementById('pipWindow');
+  pipWindow.style.display = 'block';
+  pipWindow.classList.add('active');
+
+  if (result.map_file) {
+    renderGhostMap(document.getElementById('mapCanvas'), result).then(ok => {
+      if (ok) {
+        const img = document.getElementById('pipMapImage');
+        img.src = document.getElementById('mapCanvas').toDataURL();
+        img.style.display = 'block';
+      }
+    });
+  }
+
+  // 应用已保存的缩放比例（新地图弹出时保持上次缩放）
+  applyPipZoom();
+}
+
+// ========== 画中画缩放（保持上次缩放比例） ==========
+let pipZoom = parseFloat(localStorage.getItem('pipZoom') || '1');
+const PIP_ZOOM_MIN = 0.5;
+const PIP_ZOOM_MAX = 3.0;
+const PIP_ZOOM_STEP = 0.1;
+const PIP_BASE_WIDTH = 280; // pip-window 基础宽度（减去 padding）
+
+function applyPipZoom() {
+  const pip = document.getElementById('pipWindow');
+  // 通过调整窗口宽度实现缩放，内容自然撑开
+  pip.style.width = (PIP_BASE_WIDTH * pipZoom) + 'px';
+  document.getElementById('pipZoomLevel').textContent = Math.round(pipZoom * 100) + '%';
+}
+
+function pipZoomIn() {
+  pipZoom = Math.min(PIP_ZOOM_MAX, Math.round((pipZoom + PIP_ZOOM_STEP) * 100) / 100);
+  localStorage.setItem('pipZoom', String(pipZoom));
+  applyPipZoom();
+}
+
+function pipZoomOut() {
+  pipZoom = Math.max(PIP_ZOOM_MIN, Math.round((pipZoom - PIP_ZOOM_STEP) * 100) / 100);
+  localStorage.setItem('pipZoom', String(pipZoom));
+  applyPipZoom();
+}
+
+// 滚轮缩放（画中画窗口内）
+function initPipWheelZoom() {
+  const pip = document.getElementById('pipWindow');
+  pip.addEventListener('wheel', (e) => {
+    if (e.target.id !== 'pipMapImage' && e.target.tagName !== 'IMG') return;
+    e.preventDefault();
+    if (e.deltaY < 0) {
+      pipZoom = Math.min(PIP_ZOOM_MAX, Math.round((pipZoom + PIP_ZOOM_STEP) * 100) / 100);
+    } else {
+      pipZoom = Math.max(PIP_ZOOM_MIN, Math.round((pipZoom - PIP_ZOOM_STEP) * 100) / 100);
+    }
+    localStorage.setItem('pipZoom', String(pipZoom));
+    applyPipZoom();
+  }, { passive: false });
+}
+function hidePip() {
+  document.getElementById('pipWindow').classList.remove('active', 'triggered');
+}
+function updateMonitorStatus(status, icon, text) {
+  const statusDiv = document.getElementById('monitorStatus');
+  const iconDiv = document.getElementById('monitorIcon');
+  const textDiv = document.getElementById('monitorText');
+  statusDiv.className = 'monitor-status ' + status;
+  iconDiv.textContent = icon;
+  textDiv.textContent = text;
+}
+
+// 画中画拖拽功能
+function initDraggable() {
+  const pip = document.getElementById('pipWindow');
+  let isDragging = false, startX, startY, startLeft, startTop;
+
+  pip.addEventListener('mousedown', (e) => {
+    if (e.target.tagName === 'BUTTON') return;
+    isDragging = true;
+    pip.classList.add('dragging');
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = pip.getBoundingClientRect();
+    startLeft = rect.left;
+    startTop = rect.top;
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    pip.style.left = (startLeft + dx) + 'px';
+    pip.style.top = (startTop + dy) + 'px';
+    pip.style.right = 'auto';
+    pip.style.transform = 'none';
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    pip.classList.remove('dragging');
+  });
+}
+
+// ========== 浏览器原生画中画功能 ==========
+let pipVideo = null;
+let canvasStream = null;
+let pipRefreshTimer = null;
+let lastPipData = null;
+
+async function togglePip() {
+  if (!document.pictureInPictureEnabled) {
+    console.error('当前浏览器不支持画中画');
+    return;
+  }
+
+  try {
+    // 如果已在画中画 → 关闭
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+      cleanupPip();
+      document.getElementById('btnPip').textContent = '📍 地图画中画';
+      // 恢复右侧显示
+      document.getElementById('pipWindow').style.display = 'block';
+      return;
+    }
+
+    // 需要有识别结果才能显示地图
+    if (!lastPipData) {
+      console.error('请先触发抓鬼检测获取识别结果');
+      return;
+    }
+
+    // 隐藏右侧预测地图（节省资源）
+    document.getElementById('pipWindow').style.display = 'none';
+
+    // 先画一帧地图到 canvas
+    drawMapToCanvas(lastPipData);
+
+    // 创建隐藏 video 元素
+    if (!pipVideo) {
+      pipVideo = document.getElementById('pipVideo');
+      pipVideo.muted = true;
+      pipVideo.playsInline = true;
+    }
+
+    // canvas → MediaStream（8fps）→ 挂到 video
+    if (!canvasStream) {
+      const mapCanvas = document.getElementById('mapCanvas');
+      canvasStream = mapCanvas.captureStream(8);
+      pipVideo.srcObject = canvasStream;
+      await pipVideo.play();
+    }
+
+    // 每 120ms 重绘 canvas（PiP 窗口自动跟随）
+    if (!pipRefreshTimer) {
+      pipRefreshTimer = setInterval(() => {
+        if (lastPipData) drawMapToCanvas(lastPipData);
+      }, 120);
+    }
+
+    // 请求浏览器原生画中画
+    await pipVideo.requestPictureInPicture();
+    document.getElementById('btnPip').textContent = '❌ 关闭画中画';
+
+    // 监听退出事件
+    pipVideo.addEventListener('leavepictureinpicture', () => {
+      cleanupPip();
+      document.getElementById('btnPip').textContent = '📍 地图画中画';
+      // 恢复右侧显示
+      document.getElementById('pipWindow').style.display = 'block';
+    });
+
+  } catch (e) {
+    console.error('画中画开启失败:', e.message);
+    // 失败时恢复右侧显示
+    document.getElementById('pipWindow').style.display = 'block';
+  }
+}
+
+// ========== 前端自绘地图（替代后端 annotated_image） ==========
+// 底图缓存在前端，首次加载后浏览器自动复用，无需每次请求
+const _mapImgCache = {};
+
+function loadBaseMap(file) {
+  return new Promise((resolve, reject) => {
+    if (_mapImgCache[file]) { resolve(_mapImgCache[file]); return; }
+    const img = new Image();
+    img.onload = () => { _mapImgCache[file] = img; resolve(img); };
+    img.onerror = () => reject(new Error('地图底图加载失败: ' + file));
+    img.src = '/maps/' + file;
+  });
+}
+
+function drawQuadrant(ctx, px, py, side, q, color) {
+  let x1, y1, x2, y2;
+  if (q === 1)      { x1 = px;        y1 = py - side; x2 = px + side; y2 = py; }
+  else if (q === 2) { x1 = px - side; y1 = py - side; x2 = px;        y2 = py; }
+  else if (q === 3) { x1 = px - side; y1 = py;        x2 = px;        y2 = py + side; }
+  else if (q === 4) { x1 = px;        y1 = py;        x2 = px + side; y2 = py + side; }
+  else return;
+  ctx.fillStyle = color;
+  ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+}
+
+// 在 canvas 上自绘：底图 + 坐标点 + 象限蒙版
+// 坐标映射与后端 _draw_coordinate_on_map 完全一致，注意 Y 轴翻转
+async function renderGhostMap(canvas, data) {
+  if (!data || !data.map_file) return false;
+  let base;
+  try { base = await loadBaseMap(data.map_file); }
+  catch (e) { console.error(e.message); return false; }
+
+  const ctx = canvas.getContext('2d');
+  const W = base.naturalWidth, H = base.naturalHeight;
+  canvas.width = W; canvas.height = H;
+  ctx.clearRect(0, 0, W, H);
+  ctx.drawImage(base, 0, 0, W, H);
+
+  const mw = data.map_width, mh = data.map_height;
+  if (!mw || !mh) return true;
+
+  const x = data.x, y = data.y;
+  const px = x / mw * W;               // 与后端 px = x/scale_width 一致
+  const py = H * (1 - y / mh);         // 与后端 py = imgH - y/scale_height 一致（Y 翻转）
+
+  // ±50 游戏单位换算为像素；小地图（如普陀山95×72）底图每单位像素密度高，
+  // 不限制会把框/点放大到溢出整张图，故设相对上限（短边的 35%）
+  let side = 50 / ((mw / W + mh / H) / 2);
+  const maxSide = Math.min(W, H) * 0.35;
+  if (side > maxSide) side = maxSide;
+
+  // 所有图形裁剪到地图范围，避免蒙版/黄框/圆点溢出底图
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, H);
+  ctx.clip();
+
+  // 低概率象限（浅黄） / 高概率象限（深红）
+  (data.corner_areas || []).forEach(q => drawQuadrant(ctx, px, py, side, q, 'rgba(255,255,100,0.35)'));
+  (data.position_areas || []).forEach(q => drawQuadrant(ctx, px, py, side, q, 'rgba(255,0,0,0.55)'));
+
+  // 当前位置黄框
+  ctx.strokeStyle = 'yellow';
+  ctx.lineWidth = Math.max(2, Math.min(side * 0.06, 6));
+  ctx.strokeRect(px - side, py - side, side * 2, side * 2);
+
+  // 中心圆点
+  ctx.fillStyle = 'yellow';
+  const r = Math.max(3, Math.min(side * 0.15, Math.min(W, H) * 0.08));
+  ctx.beginPath();
+  ctx.arc(px, py, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 坐标文字（白底红字，约束在地图内，避免越界）
+  const text = '(' + x + ',' + y + ')';
+  ctx.font = 'bold 22px sans-serif';
+  const tw = ctx.measureText(text).width;
+  let tx = px + side + 8, ty = py + 6;
+  tx = Math.max(2, Math.min(tx, W - tw - 4));   // 防右侧溢出
+  ty = Math.max(20, Math.min(ty, H - 6));       // 防上下溢出
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillRect(tx - 3, ty - 18, tw + 6, 24);
+  ctx.fillStyle = 'red';
+  ctx.fillText(text, tx, ty);
+
+  return true;
+}
+
+function drawMapToCanvas(data) {
+  renderGhostMap(document.getElementById('mapCanvas'), data);
+}
+
+function cleanupPip() {
+  if (pipRefreshTimer) {
+    clearInterval(pipRefreshTimer);
+    pipRefreshTimer = null;
+  }
+  if (canvasStream) {
+    canvasStream.getTracks().forEach(t => t.stop());
+    canvasStream = null;
+  }
+}
+
+// ========== 使用说明抽屉（A方案） ==========
+function toggleHelp(force) {
+  const panel = document.getElementById('helpPanel');
+  const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+  panel.classList.toggle('open', open);
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleHelp(false); });
+
+document.addEventListener('DOMContentLoaded', () => { initModels(); initDraggable(); initPipWheelZoom(); applyPipZoom(); });
+</script>
+<!-- 使用说明（A方案：右下角悬浮? + 右侧抽屉） -->
+<button class="help-fab" id="helpFab" onclick="toggleHelp()" title="使用说明">
+  <img src="/mhxy/static/help-btn.png" alt="使用说明">
+  <span class="help-fab-text">使用说明</span>
+</button>
+<div class="help-panel" id="helpPanel">
+  <div class="help-header">
+    <h3>👻 抓鬼助手 · 使用说明</h3>
+    <button class="help-close" onclick="toggleHelp(false)" title="关闭">×</button>
+  </div>
+  <div class="help-body">
+    <h4>简介</h4>
+    <p>抓鬼助手通过浏览器实时识别游戏画面中的「任务追踪」与「钟馗」，自动识别鬼所在地图与坐标，并弹出预测地图，帮你快速定位抓鬼目标。</p>
+    <h4>使用步骤</h4>
+    <ol class="help-steps">
+      <li>点击左侧竖条（或顶栏按钮）开启「共享屏幕」，选择梦幻西游游戏窗口授权。</li>
+      <li>系统实时识别，左侧面板实时显示「任务追踪 / 钟馗」状态。</li>
+      <li>两者同时出现即自动触发识别，右侧显示坐标与预测地图（支持画中画）。</li>
+      <li>可点「地图画中画」把预测地图弹到独立浮窗，滚轮或 ± 缩放查看。</li>
+    </ol>
+    <h4>注意事项</h4>
+    <p class="help-tip">游戏窗口需保持可见，勿最小化或遮挡任务追踪区域；低占用模式默认开启，性能不足时取消勾选可提速。</p>
+    <p class="help-tip">建议在梦幻西游「界面设置 → 色弱模式」中勾选，任务追踪字体将变为黄色，识别更准、更稳定。</p>
+  </div>
+</div>
+</body>
+</html>

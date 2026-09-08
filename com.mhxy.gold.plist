@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mhxy.gold</string>
+
+    <!-- 全服金价后端：backend_gold.py 内部自行 uvicorn.run(port=8010) -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>backend_gold.py</string>
+    </array>
+
+    <!-- 工作目录：mhxy-helper/backend -->
+    <key>WorkingDirectory</key>
+    <string>/Users/zhy/mhxy-helper/backend</string>
+
+    <!-- 登录自启 + 崩溃自动重启 -->
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- 日志 -->
+    <key>StandardOutPath</key>
+    <string>/tmp/gold.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/gold.stdout.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+</dict>
+</plist>

@@ -17,6 +17,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger(__name__)
 
+# 象限判定阈值比例（替代原绝对阈值 150/50，按各图尺寸换算，避免尺度不一）
+# far：远端判定比例；near：近端（贴边）判定比例
+QUADRANT_FAR_RATIO = 0.6
+QUADRANT_NEAR_RATIO = 0.2
+
 BASE_DIR = Path(__file__).parent.parent  # backend 目录
 MAPS_DIR = BASE_DIR / "data" / "maps"
 
@@ -261,13 +266,23 @@ class GhostPredictor:
         logger.warning(f"未找到地图: {map_name}")
         return None
 
-    def predict_position_areas(self, x: int, y: int, map_info: MapInfo) -> Tuple[List[int], List[int], str, bool]:
-        """预测小鬼可能出现的象限区域（按地图尺寸比例判断）
+    def predict_position_areas(self, x: int, y: int, map_info: MapInfo) -> Tuple[List[int], List[int], str]:
+        """预测小鬼可能出现的象限区域
 
         象限定义：
             2 | 1
             -----
             3 | 4
+
+        规则：
+        （四角规律优先已于 2026-08-17 禁用，坐标偏向边缘时不再单独判角落）
+        阈值按地图尺寸比例计算：far = 维度 × QUADRANT_FAR_RATIO(0.6)，near = 维度 × QUADRANT_NEAR_RATIO(0.2)
+        1. 直接走以下规则（x 用 map_w、y 用 map_h 各自换算）：
+           - x > far_w 且 y < near_h：高概率 Q4，低概率 Q1
+           - x < y：高概率 Q2，低概率 Q3
+           - x >= far_w 或 y >= far_h：高概率 Q1，低概率 Q2
+           - x < near_w 或 y < near_h：高概率 Q3，低概率 Q4
+           - 默认（x>=y）：高概率 Q4，低概率 Q1
 
         Args:
             x: X坐标
@@ -275,81 +290,71 @@ class GhostPredictor:
             map_info: 地图信息
 
         Returns:
-            (可能象限列表, 四角优先象限列表, 置信度描述, 是否中间区域)
+            (高概率象限列表, 低概率象限列表, 置信度描述)
         """
-        # 普陀山和五庄观特殊处理（GUI原版逻辑）
+        # 普陀山和五庄观特殊处理
         if map_info.name in ['普陀山', '五庄观']:
-            return [3], [], "可信度：100%", False
+            return [3], [], "可信度：100%"
 
-        position_areas = [2, 1, 3, 4]
-
-        # 按地图尺寸比例计算阈值
         map_w = map_info.width
         map_h = map_info.height
-        x_threshold_low = map_w * 0.25   # 25% 左侧边界
-        x_threshold_high = map_w * 0.75  # 75% 右侧边界
-        y_threshold_low = map_h * 0.25   # 25% 下侧边界
-        y_threshold_high = map_h * 0.75  # 75% 上侧边界
+        # 【已禁用】四角规律优先的原边界阈值（25%/75%），保留变量定义不影响逻辑
+        # x_threshold_low = map_w * 0.25   # 25% 左侧边界
+        # x_threshold_high = map_w * 0.75  # 75% 右侧边界
+        # y_threshold_low = map_h * 0.25   # 25% 下侧边界
+        # y_threshold_high = map_h * 0.75  # 75% 上侧边界
 
-        # 判断是否在中间区域
-        x_in_middle = x_threshold_low <= x <= x_threshold_high
-        y_in_middle = y_threshold_low <= y <= y_threshold_high
-        is_middle_area = x_in_middle and y_in_middle
+        high_prob = []   # 高概率象限（深红色）
+        low_prob = []    # 低概率象限（浅黄色）
 
-        # 根据坐标比例排除不可能的象限
-        if x > x_threshold_high:
-            self._remove_from_list(position_areas, [2, 3])  # 排除左侧
-        if x < x_threshold_low:
-            self._remove_from_list(position_areas, [1, 4])  # 排除右侧
-        if y > y_threshold_high:
-            self._remove_from_list(position_areas, [3, 4])  # 排除下方
-        if y < y_threshold_low:
-            self._remove_from_list(position_areas, [2, 1])  # 排除上方
+        # ===== 四角规律优先判断（已禁用，坐标不再偏向角落） =====
+        # x_corner = []
+        # y_corner = []
+        #
+        # if x > x_threshold_high:
+        #     x_corner = [1, 4]  # 坐标偏右 → 鬼在右侧角落
+        # elif x < x_threshold_low:
+        #     x_corner = [2, 3]  # 坐标偏左 → 鬼在左侧角落
+        #
+        # if y > y_threshold_high:
+        #     y_corner = [1, 2]  # 坐标偏上 → 鬼在上侧角落
+        # elif y < y_threshold_low:
+        #     y_corner = [3, 4]  # 坐标偏下 → 鬼在下侧角落
+        #
+        # # 四角交集
+        # if x_corner and y_corner:
+        #     high_prob = [a for a in [1, 2, 3, 4] if a in x_corner and a in y_corner]
 
-        # 计算置信度
-        if len(position_areas) == 1:
-            confidence = "可信度：100%"
-        elif len(position_areas) == 2:
-            confidence = "可信度：50%"
-        elif len(position_areas) == 3:
-            confidence = "可信度：33%"
+        # ===== 直接走新规则（四角规律已禁用，阈值按地图尺寸比例换算） =====
+        if not high_prob:
+            x_far, x_near = map_w * QUADRANT_FAR_RATIO, map_w * QUADRANT_NEAR_RATIO
+            y_far, y_near = map_h * QUADRANT_FAR_RATIO, map_h * QUADRANT_NEAR_RATIO
+            if x > x_far and y < y_near:
+                high_prob = [4]
+                low_prob = [1]
+            elif x < y:
+                high_prob = [2]
+                low_prob = [3]
+            elif x >= x_far or y >= y_far:
+                high_prob = [1]
+                low_prob = [2]
+            elif x < x_near or y < y_near:
+                high_prob = [3]
+                low_prob = [4]
+            else:  # 默认：x >= y
+                high_prob = [4]
+                low_prob = [1]
+
+        # ===== 置信度 =====
+        if len(high_prob) == 1 and len(low_prob) <= 1:
+            confidence = "可信度：高"
         else:
-            confidence = "可信度：25%"
+            confidence = "可信度：中"
 
-        # 四角规律（鬼偏爱往地图角落跑）
-        corner_areas = []
-        x_corner = []
-        y_corner = []
+        high_str = '/'.join([str(c) for c in high_prob])
+        confidence += f"（高概率: {high_str}）"
 
-        # x方向偏好（按比例）
-        if x > x_threshold_high:
-            x_corner = [1, 4]  # 坐标偏右 → 鬼在右侧角落
-        elif x < x_threshold_low:
-            x_corner = [2, 3]  # 坐标偏左 → 鬼在左侧角落
-
-        # y方向偏好（按比例）
-        if y > y_threshold_high:
-            y_corner = [1, 2]  # 坐标偏上 → 鬼在上侧角落
-        elif y < y_threshold_low:
-            y_corner = [3, 4]  # 坐标偏下 → 鬿在下侧角落
-
-        # 取x和y方向偏好的交集 → 最近角落概率最大
-        if x_corner and y_corner:
-            corner_areas = [a for a in position_areas if a in x_corner and a in y_corner]
-
-        # 如果没有严格交集，取x或y方向的偏好
-        if not corner_areas:
-            all_corner = set(x_corner + y_corner)
-            corner_areas = [a for a in position_areas if a in all_corner]
-
-        # 中间区域：目标点正负25为高命中区域
-        if is_middle_area:
-            confidence += "（中间区域，高命中: 目标点±25）"
-        elif corner_areas:
-            corners_str = '/'.join([str(c) for c in corner_areas])
-            confidence += f"（四角优先: {corners_str}）"
-
-        return position_areas, corner_areas, confidence, is_middle_area
+        return high_prob, low_prob, confidence
 
     def _remove_from_list(self, lst: list, values: list):
         """从列表中移除多个值"""
@@ -379,44 +384,39 @@ class GhostPredictor:
         prediction.map_info = map_info
 
         # 预测象限
-        areas, corner_areas, confidence, is_middle_area = self.predict_position_areas(x, y, map_info)
-        prediction.position_areas = areas
-        prediction.corner_areas = corner_areas
+        high_prob, low_prob, confidence = self.predict_position_areas(x, y, map_info)
+        prediction.position_areas = high_prob
+        prediction.corner_areas = low_prob
         prediction.confidence = confidence
 
-        # 标注地图
-        prediction.annotated_image = self._draw_coordinate_on_map(
-            map_info, x, y, areas, corner_areas, is_middle_area
-        )
+        # 地图标注改为前端渲染：后端不再生成 annotated_image（省 CPU + 带宽）
+        # 如需恢复：prediction.annotated_image = self._draw_coordinate_on_map(...)
 
         return prediction
 
     def _draw_coordinate_on_map(self, map_info: MapInfo, x: int, y: int,
-                                 position_areas: List[int],
-                                 corner_areas: List[int] = None,
-                                 is_middle_area: bool = False) -> Optional[Image.Image]:
+                                 high_prob: List[int],
+                                 low_prob: List[int] = None) -> Optional[Image.Image]:
         """在地图上标注坐标位置
 
         Args:
             map_info: 地图信息
             x: X坐标
             y: Y坐标
-            position_areas: 预测的象限区域
-            corner_areas: 四角规律优先的角落区域（蒙版更深）
-            is_middle_area: 是否在中间区域（目标点±25高命中）
+            high_prob: 高概率象限区域（深红色蒙版）
+            low_prob: 低概率象限区域（浅黄色蒙版）
 
         Returns:
             标注后的地图图片
         """
-        if corner_areas is None:
-            corner_areas = []
+        if low_prob is None:
+            low_prob = []
 
         if not map_info.background_image:
             return None
 
         # 复制背景图
         image = map_info.background_image.copy()
-        draw = ImageDraw.Draw(image)
 
         # 地图区域边界（不含边框刻度）
         map_left = map_info.border_size
@@ -432,39 +432,25 @@ class GhostPredictor:
         px = max(map_left, min(map_right, px))
         py = max(map_top, min(map_bottom, py))
 
-        # 计算标记框大小（适配地图缩放）
-        side = 30 / ((map_info.scale_width + map_info.scale_height) / 2)
+        # 计算标记框大小（游戏坐标±50，根据地图缩放换算成像素）
+        # x方向和y方向缩放比可能不同，取平均
+        side = 50 / ((map_info.scale_width + map_info.scale_height) / 2)
 
         # 绘制象限蒙版（裁剪到地图区域）
         area_overlay = Image.new('RGBA', image.size, (0, 0, 0, 0))
         area_draw = ImageDraw.Draw(area_overlay)
 
-        if is_middle_area:
-            # 中间区域：绘制目标点±25的高命中区域（浅黄色蒙版）
-            # 将±25转换为图片坐标
-            offset_px = 25 / map_info.scale_width
-            offset_py = 25 / map_info.scale_height
+        # 先绘制低概率区域（浅黄色）
+        for quadrant in low_prob:
+            rect = self._get_quadrant_rect(px, py, side, quadrant)
+            rect = self._clip_rect_to_map(rect, map_left, map_top, map_right, map_bottom)
+            area_draw.rectangle(rect, fill=(255, 255, 100, 80))
 
-            high_hit_rect = (
-                px - offset_px,
-                py - offset_py,
-                px + offset_px,
-                py + offset_py
-            )
-            high_hit_rect = self._clip_rect_to_map(high_hit_rect, map_left, map_top, map_right, map_bottom)
-            # 浅黄色半透明蒙版（高命中区域）
-            area_draw.rectangle(high_hit_rect, fill=(255, 255, 100, 100))
-        else:
-            # 非中间区域：绘制象限蒙版
-            for quadrant in position_areas:
-                rect = self._get_quadrant_rect(px, py, side, quadrant)
-                rect = self._clip_rect_to_map(rect, map_left, map_top, map_right, map_bottom)
-                if quadrant in corner_areas:
-                    # 四角优先区域：深红色
-                    area_draw.rectangle(rect, fill=(255, 0, 0, 180))
-                else:
-                    # 普通预测区域：浅黄色半透明
-                    area_draw.rectangle(rect, fill=(255, 255, 100, 80))
+        # 再绘制高概率区域（深红色，覆盖在上面）
+        for quadrant in high_prob:
+            rect = self._get_quadrant_rect(px, py, side, quadrant)
+            rect = self._clip_rect_to_map(rect, map_left, map_top, map_right, map_bottom)
+            area_draw.rectangle(rect, fill=(255, 0, 0, 180))
 
         image = Image.alpha_composite(image, area_overlay)
 
@@ -485,15 +471,35 @@ class GhostPredictor:
         draw2.ellipse(point_rect, fill="yellow")
 
         # 在标记旁边写坐标文字（确保不超出边界）
-        text_x = px + side + 4
-        text_y = py - 8
-        if text_x > map_right - 60:
-            text_x = px - side - 60
+        text = f"({x},{y})"
+
+        # 尝试加载字体，失败则用默认字体
+        try:
+            font_size = 20
+            font = ImageFont.truetype("/System/Library/Fonts/PingFang.ttc", font_size)
+        except:
+            try:
+                font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 18)
+            except:
+                font = ImageFont.load_default()
+
+        # 计算文字位置
+        text_x = px + side + 8
+        text_y = py - 10
+        if text_x > map_right - 80:
+            text_x = px - side - 80
         if text_y < map_top:
             text_y = py + 4
 
-        text = f"({x},{y})"
-        draw2.text((text_x, text_y), text, fill="red")
+        # 先绘制白色背景框
+        bbox = draw2.textbbox((text_x, text_y), text, font=font)
+        padding = 3
+        draw2.rectangle(
+            (bbox[0] - padding, bbox[1] - padding, bbox[2] + padding, bbox[3] + padding),
+            fill=(255, 255, 255, 230)
+        )
+        # 再绘制红色文字
+        draw2.text((text_x, text_y), text, fill="red", font=font)
 
         return image
 
@@ -542,20 +548,27 @@ if __name__ == "__main__":
     # 测试预测
     print("支持的地图:", predictor.get_map_list())
 
-    # 测试：长寿村 (100, 80) - 边缘区域
+    # 测试：长寿村 (100, 80) - x > y, 不满足四角规律
     result = predictor.predict("长寿村", 100, 80)
-    print(f"\n预测结果: {result.map_name} ({result.x}, {result.y})")
-    print(f"可能象限: {result.position_areas}")
+    print(f"\n长寿村 (100, 80): 高概率={result.position_areas}, 低概率={result.corner_areas}")
     print(f"置信度: {result.confidence}")
 
-    # 测试：长寿村 (80, 105) - 中间区域 (160x210的地图, 25%-75%范围)
+    # 测试：长寿村 (80, 105) - 中间区域 + x < y
     result2 = predictor.predict("长寿村", 80, 105)
-    print(f"\n预测结果: {result2.map_name} ({result2.x}, {result2.y})")
-    print(f"可能象限: {result2.position_areas}")
+    print(f"\n长寿村 (80, 105): 高概率={result2.position_areas}, 低概率={result2.corner_areas}")
     print(f"置信度: {result2.confidence}")
 
-    # 测试：江南野外 (80, 60)
-    result3 = predictor.predict("江南野外", 80, 60)
-    print(f"\n预测结果: {result3.map_name} ({result3.x}, {result3.y})")
-    print(f"可能象限: {result3.position_areas}")
+    # 测试：江南野外 (85, 54) - 中间区域 + x > y
+    result3 = predictor.predict("江南野外", 85, 54)
+    print(f"\n江南野外 (85, 54): 高概率={result3.position_areas}, 低概率={result3.corner_areas}")
     print(f"置信度: {result3.confidence}")
+
+    # 测试：大唐境外 (500, 60) - 四角规律：x偏右
+    result4 = predictor.predict("大唐境外", 500, 60)
+    print(f"\n大唐境外 (500, 60): 高概率={result4.position_areas}, 低概率={result4.corner_areas}")
+    print(f"置信度: {result4.confidence}")
+
+    # 测试：x < y 场景
+    result5 = predictor.predict("建邺城", 50, 100)
+    print(f"\n建邺城 (50, 100): 高概率={result5.position_areas}, 低概率={result5.corner_areas}")
+    print(f"置信度: {result5.confidence}")

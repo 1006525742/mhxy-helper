@@ -7,7 +7,7 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; overflow: hidden; }
-.header { background: #16213e; padding: 10px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #0f3460; }
+.header { background: #16213e; padding: 10px 20px; display: flex; align-items: center; gap: 12px; border: 1px solid #0f3460; border-radius: 8px; max-width: 1388px; margin: 12px auto 0; }
 .header h1 { font-size: 16px; color: #e94560; }
 .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
 .btn:hover { opacity: 0.85; }
@@ -21,9 +21,9 @@ body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif;
 .status-badge.ready { background: #1b5e20; }
 .status-badge.triggered { background: #ffc107; color: #000; animation: pulse 0.5s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
-.main { display: flex; height: calc(100vh - 50px); }
-.left-panel { width: 280px; padding: 15px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; background: #16213e; }
-.section { background: #1a1f2e; padding: 12px; border-radius: 6px; }
+.main { display: flex; gap: 12px; max-width: 1388px; margin: 12px auto; padding: 0 12px; height: calc(100vh - 130px); }
+.left-panel { width: 300px; padding: 0; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; background: transparent; }
+.section { background: #1a1f2e; padding: 12px; border-radius: 8px; border: 1px solid #2a3040; }
 .section h2 { font-size: 14px; color: #4fc3f7; margin-bottom: 8px; }
 .info-item { background: #16213e; padding: 8px; border-radius: 4px; margin-bottom: 6px; }
 .info-item .label { color: #888; font-size: 11px; }
@@ -49,7 +49,7 @@ body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif;
 .detect-item .count { font-size: 18px; font-weight: bold; }
 .detect-item.active .count { color: #4fc3f7; }
 .detect-item.triggered .count { color: #ffc107; }
-.right-panel { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+.right-panel { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 16px; }
 .pip-window { width: 300px; background: #16213e; border-radius: 8px; border: 2px solid #2a3040; padding: 10px; display: none; position: fixed; top: 60px; right: 20px; overflow: hidden; }
 .pip-window.active { display: block; }
 .pip-window img { display: block; transform-origin: top left; }
@@ -84,16 +84,74 @@ body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif;
 /* 画中画可拖拽 */
 .pip-window { position: absolute; cursor: move; }
 .pip-window.dragging { cursor: grabbing; }
+
+/* 左侧监控竖条（与挖图助手 ScreenShare.vue 一致） */
+.monitor-rail {
+  position: fixed; left: 0; top: 50%; transform: translateY(-50%);
+  z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 26px; padding: 12px 4px; cursor: pointer; user-select: none;
+  background: #16213e; border: 1px solid #0f3460; border-left: none; border-radius: 0 8px 8px 0;
+}
+.monitor-rail:hover { background: rgba(255,255,255,0.07); border-color: #4fc3f7; }
+.monitor-rail.active { border-color: #f5c518; box-shadow: 0 0 0 1px rgba(245,197,24,0.3); }
+.rail-dot { width: 9px; height: 9px; border-radius: 50%; background: #888; flex-shrink: 0; }
+.monitor-rail.active .rail-dot { background: #ff4d4f; box-shadow: 0 0 8px #ff4d4f; animation: pulse 1s infinite; }
+.rail-label { writing-mode: vertical-rl; text-orientation: upright; font-size: 11px; letter-spacing: 2px; color: #888; }
+.monitor-rail.active .rail-label { color: #f5c518; }
+.rail-actions { position: fixed; left: 32px; top: 50%; transform: translateY(-50%); z-index: 60; display: none; flex-direction: column; gap: 4px; }
+.mini-btn { width: 30px; height: 30px; border-radius: 6px; border: 1px solid #0f3460; background: #16213e; color: #4fc3f7; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+.mini-btn:hover { background: rgba(255,255,255,0.07); border-color: #4fc3f7; }
+/* 返回首页（与其他静态页一致） */
+.return-home{display:inline-flex;align-items:center;gap:4px;color:#9aa3b2;font-size:13px;padding:6px 12px;border-radius:4px;text-decoration:none;transition:all .2s;background:transparent}
+.return-home:hover{color:#fff;background:rgba(255,255,255,.08)}
+
+/* 使用说明（A方案：右下角悬浮「图片+文字」+ 右侧抽屉，沿用抓鬼页配色） */
+.help-fab{position:fixed;right:22px;bottom:22px;z-index:80;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:22px;border:1px solid rgba(79,195,247,.45);background:rgba(22,33,62,.94);color:#e6f6ff;font-size:14px;font-weight:600;letter-spacing:1px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .2s,background .2s;backdrop-filter:blur(4px)}
+.help-fab:hover{transform:scale(1.05);background:rgba(79,195,247,.18)}
+.help-fab img{width:22px;height:22px;display:block;object-fit:contain}
+.help-fab .help-fab-text{white-space:nowrap}
+.help-panel{position:fixed;right:0;top:0;bottom:0;z-index:90;width:360px;max-width:92vw;height:100vh;background:#16213e;border-left:2px solid #4fc3f7;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s ease;box-shadow:-10px 0 40px rgba(0,0,0,.4)}
+.help-panel.open{transform:translateX(0)}
+.help-header{display:flex;align-items:center;gap:8px;padding:14px 16px;background:#0f3460;border-bottom:1px solid #16213e}
+.help-header h3{margin:0;font-size:15px;color:#fff;font-weight:500}
+.help-close{margin-left:auto;background:none;border:none;color:#9aa3b2;font-size:22px;cursor:pointer;line-height:1}
+.help-close:hover{color:#fff}
+.help-body{flex:1;overflow-y:auto;padding:16px;color:#e0e0e0;font-size:13px;line-height:1.65}
+.help-body h4{color:#4fc3f7;font-size:14px;margin:14px 0 8px;font-weight:500}
+.help-body h4:first-child{margin-top:0}
+.help-body p{color:#b8c0cc;margin:0 0 8px}
+.help-steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.help-steps li{position:relative;padding-left:30px;margin-bottom:10px;color:#b8c0cc}
+.help-steps li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:0;width:20px;height:20px;border-radius:50%;background:#4fc3f7;color:#0f0f23;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center}
+.help-tip{background:rgba(255,193,7,.08);border-left:3px solid #ffc107;padding:8px 10px;border-radius:4px;color:#d4b455;font-size:12px;margin-top:6px}
 </style>
 </head>
 <body>
+<!-- 左侧监控竖条（与挖图助手一致） -->
+<div class="monitor-rail" id="monitorRail" onclick="toggleMonitorRail()" title="点击开始抓鬼监控">
+  <span class="rail-dot"></span>
+  <span class="rail-label" id="railLabel">开始监控</span>
+</div>
+<div class="rail-actions" id="railActions">
+  <button class="mini-btn" onclick="manualRecognize()" title="手动识别">🔍</button>
+  <button class="mini-btn" onclick="stopMonitor()" title="停止监控">✕</button>
+</div>
 <div class="header">
+  <a href="/" class="return-home" target="_top">⬅ 返回首页</a>
   <h1>👻 抓鬼助手 - 画中画监控</h1>
   <span class="status-badge" id="statusBadge">加载模型...</span>
-  <button class="btn btn-primary" id="btnShare" onclick="startMonitor()" disabled>开始监控</button>
-  <button class="btn btn-danger" id="btnStop" onclick="stopMonitor()" disabled>停止监控</button>
-  <button class="btn btn-success" id="btnRecognize" onclick="manualRecognize()" disabled>🔍 手动识别</button>
-  <button class="btn btn-warning" id="btnPip" onclick="togglePip()">📍 地图画中画</button>
+      <button class="btn btn-warning" onclick="manualRecognize()" title="自动识别不到时，点此手动触发一次识别">🔍 手动识别</button>
+      <button class="btn btn-warning" id="btnPip" onclick="togglePip()">📍 地图画中画</button>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#aaa;margin-left:12px;">
+        取流：
+        <select id="srcMode" style="background:#16213e;color:#4fc3f7;border:1px solid #0f3460;border-radius:4px;padding:4px 6px;font-size:13px;cursor:pointer;">
+          <option value="screen">📺 屏幕共享</option>
+          <option value="camera">📷 摄像头</option>
+        </select>
+      </label>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#aaa;margin-left:12px;">
+        <input type="checkbox" id="chkLowPower" onchange="toggleLowPower()" checked> 🎮 低占用模式
+      </label>
   <span id="fpsDisplay" style="color:#4fc3f7;font-size:12px;"></span>
 </div>
 
@@ -133,9 +191,18 @@ body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif;
     </div>
   </div>
   <div class="right-panel">
+    <!-- 摄像头取流实时预览（仅摄像头模式显示） -->
+    <video id="cameraPreview" muted autoplay playsinline style="display:none;max-width:100%;max-height:100%;border-radius:8px;background:#000;box-shadow:0 0 0 1px #2a3040;"></video>
     <!-- 预测地图画中画 -->
     <div class="pip-window" id="pipWindow">
-      <h3 style="color:#4fc3f7;font-size:12px;margin-bottom:8px">🗺️ 预测地图</h3>
+      <div class="pip-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="color:#4fc3f7;font-size:12px;margin:0;">🗺️ 预测地图</h3>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button class="pip-zoom" onclick="pipZoomOut()" title="缩小" style="width:22px;height:22px;border-radius:4px;border:1px solid #2a3040;background:#16213e;color:#4fc3f7;cursor:pointer;font-size:14px;">−</button>
+          <span id="pipZoomLevel" style="font-size:11px;color:#4fc3f7;min-width:36px;text-align:center;">100%</span>
+          <button class="pip-zoom" onclick="pipZoomIn()" title="放大" style="width:22px;height:22px;border-radius:4px;border:1px solid #2a3040;background:#16213e;color:#4fc3f7;cursor:pointer;font-size:14px;">+</button>
+        </div>
+      </div>
       <img id="pipMapImage" style="display:none;width:100%;border-radius:4px;">
     </div>
     <!-- 截图预览 -->
@@ -152,12 +219,49 @@ const CONFIG = {
   yoloModelPath: '/models/zhuagui/model.json',
   yoloModelVersion: 'v1',
   apiBaseUrl: '',
-  confidenceThreshold: 0.8,
+  confidenceThreshold: 0.8,        // 屏幕共享默认阈值（画质好，高阈值降误报）
+  cameraConfidenceThreshold: 0.45,  // 摄像头模式阈值（拍屏画质差，对齐竞品 mhxyai 的 0.4）
+  // 模型固定 480x480 输入，不可修改
   inputSize: 480,
   classes: ['任务追踪', '钟馗', '黑无常', '店小二', '接引仙女', '左侧干扰', '驿站老板', '强盗对话'],
-  monitorInterval: 200
+  monitorInterval: 800
 };
+// 按取流模式返回生效阈值：摄像头拍屏画质差，用更宽松的 0.45 对齐竞品；屏幕共享用 0.8
+function activeThreshold() {
+  return currentMode === 'camera' ? CONFIG.cameraConfidenceThreshold : CONFIG.confidenceThreshold;
+}
+let isLowPower = true;
+function toggleLowPower() {
+  isLowPower = document.getElementById('chkLowPower').checked;
+  if (isLowPower) {
+    // 低占用模式：降低检测频率（200ms → 800ms），GPU 负担约为原来的 1/4
+    CONFIG.monitorInterval = 800;
+  } else {
+    CONFIG.monitorInterval = 200;
+  }
+  console.log(`性能模式: ${isLowPower ? '🎮 低占用 (interval=800ms)' : '🚀 高性能 (interval=200ms)'}`);
+}
 let yoloModel = null, videoStream = null, video = null, canvas = null, ctx = null, isMonitoring = false, monitorLoopId = null, recognizeHistory = [];
+let currentMode = 'screen';  // 当前取流模式：screen / camera，决定生效的置信度阈值
+let triggerCooldownUntil = 0;  // 触发冷却：同一次对话不重复触发，对话关闭后自动重置
+let zeroCoordRetried = false;  // 标记是否已因坐标为0重试过一次
+
+// 左侧竖条：开始/停止监控的状态同步
+function toggleMonitorRail() { if (!isMonitoring) startMonitor(); }
+function updateRail(active) {
+  const rail = document.getElementById('monitorRail');
+  const label = document.getElementById('railLabel');
+  const actions = document.getElementById('railActions');
+  if (active) {
+    rail.classList.add('active');
+    label.textContent = '抓鬼监控·监控中';
+    actions.style.display = 'flex';
+  } else {
+    rail.classList.remove('active');
+    label.textContent = '开始监控';
+    actions.style.display = 'none';
+  }
+}
 function addToHistory(result) {
   const time = new Date().toLocaleTimeString();
   const item = {
@@ -207,39 +311,116 @@ async function initModels() {
     }
     setStatus('就绪', 'ready');
     console.log('YOLO模型加载完成');
-    document.getElementById('btnShare').disabled = false;
   } catch (e) {
     console.error('模型加载失败:', e.message);
     setStatus('加载失败', 'error');
   }
 }
-async function startMonitor() { try { videoStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'never' }, audio: false }); video = document.createElement('video'); video.srcObject = videoStream; await video.play(); canvas = document.createElement('canvas'); canvas.width = video.videoWidth; canvas.height = video.videoHeight; ctx = canvas.getContext('2d'); videoStream.getVideoTracks()[0].onended = () => stopMonitor(); isMonitoring = true; document.getElementById('btnShare').disabled = true; document.getElementById('btnStop').disabled = false; document.getElementById('btnRecognize').disabled = false; updateMonitorStatus('active', '🔍 监控中', '点击手动识别按钮'); setStatus('监控中', 'ready'); monitorLoop(); } catch (e) { console.error('无法启动监控:', e.message); } }
-function stopMonitor() { isMonitoring = false; if (monitorLoopId) { clearInterval(monitorLoopId); monitorLoopId = null; } if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; } video = null; canvas = null; document.getElementById('btnShare').disabled = false; document.getElementById('btnStop').disabled = true; document.getElementById('btnRecognize').disabled = true; updateMonitorStatus('inactive', '😴 已停止', '等待开始监控'); setStatus('就绪', 'ready'); hidePip(); }
+async function startMonitor() {
+  try {
+    const mode = (document.getElementById('srcMode') || {}).value || 'screen';
+    currentMode = mode;
+    let stream;
+    if (mode === 'camera') {
+      // 摄像头模式：手机后置摄像头对准游戏画面（或电脑外接摄像头拍屏）
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false
+      });
+      const cp = document.getElementById('cameraPreview');
+      video = cp;
+      video.srcObject = stream;
+      video.style.display = 'block';
+    } else {
+      // 屏幕共享模式（默认）：直接抓取游戏窗口
+      stream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'never' }, audio: false });
+      video = document.createElement('video');
+      video.srcObject = stream;
+    }
+    await video.play();
+    // 等待视频尺寸就绪：摄像头/部分设备 videoWidth 在 play() 后仍未就绪，
+    // 若直接读取会得到 0，导致 canvas 0×0 黑屏、getImageData 抛错、整条监控循环静默失效
+    if (!video.videoWidth || !video.videoHeight) {
+      await new Promise((resolve) => {
+        if (video.readyState >= 1 && video.videoWidth) return resolve();
+        const onMeta = () => resolve();
+        video.addEventListener('loadedmetadata', onMeta, { once: true });
+        setTimeout(() => { video.removeEventListener('loadedmetadata', onMeta); resolve(); }, 1500);
+      });
+    }
+    videoStream = stream;
+    canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 1920;
+    canvas.height = video.videoHeight || 1080;
+    ctx = canvas.getContext('2d');
+    // 屏幕共享会在用户停止共享时触发 onended；摄像头不会，靠停止按钮
+    if (mode === 'screen') {
+      stream.getVideoTracks()[0].onended = () => stopMonitor();
+    }
+    isMonitoring = true;
+    updateRail(true);
+    updateMonitorStatus('active', '🔍 监控中', mode === 'camera' ? '摄像头模式：将镜头对准游戏画面' : '点击左侧竖条手动识别/停止');
+    setStatus('监控中', 'ready');
+    monitorLoop();
+  } catch (e) {
+    console.error('无法启动监控:', e.message);
+    alert('无法启动监控：' + e.message);
+    updateRail(false);
+    updateMonitorStatus('inactive', '😴 已停止', '点击左侧竖条开始监控');
+  }
+}
+function stopMonitor() { isMonitoring = false; if (monitorLoopId) { clearInterval(monitorLoopId); monitorLoopId = null; } if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; } const cp = document.getElementById('cameraPreview'); if (cp) { cp.style.display = 'none'; cp.srcObject = null; } video = null; canvas = null; updateRail(false); updateMonitorStatus('inactive', '😴 已停止', '点击左侧竖条开始监控'); setStatus('就绪', 'ready'); hidePip(); }
 async function monitorLoop() {
   if (!isMonitoring || !video || !yoloModel) return;
   const t0 = performance.now();
+  // 截帧尺寸自愈：canvas 0×0 = 视频尺寸未就绪时动态重建，避免黑屏导致监控循环静默失效
+  if (!canvas || !canvas.width || !canvas.height) {
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (vw && vh) {
+      // 视频尺寸已就绪但 canvas 仍是 0×0：动态重建，自愈黑屏
+      canvas = canvas || document.createElement('canvas');
+      canvas.width = vw; canvas.height = vh;
+      ctx = canvas.getContext('2d');
+    } else {
+      // 视频尺寸仍未就绪，跳过本帧但保持轮询
+      if (isMonitoring) monitorLoopId = setTimeout(monitorLoop, CONFIG.monitorInterval);
+      return;
+    }
+  }
   try {
     ctx.drawImage(video, 0, 0);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const detections = await runYOLO(imageData);
 
     // 检测任务追踪和钟馗
-    const taskTrack = detections.filter(d => d.classId === 0 && d.conf > CONFIG.confidenceThreshold);
-    const zhongKui = detections.filter(d => d.classId === 1 && d.conf > CONFIG.confidenceThreshold);
+    const taskTrack = detections.filter(d => d.classId === 0 && d.conf > activeThreshold());
+    const zhongKui = detections.filter(d => d.classId === 1 && d.conf > activeThreshold());
 
     // 更新条件状态显示
     updateConditionStatus(taskTrack.length > 0, zhongKui.length > 0);
 
-    // 检测到任务追踪和钟馗后自动触发识别
+    // 检测到任务追踪和钟馗后延迟触发
     if (taskTrack.length > 0 && zhongKui.length > 0) {
-      onTrigger(imageData, taskTrack[0], zhongKui[0]);
-      updateMonitorStatus('triggered', '⚡ 条件满足，开始识别', '');
+      const now = Date.now();
+      if (now >= triggerCooldownUntil) {
+        // 延迟1秒后触发（等待画面稳定）
+        triggerCooldownUntil = now + 1000;
+        setTimeout(() => {
+          if (isMonitoring && video) {
+            onTrigger(imageData, taskTrack[0], zhongKui[0]);
+          }
+        }, 1000);
+        updateMonitorStatus('triggered', '⚡ 检测到抓鬼任务', '延迟1秒后识别...');
+      }
     } else {
+      // 条件不满足时重置冷却和重试计数
+      triggerCooldownUntil = 0;
+      retryCount = 0;
       updateMonitorStatus('active', '🔍 监控中', '');
     }
 
     const fps = Math.round(1000 / (performance.now() - t0));
-    document.getElementById('fpsDisplay').textContent = fps + ' FPS';
+    document.getElementById('fpsDisplay').textContent = fps + ' FPS' + (isLowPower ? ' 🎮' : '');
   } catch (e) {
     console.error('检测错误:', e.message);
   }
@@ -262,7 +443,7 @@ async function manualRecognize() {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const detections = await runYOLO(imageData);
 
-    const taskTrack = detections.filter(d => d.classId === 0 && d.conf > CONFIG.confidenceThreshold);
+    const taskTrack = detections.filter(d => d.classId === 0 && d.conf > activeThreshold());
 
     if (taskTrack.length === 0) {
       alert('未检测到任务追踪');
@@ -304,7 +485,7 @@ function updateConditionStatus(hasTaskTrack, hasZhongKui) {
   }
 }
 
-async function runYOLO(imageData) { const { width, height, data } = imageData; const inputSize = CONFIG.inputSize; const inputTensor = tf.tidy(() => { let tensor = tf.tensor3d(new Uint8Array(data), [height, width, 4]); tensor = tensor.slice([0, 0, 0], [-1, -1, 3]); tensor = tf.image.resizeBilinear(tensor, [inputSize, inputSize]); tensor = tensor.toFloat().div(255); return tensor.expandDims(0); }); const output = await yoloModel.executeAsync({ images: inputTensor }); const outputData = await output.data(); const dims = output.shape; inputTensor.dispose(); output.dispose(); const numAnchors = dims[2]; const boxes = []; for (let i = 0; i < numAnchors; i++) { const cx = outputData[0 * numAnchors + i]; const cy = outputData[1 * numAnchors + i]; const w = outputData[2 * numAnchors + i]; const h = outputData[3 * numAnchors + i]; let maxConf = 0, classId = 0; for (let c = 4; c < 12; c++) { const conf = outputData[c * numAnchors + i]; if (conf > maxConf) { maxConf = conf; classId = c - 4; } } if (maxConf > CONFIG.confidenceThreshold) { boxes.push({ x1: (cx - w/2) * width / inputSize, y1: (cy - h/2) * height / inputSize, x2: (cx + w/2) * width / inputSize, y2: (cy + h/2) * height / inputSize, conf: maxConf, classId, className: CONFIG.classes[classId] }); } } return boxes; }
+async function runYOLO(imageData) { const { width, height, data } = imageData; const inputSize = CONFIG.inputSize; const inputTensor = tf.tidy(() => { let tensor = tf.tensor3d(new Uint8Array(data), [height, width, 4]); tensor = tensor.slice([0, 0, 0], [-1, -1, 3]); tensor = tf.image.resizeBilinear(tensor, [inputSize, inputSize]); tensor = tensor.toFloat().div(255); return tensor.expandDims(0); }); const output = await yoloModel.executeAsync({ images: inputTensor }); const outputData = await output.data(); const dims = output.shape; inputTensor.dispose(); output.dispose(); const numAnchors = dims[2]; const boxes = []; for (let i = 0; i < numAnchors; i++) { const cx = outputData[0 * numAnchors + i]; const cy = outputData[1 * numAnchors + i]; const w = outputData[2 * numAnchors + i]; const h = outputData[3 * numAnchors + i]; let maxConf = 0, classId = 0; for (let c = 4; c < 12; c++) { const conf = outputData[c * numAnchors + i]; if (conf > maxConf) { maxConf = conf; classId = c - 4; } } if (maxConf > activeThreshold()) { boxes.push({ x1: (cx - w/2) * width / inputSize, y1: (cy - h/2) * height / inputSize, x2: (cx + w/2) * width / inputSize, y2: (cy + h/2) * height / inputSize, conf: maxConf, classId, className: CONFIG.classes[classId] }); } } return boxes; }
 async function onTrigger(imageData, taskTrack) {
   setStatus('识别中...', 'triggered');
   console.log(`触发识别: 任务追踪置信=${taskTrack.conf.toFixed(2)}`);
@@ -354,6 +535,7 @@ async function onTrigger(imageData, taskTrack) {
     const result = await response.json();
 
     if (result.success) {
+      // 识别成功
       document.getElementById('resultMap').textContent = result.map || '-';
       document.getElementById('resultCoord').textContent = result.x + ', ' + result.y;
       document.getElementById('resultGhost').textContent = '-';
@@ -363,24 +545,28 @@ async function onTrigger(imageData, taskTrack) {
 
       setStatus('识别完成', 'ready');
       updateMonitorStatus('active', '🔍 监控中', `识别成功: ${result.map} (${result.x},${result.y})`);
+
+      // 成功后设置8秒冷却（防止同一对话重复触发）
+      triggerCooldownUntil = Date.now() + 8000;
     } else {
-      // 识别失败，3秒后重试一次
-      console.log('识别失败，3秒后重试');
-      setTimeout(() => {
-        if (isMonitoring) {
-          console.log('重试识别...');
-          onTrigger(imageData, taskTrack);
-        }
-      }, 3000);
+      // 识别失败，不重试
+      console.log('识别失败:', result.error);
 
       document.getElementById('resultMap').textContent = '识别失败';
       document.getElementById('resultCoord').textContent = '-';
       setStatus('识别失败', 'error');
-      updateMonitorStatus('active', '🔍 监控中', '识别失败，3秒后重试...');
+      updateMonitorStatus('active', '🔍 监控中', '识别失败，继续监控');
+
+      // 设置8秒冷却，等待下次对话
+      triggerCooldownUntil = Date.now() + 8000;
     }
   } catch (e) {
     console.error('API调用失败:', e.message);
-    setStatus('识别失败', 'error');
+    document.getElementById('resultMap').textContent = '网络错误';
+    document.getElementById('resultCoord').textContent = '-';
+    setStatus('网络错误', 'error');
+    updateMonitorStatus('active', '🔍 监控中', '网络错误，继续监控');
+    triggerCooldownUntil = Date.now() + 8000;
   }
 }
 function showPip(result) {
@@ -391,11 +577,60 @@ function showPip(result) {
   pipWindow.style.display = 'block';
   pipWindow.classList.add('active');
 
-  if (result.annotated_image) {
-    const img = document.getElementById('pipMapImage');
-    img.src = 'data:image/png;base64,' + result.annotated_image;
-    img.style.display = 'block';
+  if (result.map_file) {
+    renderGhostMap(document.getElementById('mapCanvas'), result).then(ok => {
+      if (ok) {
+        const img = document.getElementById('pipMapImage');
+        img.src = document.getElementById('mapCanvas').toDataURL();
+        img.style.display = 'block';
+      }
+    });
   }
+
+  // 应用已保存的缩放比例（新地图弹出时保持上次缩放）
+  applyPipZoom();
+}
+
+// ========== 画中画缩放（保持上次缩放比例） ==========
+let pipZoom = parseFloat(localStorage.getItem('pipZoom') || '1');
+const PIP_ZOOM_MIN = 0.5;
+const PIP_ZOOM_MAX = 3.0;
+const PIP_ZOOM_STEP = 0.1;
+const PIP_BASE_WIDTH = 280; // pip-window 基础宽度（减去 padding）
+
+function applyPipZoom() {
+  const pip = document.getElementById('pipWindow');
+  // 通过调整窗口宽度实现缩放，内容自然撑开
+  pip.style.width = (PIP_BASE_WIDTH * pipZoom) + 'px';
+  document.getElementById('pipZoomLevel').textContent = Math.round(pipZoom * 100) + '%';
+}
+
+function pipZoomIn() {
+  pipZoom = Math.min(PIP_ZOOM_MAX, Math.round((pipZoom + PIP_ZOOM_STEP) * 100) / 100);
+  localStorage.setItem('pipZoom', String(pipZoom));
+  applyPipZoom();
+}
+
+function pipZoomOut() {
+  pipZoom = Math.max(PIP_ZOOM_MIN, Math.round((pipZoom - PIP_ZOOM_STEP) * 100) / 100);
+  localStorage.setItem('pipZoom', String(pipZoom));
+  applyPipZoom();
+}
+
+// 滚轮缩放（画中画窗口内）
+function initPipWheelZoom() {
+  const pip = document.getElementById('pipWindow');
+  pip.addEventListener('wheel', (e) => {
+    if (e.target.id !== 'pipMapImage' && e.target.tagName !== 'IMG') return;
+    e.preventDefault();
+    if (e.deltaY < 0) {
+      pipZoom = Math.min(PIP_ZOOM_MAX, Math.round((pipZoom + PIP_ZOOM_STEP) * 100) / 100);
+    } else {
+      pipZoom = Math.max(PIP_ZOOM_MIN, Math.round((pipZoom - PIP_ZOOM_STEP) * 100) / 100);
+    }
+    localStorage.setItem('pipZoom', String(pipZoom));
+    applyPipZoom();
+  }, { passive: false });
 }
 function hidePip() {
   document.getElementById('pipWindow').classList.remove('active', 'triggered');
@@ -518,24 +753,97 @@ async function togglePip() {
   }
 }
 
-function drawMapToCanvas(data) {
-  const canvas = document.getElementById('mapCanvas');
-  const ctx = canvas.getContext('2d');
+// ========== 前端自绘地图（替代后端 annotated_image） ==========
+// 底图缓存在前端，首次加载后浏览器自动复用，无需每次请求
+const _mapImgCache = {};
 
-  // 清空画布
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // 只绘制标注地图图片（PNG无损）
-  if (data.annotated_image) {
+function loadBaseMap(file) {
+  return new Promise((resolve, reject) => {
+    if (_mapImgCache[file]) { resolve(_mapImgCache[file]); return; }
     const img = new Image();
-    img.src = 'data:image/png;base64,' + data.annotated_image;
-    if (img.complete) {
-      // 调整canvas尺寸匹配图片
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-    }
-  }
+    img.onload = () => { _mapImgCache[file] = img; resolve(img); };
+    img.onerror = () => reject(new Error('地图底图加载失败: ' + file));
+    img.src = '/maps/' + file;
+  });
+}
+
+function drawQuadrant(ctx, px, py, side, q, color) {
+  let x1, y1, x2, y2;
+  if (q === 1)      { x1 = px;        y1 = py - side; x2 = px + side; y2 = py; }
+  else if (q === 2) { x1 = px - side; y1 = py - side; x2 = px;        y2 = py; }
+  else if (q === 3) { x1 = px - side; y1 = py;        x2 = px;        y2 = py + side; }
+  else if (q === 4) { x1 = px;        y1 = py;        x2 = px + side; y2 = py + side; }
+  else return;
+  ctx.fillStyle = color;
+  ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+}
+
+// 在 canvas 上自绘：底图 + 坐标点 + 象限蒙版
+// 坐标映射与后端 _draw_coordinate_on_map 完全一致，注意 Y 轴翻转
+async function renderGhostMap(canvas, data) {
+  if (!data || !data.map_file) return false;
+  let base;
+  try { base = await loadBaseMap(data.map_file); }
+  catch (e) { console.error(e.message); return false; }
+
+  const ctx = canvas.getContext('2d');
+  const W = base.naturalWidth, H = base.naturalHeight;
+  canvas.width = W; canvas.height = H;
+  ctx.clearRect(0, 0, W, H);
+  ctx.drawImage(base, 0, 0, W, H);
+
+  const mw = data.map_width, mh = data.map_height;
+  if (!mw || !mh) return true;
+
+  const x = data.x, y = data.y;
+  const px = x / mw * W;               // 与后端 px = x/scale_width 一致
+  const py = H * (1 - y / mh);         // 与后端 py = imgH - y/scale_height 一致（Y 翻转）
+
+  // ±50 游戏单位换算为像素（预测范围固定为坐标点周围 ±50 游戏单位）。
+  // 任务坐标允许超出地图真实边界(xy)最多 ±50，故框可能只有一部分落在地图内；
+  // 下方 clip 只绘制地图范围内的部分，地图外的不画。
+  const side = 50 / ((mw / W + mh / H) / 2);
+
+  // 所有图形裁剪到地图范围，避免蒙版/黄框/圆点溢出底图
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, H);
+  ctx.clip();
+
+  // 低概率象限（浅黄） / 高概率象限（深红）
+  (data.corner_areas || []).forEach(q => drawQuadrant(ctx, px, py, side, q, 'rgba(255,255,100,0.35)'));
+  (data.position_areas || []).forEach(q => drawQuadrant(ctx, px, py, side, q, 'rgba(255,0,0,0.55)'));
+
+  // 当前位置黄框
+  ctx.strokeStyle = 'yellow';
+  ctx.lineWidth = Math.max(2, Math.min(side * 0.06, 6));
+  ctx.strokeRect(px - side, py - side, side * 2, side * 2);
+
+  // 中心圆点
+  ctx.fillStyle = 'yellow';
+  const r = Math.max(3, Math.min(side * 0.15, Math.min(W, H) * 0.08));
+  ctx.beginPath();
+  ctx.arc(px, py, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 坐标文字（白底红字，约束在地图内，避免越界）
+  const text = '(' + x + ',' + y + ')';
+  ctx.font = 'bold 22px sans-serif';
+  const tw = ctx.measureText(text).width;
+  let tx = px + side + 8, ty = py + 6;
+  tx = Math.max(2, Math.min(tx, W - tw - 4));   // 防右侧溢出
+  ty = Math.max(20, Math.min(ty, H - 6));       // 防上下溢出
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillRect(tx - 3, ty - 18, tw + 6, 24);
+  ctx.fillStyle = 'red';
+  ctx.fillText(text, tx, ty);
+
+  return true;
+}
+
+function drawMapToCanvas(data) {
+  renderGhostMap(document.getElementById('mapCanvas'), data);
 }
 
 function cleanupPip() {
@@ -549,7 +857,41 @@ function cleanupPip() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => { initModels(); });
+// ========== 使用说明抽屉（A方案） ==========
+function toggleHelp(force) {
+  const panel = document.getElementById('helpPanel');
+  const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+  panel.classList.toggle('open', open);
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleHelp(false); });
+
+document.addEventListener('DOMContentLoaded', () => { initModels(); initDraggable(); initPipWheelZoom(); applyPipZoom(); });
 </script>
+<!-- 使用说明（A方案：右下角悬浮? + 右侧抽屉） -->
+<button class="help-fab" id="helpFab" onclick="toggleHelp()" title="使用说明">
+  <img src="/mhxy/static/help-btn.png" alt="使用说明">
+  <span class="help-fab-text">使用说明</span>
+</button>
+<div class="help-panel" id="helpPanel">
+  <div class="help-header">
+    <h3>👻 抓鬼助手 · 使用说明</h3>
+    <button class="help-close" onclick="toggleHelp(false)" title="关闭">×</button>
+  </div>
+  <div class="help-body">
+    <h4>简介</h4>
+    <p>抓鬼助手通过浏览器实时识别游戏画面中的「任务追踪」与「钟馗」，自动识别鬼所在地图与坐标，并弹出预测地图，帮你快速定位抓鬼目标。</p>
+    <h4>使用步骤</h4>
+    <ol class="help-steps">
+      <li>点击左侧竖条（或顶栏按钮）开启监控。顶栏「取流」可选 <b>📺 屏幕共享</b>（默认，直接选梦幻西游窗口）或 <b>📷 摄像头</b>（用摄像头拍屏，适合手机/外接摄像头场景）。</li>
+      <li>系统实时识别，左侧面板实时显示「任务追踪 / 钟馗」状态。</li>
+      <li>两者同时出现即自动触发识别，右侧显示坐标与预测地图（支持画中画）。</li>
+      <li>可点「地图画中画」把预测地图弹到独立浮窗，滚轮或 ± 缩放查看。</li>
+    </ol>
+    <h4>注意事项</h4>
+    <p class="help-tip">游戏窗口需保持可见，勿最小化或遮挡任务追踪区域；低占用模式默认开启，性能不足时取消勾选可提速。</p>
+    <p class="help-tip">建议在梦幻西游「界面设置 → 色弱模式」中勾选，任务追踪字体将变为黄色，识别更准、更稳定。</p>
+    <p class="help-tip">📷 摄像头模式：仅可在 HTTPS 或 localhost 下使用（浏览器安全限制）。将镜头对准游戏画面，保持光线充足、避免反光与角度倾斜；画质受环境影响，准确率不如屏幕共享，建议优先用屏幕共享。</p>
+  </div>
+</div>
 </body>
 </html>

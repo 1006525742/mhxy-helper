@@ -8,6 +8,7 @@ import base64
 import io
 import json
 import logging
+import os
 from pathlib import Path
 
 import cv2
@@ -16,12 +17,69 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# 配置日志
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)s %(message)s'
+# ============ 日志配置 (TimedRotatingFileHandler, 保留30天, UTF-8) ============
+LOG_DIR = Path(__file__).resolve().parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+LOG_FILE = LOG_DIR / "backend.log"
+
+from logging.handlers import TimedRotatingFileHandler  # noqa: E402
+
+# 统一的日志格式
+LOG_FORMAT = '%(asctime)s %(levelname)s %(message)s'
+
+# 轮转文件 handler：每天午夜切分，保留30个备份，强制 UTF-8
+file_handler = TimedRotatingFileHandler(
+    str(LOG_FILE),
+    when="midnight",
+    interval=1,
+    backupCount=30,
+    encoding="utf-8"
 )
+file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+
+# 控制台 handler（调试用）
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+
+# 配置根 logger（应用日志 + uvicorn 日志统一走这里，UTF-8 写入 backend.log）
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.addHandler(file_handler)
+root_logger.addHandler(console_handler)
+
 logger = logging.getLogger('ghost')
+
+
+# uvicorn 日志配置：使用同一个 UTF-8 rotating file handler
+def _build_uvicorn_log_config():
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "default": {"format": LOG_FORMAT},
+            "access": {"format": LOG_FORMAT},
+        },
+        "handlers": {
+            "rotating_file": {
+                "class": "logging.handlers.TimedRotatingFileHandler",
+                "filename": str(LOG_FILE),
+                "when": "midnight",
+                "interval": 1,
+                "backupCount": 30,
+                "encoding": "utf-8",
+                "formatter": "default",
+            },
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "default",
+            },
+        },
+        "loggers": {
+            "uvicorn": {"handlers": ["rotating_file", "console"], "level": "INFO", "propagate": False},
+            "uvicorn.error": {"handlers": ["rotating_file", "console"], "level": "INFO", "propagate": False},
+            "uvicorn.access": {"handlers": ["rotating_file", "console"], "level": "WARNING", "propagate": False},
+        },
+    }
 
 # Paths
 BASE_DIR = Path(__file__).parent
@@ -134,7 +192,7 @@ async def ghost_capture(req: RecognizeRequest):
         # OCR 识别坐标
         import time
         t_start = time.time()
-        map_name, x, y = recognize_coord_from_image(img)
+        map_name, x, y = recognize_coord_from_image(img, use_cls=False)
         t_ms = (time.time() - t_start) * 1000
         logger.info(f"[OCR] {map_name} ({x}, {y}) - {t_ms:.1f}ms")
 
@@ -148,9 +206,19 @@ async def ghost_capture(req: RecognizeRequest):
         # 自动预测
         result = ghost_predictor.predict(map_name, x, y)
 
+        # 前端自绘地图所需元数据（底图文件 + 逻辑坐标边界）
+        map_file = map_width = map_height = None
+        if result.map_info:
+            map_file = os.path.basename(result.map_info.image_path)
+            map_width = result.map_info.width
+            map_height = result.map_info.height
+
         response = {
             "success": True,
             "map": result.map_name,
+            "map_file": map_file,
+            "map_width": map_width,
+            "map_height": map_height,
             "x": result.x,
             "y": result.y,
             "position_areas": result.position_areas,
@@ -163,13 +231,6 @@ async def ghost_capture(req: RecognizeRequest):
                 "time_ms": round(t_ms, 1)
             }
         }
-
-        # 标注地图图片
-        if result.annotated_image:
-            buffer = io.BytesIO()
-            result.annotated_image.save(buffer, format="PNG")
-            img_bytes = buffer.getvalue()
-            response["annotated_image"] = base64.b64encode(img_bytes).decode()
 
         return response
 
@@ -201,4 +262,4 @@ async def get_monster_list():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_config=_build_uvicorn_log_config())

@@ -14,6 +14,9 @@ export class ScreenCapture {
   private stream: MediaStream | null = null
   private video: HTMLVideoElement | null = null
   private canvas: HTMLCanvasElement | null = null
+  /** 承载 video 的隐藏容器：video 必须挂在 DOM 上，浏览器才会持续解码屏幕共享帧
+   * （否则页面被遮挡/切后台时 video 帧冻结，captureFull 永远抓到旧画面）。 */
+  private holder: HTMLElement | null = null
 
   /**
    * 开始屏幕共享
@@ -27,8 +30,17 @@ export class ScreenCapture {
         return false
       }
 
+      // 采集分辨率对齐原站 mhxyai.com/v2/fentu：ideal 1280×960。
+      // 原站的格子判定基于「采集后物品栏约 250×200px + 固定 cellSize 50/55」，
+      // 若用原生高分辨率（如 2560×1440）采集，物品栏框会远大于 250px，
+      // 固定格尺寸就会整体错位。这里统一降采集分辨率来保证几何一致。
       this.stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { cursor: 'always' } as MediaTrackConstraints,
+        video: {
+          cursor: 'always',
+          width: { ideal: 1280 },
+          height: { ideal: 960 },
+          frameRate: { ideal: 15 }
+        } as MediaTrackConstraints,
         audio: false
       })
 
@@ -37,6 +49,14 @@ export class ScreenCapture {
       this.video.muted = true
       this.video.srcObject = this.stream
       await this.video.play()
+
+      // 把 video 挂到 DOM（视觉隐藏但非 display:none）：浏览器需有渲染目标才能
+      // 在页面被遮挡 / 切后台时持续解码屏幕共享帧，否则 captureFull 会永远抓到旧画面。
+      this.holder = document.createElement('div')
+      this.holder.style.cssText =
+        'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;overflow:hidden;'
+      this.holder.appendChild(this.video)
+      document.body.appendChild(this.holder)
 
       // 等待视频元数据加载（确保 videoWidth/Height 可用）
       await this.waitForVideoReady()
@@ -81,6 +101,16 @@ export class ScreenCapture {
   }
 
   /**
+   * 确保 video 处于播放状态（页面被遮挡/切后台后浏览器可能暂停 video，
+   * 用 fire-and-forget 方式重新 play 以恢复帧解码）。
+   */
+  ensurePlaying(): void {
+    if (this.video && this.video.paused) {
+      this.video.play().catch(() => {})
+    }
+  }
+
+  /**
    * 停止屏幕共享
    */
   stop(): void {
@@ -88,6 +118,10 @@ export class ScreenCapture {
       this.stream.getTracks().forEach(track => track.stop())
       this.stream = null
     }
+    if (this.holder && this.holder.parentNode) {
+      this.holder.parentNode.removeChild(this.holder)
+    }
+    this.holder = null
     this.video = null
     this.canvas = null
   }
@@ -107,6 +141,7 @@ export class ScreenCapture {
    * 截取全屏
    */
   captureFull(): string | null {
+    this.ensurePlaying()
     if (!this.video || !this.canvas) return null
 
     const width = this.video.videoWidth
@@ -128,6 +163,7 @@ export class ScreenCapture {
    * 截取指定区域
    */
   captureRegion(options: ScreenCaptureOptions): string | null {
+    this.ensurePlaying()
     if (!this.video || !this.canvas) return null
 
     const fullWidth = this.video.videoWidth
@@ -164,6 +200,7 @@ export class ScreenCapture {
    * 获取实时预览帧（用于本地显示）
    */
   getPreviewFrame(): string | null {
+    this.ensurePlaying()
     if (!this.video || !this.canvas) return null
 
     const width = this.video.videoWidth

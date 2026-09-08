@@ -1,0 +1,2273 @@
+{
+ "source": "cbg server_list_data.js",
+ "areas": [
+  {
+   "area_id": "1",
+   "area_name": "上海1区"
+  },
+  {
+   "area_id": "2",
+   "area_name": "广东3区"
+  },
+  {
+   "area_id": "3",
+   "area_name": "北京1区"
+  },
+  {
+   "area_id": "4",
+   "area_name": "广东4区"
+  },
+  {
+   "area_id": "5",
+   "area_name": "浙江3区"
+  },
+  {
+   "area_id": "6",
+   "area_name": "广西2区"
+  },
+  {
+   "area_id": "7",
+   "area_name": "河南2区"
+  },
+  {
+   "area_id": "8",
+   "area_name": "山东2区"
+  },
+  {
+   "area_id": "9",
+   "area_name": "北京2区"
+  },
+  {
+   "area_id": "10",
+   "area_name": "福建2区"
+  },
+  {
+   "area_id": "11",
+   "area_name": "广西1区"
+  },
+  {
+   "area_id": "12",
+   "area_name": "河北1区"
+  },
+  {
+   "area_id": "13",
+   "area_name": "河北3区"
+  },
+  {
+   "area_id": "14",
+   "area_name": "黑龙江区"
+  },
+  {
+   "area_id": "15",
+   "area_name": "湖北1区"
+  },
+  {
+   "area_id": "16",
+   "area_name": "湖北2区"
+  },
+  {
+   "area_id": "17",
+   "area_name": "湖南区"
+  },
+  {
+   "area_id": "19",
+   "area_name": "天津区"
+  },
+  {
+   "area_id": "20",
+   "area_name": "吉林区"
+  },
+  {
+   "area_id": "21",
+   "area_name": "江苏1区"
+  },
+  {
+   "area_id": "22",
+   "area_name": "江苏2区"
+  },
+  {
+   "area_id": "23",
+   "area_name": "江苏3区"
+  },
+  {
+   "area_id": "24",
+   "area_name": "江西区"
+  },
+  {
+   "area_id": "25",
+   "area_name": "辽宁1区"
+  },
+  {
+   "area_id": "26",
+   "area_name": "山东1区"
+  },
+  {
+   "area_id": "27",
+   "area_name": "山东3区"
+  },
+  {
+   "area_id": "28",
+   "area_name": "山东4区"
+  },
+  {
+   "area_id": "29",
+   "area_name": "山东5区"
+  },
+  {
+   "area_id": "30",
+   "area_name": "山西区"
+  },
+  {
+   "area_id": "31",
+   "area_name": "陕西区"
+  },
+  {
+   "area_id": "32",
+   "area_name": "上海2区"
+  },
+  {
+   "area_id": "33",
+   "area_name": "深圳2区"
+  },
+  {
+   "area_id": "34",
+   "area_name": "四川1区"
+  },
+  {
+   "area_id": "35",
+   "area_name": "浙江4区"
+  },
+  {
+   "area_id": "36",
+   "area_name": "贵州区"
+  },
+  {
+   "area_id": "37",
+   "area_name": "深圳1区"
+  },
+  {
+   "area_id": "38",
+   "area_name": "时光"
+  },
+  {
+   "area_id": "39",
+   "area_name": "华南区"
+  },
+  {
+   "area_id": "40",
+   "area_name": "内蒙区"
+  },
+  {
+   "area_id": "41",
+   "area_name": "福建1区"
+  },
+  {
+   "area_id": "42",
+   "area_name": "安徽1区"
+  },
+  {
+   "area_id": "43",
+   "area_name": "广东2区"
+  },
+  {
+   "area_id": "44",
+   "area_name": "云南区"
+  },
+  {
+   "area_id": "45",
+   "area_name": "追忆"
+  },
+  {
+   "area_id": "47",
+   "area_name": "广东1区"
+  },
+  {
+   "area_id": "48",
+   "area_name": "河北2区"
+  },
+  {
+   "area_id": "49",
+   "area_name": "河南1区"
+  },
+  {
+   "area_id": "50",
+   "area_name": "河南3区"
+  },
+  {
+   "area_id": "51",
+   "area_name": "辽宁2区"
+  },
+  {
+   "area_id": "52",
+   "area_name": "四川2区"
+  },
+  {
+   "area_id": "54",
+   "area_name": "浙江1区"
+  },
+  {
+   "area_id": "55",
+   "area_name": "浙江2区"
+  },
+  {
+   "area_id": "56",
+   "area_name": "重庆区"
+  },
+  {
+   "area_id": "57",
+   "area_name": "海外专区"
+  },
+  {
+   "area_id": "58",
+   "area_name": "无与伦比"
+  },
+  {
+   "area_id": "60",
+   "area_name": "天下无双"
+  },
+  {
+   "area_id": "61",
+   "area_name": "笑傲三界"
+  },
+  {
+   "area_id": "62",
+   "area_name": "名扬三界"
+  },
+  {
+   "area_id": "63",
+   "area_name": "山河社稷"
+  },
+  {
+   "area_id": "66",
+   "area_name": "良辰美景"
+  },
+  {
+   "area_id": "67",
+   "area_name": "北京3区"
+  },
+  {
+   "area_id": "68",
+   "area_name": "星辰大海"
+  },
+  {
+   "area_id": "69",
+   "area_name": "为爱追寻"
+  },
+  {
+   "area_id": "70",
+   "area_name": "神通广大"
+  }
+ ],
+ "servers": [
+  {
+   "server_id": "159",
+   "server_name": "珍宝阁",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "163",
+   "server_name": "晚芳亭",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "841",
+   "server_name": "灿若星河",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "939",
+   "server_name": "华灯初上",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "975",
+   "server_name": "新天地",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "1003",
+   "server_name": "大闹天宫",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "1003",
+   "server_name": "城隍庙",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "975",
+   "server_name": "长风破浪",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "841",
+   "server_name": "龙游四海",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "975",
+   "server_name": "云海雪霜",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "1012",
+   "server_name": "久别重逢",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "1032",
+   "server_name": "南风知意",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "1003",
+   "server_name": "钱塘观潮",
+   "area_name": "上海1区",
+   "area_id": "1"
+  },
+  {
+   "server_id": "2",
+   "server_name": "罗浮山",
+   "area_name": "广东3区",
+   "area_id": "2"
+  },
+  {
+   "server_id": "677",
+   "server_name": "广州湾",
+   "area_name": "广东3区",
+   "area_id": "2"
+  },
+  {
+   "server_id": "677",
+   "server_name": "凤凰台",
+   "area_name": "广东3区",
+   "area_id": "2"
+  },
+  {
+   "server_id": "677",
+   "server_name": "碧海潮生",
+   "area_name": "广东3区",
+   "area_id": "2"
+  },
+  {
+   "server_id": "3",
+   "server_name": "国子监",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "155",
+   "server_name": "太和殿",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "9",
+   "server_name": "紫禁城",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "459",
+   "server_name": "2008",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "527",
+   "server_name": "生日快乐",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "699",
+   "server_name": "喜大普奔",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "769",
+   "server_name": "恭王府",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "786",
+   "server_name": "五道口",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "838",
+   "server_name": "黄金台",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "851",
+   "server_name": "江山如画",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "871",
+   "server_name": "繁荣富强",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "920",
+   "server_name": "香山红叶",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "1019",
+   "server_name": "九五至尊",
+   "area_name": "北京1区",
+   "area_id": "3"
+  },
+  {
+   "server_id": "358",
+   "server_name": "流花湖",
+   "area_name": "广东4区",
+   "area_id": "4"
+  },
+  {
+   "server_id": "85",
+   "server_name": "白云山",
+   "area_name": "广东4区",
+   "area_id": "4"
+  },
+  {
+   "server_id": "82",
+   "server_name": "状元坊",
+   "area_name": "广东4区",
+   "area_id": "4"
+  },
+  {
+   "server_id": "84",
+   "server_name": "流溪河",
+   "area_name": "广东4区",
+   "area_id": "4"
+  },
+  {
+   "server_id": "139",
+   "server_name": "普陀山",
+   "area_name": "浙江3区",
+   "area_id": "5"
+  },
+  {
+   "server_id": "138",
+   "server_name": "钱塘江",
+   "area_name": "浙江3区",
+   "area_id": "5"
+  },
+  {
+   "server_id": "804",
+   "server_name": "功成名就",
+   "area_name": "浙江3区",
+   "area_id": "5"
+  },
+  {
+   "server_id": "1003",
+   "server_name": "钱塘观潮",
+   "area_name": "浙江3区",
+   "area_id": "5"
+  },
+  {
+   "server_id": "6",
+   "server_name": "叠彩山",
+   "area_name": "广西2区",
+   "area_id": "6"
+  },
+  {
+   "server_id": "6",
+   "server_name": "黄姚古镇",
+   "area_name": "广西2区",
+   "area_id": "6"
+  },
+  {
+   "server_id": "192",
+   "server_name": "牡丹亭",
+   "area_name": "河南2区",
+   "area_id": "7"
+  },
+  {
+   "server_id": "193",
+   "server_name": "少室山",
+   "area_name": "河南2区",
+   "area_id": "7"
+  },
+  {
+   "server_id": "193",
+   "server_name": "王屋山",
+   "area_name": "河南2区",
+   "area_id": "7"
+  },
+  {
+   "server_id": "212",
+   "server_name": "水泊梁山",
+   "area_name": "山东2区",
+   "area_id": "8"
+  },
+  {
+   "server_id": "299",
+   "server_name": "阳光城",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "689",
+   "server_name": "万里长城",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "732",
+   "server_name": "长安街",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "799",
+   "server_name": "东方巨龙",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "811",
+   "server_name": "天之骄子",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "816",
+   "server_name": "龙争虎斗",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "821",
+   "server_name": "顺天府",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "816",
+   "server_name": "三吴都会",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "821",
+   "server_name": "百战不殆",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "821",
+   "server_name": "千帆竞发",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "932",
+   "server_name": "乾清宫",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "935",
+   "server_name": "一生一世",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "996",
+   "server_name": "长城守望",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "1006",
+   "server_name": "华夏",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "799",
+   "server_name": "龙图腾",
+   "area_name": "北京2区",
+   "area_id": "9"
+  },
+  {
+   "server_id": "304",
+   "server_name": "日光岩",
+   "area_name": "福建2区",
+   "area_id": "10"
+  },
+  {
+   "server_id": "234",
+   "server_name": "鼓浪屿",
+   "area_name": "福建2区",
+   "area_id": "10"
+  },
+  {
+   "server_id": "11",
+   "server_name": "百花村",
+   "area_name": "福建2区",
+   "area_id": "10"
+  },
+  {
+   "server_id": "326",
+   "server_name": "齐云楼",
+   "area_name": "福建2区",
+   "area_id": "10"
+  },
+  {
+   "server_id": "12",
+   "server_name": "明秀园",
+   "area_name": "广西1区",
+   "area_id": "11"
+  },
+  {
+   "server_id": "249",
+   "server_name": "青秀山",
+   "area_name": "广西1区",
+   "area_id": "11"
+  },
+  {
+   "server_id": "86",
+   "server_name": "云天宫",
+   "area_name": "广西1区",
+   "area_id": "11"
+  },
+  {
+   "server_id": "932",
+   "server_name": "甲天下",
+   "area_name": "广西1区",
+   "area_id": "11"
+  },
+  {
+   "server_id": "60",
+   "server_name": "缘聚唐城",
+   "area_name": "河北1区",
+   "area_id": "12"
+  },
+  {
+   "server_id": "482",
+   "server_name": "渤海明珠",
+   "area_name": "河北1区",
+   "area_id": "12"
+  },
+  {
+   "server_id": "931",
+   "server_name": "月亮湖",
+   "area_name": "河北1区",
+   "area_id": "12"
+  },
+  {
+   "server_id": "931",
+   "server_name": "蒹葭苍苍",
+   "area_name": "河北1区",
+   "area_id": "12"
+  },
+  {
+   "server_id": "15",
+   "server_name": "避暑山庄",
+   "area_name": "河北3区",
+   "area_id": "13"
+  },
+  {
+   "server_id": "221",
+   "server_name": "雪域天龙",
+   "area_name": "黑龙江区",
+   "area_id": "14"
+  },
+  {
+   "server_id": "221",
+   "server_name": "佟佳江",
+   "area_name": "黑龙江区",
+   "area_id": "14"
+  },
+  {
+   "server_id": "94",
+   "server_name": "武当山",
+   "area_name": "湖北1区",
+   "area_id": "15"
+  },
+  {
+   "server_id": "420",
+   "server_name": "昭君台",
+   "area_name": "湖北1区",
+   "area_id": "15"
+  },
+  {
+   "server_id": "871",
+   "server_name": "大江大湖",
+   "area_name": "湖北1区",
+   "area_id": "15"
+  },
+  {
+   "server_id": "94",
+   "server_name": "南天门",
+   "area_name": "湖北1区",
+   "area_id": "15"
+  },
+  {
+   "server_id": "420",
+   "server_name": "神农架",
+   "area_name": "湖北2区",
+   "area_id": "16"
+  },
+  {
+   "server_id": "223",
+   "server_name": "黄鹤楼",
+   "area_name": "湖北2区",
+   "area_id": "16"
+  },
+  {
+   "server_id": "275",
+   "server_name": "橘子洲",
+   "area_name": "湖南区",
+   "area_id": "17"
+  },
+  {
+   "server_id": "96",
+   "server_name": "洞庭湖",
+   "area_name": "湖南区",
+   "area_id": "17"
+  },
+  {
+   "server_id": "932",
+   "server_name": "风华正茂",
+   "area_name": "湖南区",
+   "area_id": "17"
+  },
+  {
+   "server_id": "975",
+   "server_name": "云海雪霜",
+   "area_name": "湖南区",
+   "area_id": "17"
+  },
+  {
+   "server_id": "932",
+   "server_name": "甲天下",
+   "area_name": "湖南区",
+   "area_id": "17"
+  },
+  {
+   "server_id": "55",
+   "server_name": "精武门",
+   "area_name": "天津区",
+   "area_id": "19"
+  },
+  {
+   "server_id": "221",
+   "server_name": "佟佳江",
+   "area_name": "吉林区",
+   "area_id": "20"
+  },
+  {
+   "server_id": "101",
+   "server_name": "文昌阁",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "104",
+   "server_name": "雨花台",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "677",
+   "server_name": "凤凰台",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "855",
+   "server_name": "天下文枢",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "930",
+   "server_name": "寒山寺",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "936",
+   "server_name": "苏州园林",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "957",
+   "server_name": "秦淮风光",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "981",
+   "server_name": "十里桃花",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "993",
+   "server_name": "齐天大圣",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "1002",
+   "server_name": "雪满关山",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "981",
+   "server_name": "春心萌动",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "981",
+   "server_name": "双龙之战",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "957",
+   "server_name": "九曲黄河",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "957",
+   "server_name": "九天揽月",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "1029",
+   "server_name": "好运连连",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "1035",
+   "server_name": "夏天的风",
+   "area_name": "江苏1区",
+   "area_id": "21"
+  },
+  {
+   "server_id": "105",
+   "server_name": "夫子庙",
+   "area_name": "江苏2区",
+   "area_id": "22"
+  },
+  {
+   "server_id": "352",
+   "server_name": "姑苏城",
+   "area_name": "江苏2区",
+   "area_id": "22"
+  },
+  {
+   "server_id": "882",
+   "server_name": "枫桥夜泊",
+   "area_name": "江苏2区",
+   "area_id": "22"
+  },
+  {
+   "server_id": "26",
+   "server_name": "花果山",
+   "area_name": "江苏3区",
+   "area_id": "23"
+  },
+  {
+   "server_id": "462",
+   "server_name": "镇淮楼",
+   "area_name": "江苏3区",
+   "area_id": "23"
+  },
+  {
+   "server_id": "902",
+   "server_name": "燕子矶",
+   "area_name": "江苏3区",
+   "area_id": "23"
+  },
+  {
+   "server_id": "930",
+   "server_name": "烟花三月",
+   "area_name": "江苏3区",
+   "area_id": "23"
+  },
+  {
+   "server_id": "930",
+   "server_name": "秋分",
+   "area_name": "江苏3区",
+   "area_id": "23"
+  },
+  {
+   "server_id": "270",
+   "server_name": "庐山胜境",
+   "area_name": "江西区",
+   "area_id": "24"
+  },
+  {
+   "server_id": "367",
+   "server_name": "星海湾",
+   "area_name": "辽宁1区",
+   "area_id": "25"
+  },
+  {
+   "server_id": "211",
+   "server_name": "东岳泰山",
+   "area_name": "山东1区",
+   "area_id": "26"
+  },
+  {
+   "server_id": "94",
+   "server_name": "南天门",
+   "area_name": "山东1区",
+   "area_id": "26"
+  },
+  {
+   "server_id": "669",
+   "server_name": "青岛栈桥",
+   "area_name": "山东1区",
+   "area_id": "26"
+  },
+  {
+   "server_id": "681",
+   "server_name": "东海崂山",
+   "area_name": "山东1区",
+   "area_id": "26"
+  },
+  {
+   "server_id": "821",
+   "server_name": "千帆竞发",
+   "area_name": "山东1区",
+   "area_id": "26"
+  },
+  {
+   "server_id": "934",
+   "server_name": "凌绝顶",
+   "area_name": "山东1区",
+   "area_id": "26"
+  },
+  {
+   "server_id": "934",
+   "server_name": "临江仙",
+   "area_name": "山东1区",
+   "area_id": "26"
+  },
+  {
+   "server_id": "934",
+   "server_name": "五岳独尊",
+   "area_name": "山东1区",
+   "area_id": "26"
+  },
+  {
+   "server_id": "1004",
+   "server_name": "春风得意",
+   "area_name": "山东1区",
+   "area_id": "26"
+  },
+  {
+   "server_id": "33",
+   "server_name": "蓬莱岛",
+   "area_name": "山东3区",
+   "area_id": "27"
+  },
+  {
+   "server_id": "857",
+   "server_name": "壮气凌云",
+   "area_name": "山东3区",
+   "area_id": "27"
+  },
+  {
+   "server_id": "857",
+   "server_name": "十里金沙",
+   "area_name": "山东3区",
+   "area_id": "27"
+  },
+  {
+   "server_id": "857",
+   "server_name": "三水荷花",
+   "area_name": "山东3区",
+   "area_id": "27"
+  },
+  {
+   "server_id": "857",
+   "server_name": "洪崖洞",
+   "area_name": "山东3区",
+   "area_id": "27"
+  },
+  {
+   "server_id": "207",
+   "server_name": "大明湖",
+   "area_name": "山东4区",
+   "area_id": "28"
+  },
+  {
+   "server_id": "443",
+   "server_name": "沂水雪山",
+   "area_name": "山东4区",
+   "area_id": "28"
+  },
+  {
+   "server_id": "934",
+   "server_name": "灵山湾",
+   "area_name": "山东4区",
+   "area_id": "28"
+  },
+  {
+   "server_id": "34",
+   "server_name": "玉皇顶",
+   "area_name": "山东5区",
+   "area_id": "29"
+  },
+  {
+   "server_id": "407",
+   "server_name": "曲阜孔庙",
+   "area_name": "山东5区",
+   "area_id": "29"
+  },
+  {
+   "server_id": "657",
+   "server_name": "威海卫",
+   "area_name": "山东5区",
+   "area_id": "29"
+  },
+  {
+   "server_id": "421",
+   "server_name": "雁门关",
+   "area_name": "山西区",
+   "area_id": "30"
+  },
+  {
+   "server_id": "200",
+   "server_name": "大雁塔",
+   "area_name": "陕西区",
+   "area_id": "31"
+  },
+  {
+   "server_id": "203",
+   "server_name": "西岳华山",
+   "area_name": "陕西区",
+   "area_id": "31"
+  },
+  {
+   "server_id": "878",
+   "server_name": "岁岁长安",
+   "area_name": "陕西区",
+   "area_id": "31"
+  },
+  {
+   "server_id": "38",
+   "server_name": "东方明珠",
+   "area_name": "上海2区",
+   "area_id": "32"
+  },
+  {
+   "server_id": "622",
+   "server_name": "徐家汇",
+   "area_name": "上海2区",
+   "area_id": "32"
+  },
+  {
+   "server_id": "855",
+   "server_name": "四海升平",
+   "area_name": "上海2区",
+   "area_id": "32"
+  },
+  {
+   "server_id": "855",
+   "server_name": "天下文枢",
+   "area_name": "上海2区",
+   "area_id": "32"
+  },
+  {
+   "server_id": "855",
+   "server_name": "腾云驾雾",
+   "area_name": "上海2区",
+   "area_id": "32"
+  },
+  {
+   "server_id": "855",
+   "server_name": "桃花坞",
+   "area_name": "上海2区",
+   "area_id": "32"
+  },
+  {
+   "server_id": "855",
+   "server_name": "金榜题名",
+   "area_name": "上海2区",
+   "area_id": "32"
+  },
+  {
+   "server_id": "412",
+   "server_name": "梧桐山",
+   "area_name": "深圳2区",
+   "area_id": "33"
+  },
+  {
+   "server_id": "344",
+   "server_name": "小梅沙",
+   "area_name": "深圳2区",
+   "area_id": "33"
+  },
+  {
+   "server_id": "39",
+   "server_name": "世界之窗",
+   "area_name": "深圳2区",
+   "area_id": "33"
+  },
+  {
+   "server_id": "263",
+   "server_name": "嘉陵江",
+   "area_name": "四川1区",
+   "area_id": "34"
+  },
+  {
+   "server_id": "40",
+   "server_name": "成都府",
+   "area_name": "四川1区",
+   "area_id": "34"
+  },
+  {
+   "server_id": "878",
+   "server_name": "三星堆",
+   "area_name": "四川1区",
+   "area_id": "34"
+  },
+  {
+   "server_id": "878",
+   "server_name": "黑熊谷",
+   "area_name": "四川1区",
+   "area_id": "34"
+  },
+  {
+   "server_id": "377",
+   "server_name": "绍兴兰亭",
+   "area_name": "浙江4区",
+   "area_id": "35"
+  },
+  {
+   "server_id": "416",
+   "server_name": "绍兴鉴湖",
+   "area_name": "浙江4区",
+   "area_id": "35"
+  },
+  {
+   "server_id": "750",
+   "server_name": "烟雨江南",
+   "area_name": "浙江4区",
+   "area_id": "35"
+  },
+  {
+   "server_id": "881",
+   "server_name": "好运岛",
+   "area_name": "浙江4区",
+   "area_id": "35"
+  },
+  {
+   "server_id": "881",
+   "server_name": "春色满园",
+   "area_name": "浙江4区",
+   "area_id": "35"
+  },
+  {
+   "server_id": "285",
+   "server_name": "红枫湖",
+   "area_name": "贵州区",
+   "area_id": "36"
+  },
+  {
+   "server_id": "116",
+   "server_name": "大观园",
+   "area_name": "深圳1区",
+   "area_id": "37"
+  },
+  {
+   "server_id": "45",
+   "server_name": "花样年华",
+   "area_name": "时光",
+   "area_id": "38"
+  },
+  {
+   "server_id": "173",
+   "server_name": "逍遥城",
+   "area_name": "华南区",
+   "area_id": "39"
+  },
+  {
+   "server_id": "625",
+   "server_name": "钓鱼岛",
+   "area_name": "华南区",
+   "area_id": "39"
+  },
+  {
+   "server_id": "173",
+   "server_name": "侠客岛",
+   "area_name": "华南区",
+   "area_id": "39"
+  },
+  {
+   "server_id": "229",
+   "server_name": "雄鹰岭",
+   "area_name": "内蒙区",
+   "area_id": "40"
+  },
+  {
+   "server_id": "305",
+   "server_name": "朱紫坊",
+   "area_name": "福建1区",
+   "area_id": "41"
+  },
+  {
+   "server_id": "305",
+   "server_name": "凌云殿",
+   "area_name": "福建1区",
+   "area_id": "41"
+  },
+  {
+   "server_id": "878",
+   "server_name": "彩云归",
+   "area_name": "福建1区",
+   "area_id": "41"
+  },
+  {
+   "server_id": "878",
+   "server_name": "岁岁长安",
+   "area_name": "福建1区",
+   "area_id": "41"
+  },
+  {
+   "server_id": "417",
+   "server_name": "紫蓬山",
+   "area_name": "安徽1区",
+   "area_id": "42"
+  },
+  {
+   "server_id": "266",
+   "server_name": "慈光阁",
+   "area_name": "安徽1区",
+   "area_id": "42"
+  },
+  {
+   "server_id": "930",
+   "server_name": "秋分",
+   "area_name": "安徽1区",
+   "area_id": "42"
+  },
+  {
+   "server_id": "79",
+   "server_name": "如意岛",
+   "area_name": "广东2区",
+   "area_id": "43"
+  },
+  {
+   "server_id": "77",
+   "server_name": "进贤门",
+   "area_name": "广东2区",
+   "area_id": "43"
+  },
+  {
+   "server_id": "78",
+   "server_name": "万绿湖",
+   "area_name": "广东2区",
+   "area_id": "43"
+  },
+  {
+   "server_id": "79",
+   "server_name": "七星岩",
+   "area_name": "广东2区",
+   "area_id": "43"
+  },
+  {
+   "server_id": "127",
+   "server_name": "彩云之南",
+   "area_name": "云南区",
+   "area_id": "44"
+  },
+  {
+   "server_id": "130",
+   "server_name": "蝴蝶泉",
+   "area_name": "云南区",
+   "area_id": "44"
+  },
+  {
+   "server_id": "149",
+   "server_name": "再续前缘",
+   "area_name": "追忆",
+   "area_id": "45"
+  },
+  {
+   "server_id": "150",
+   "server_name": "梦回望月",
+   "area_name": "追忆",
+   "area_id": "45"
+  },
+  {
+   "server_id": "901",
+   "server_name": "2020",
+   "area_name": "追忆",
+   "area_id": "45"
+  },
+  {
+   "server_id": "954",
+   "server_name": "一生所爱",
+   "area_name": "追忆",
+   "area_id": "45"
+  },
+  {
+   "server_id": "962",
+   "server_name": "天命之路",
+   "area_name": "追忆",
+   "area_id": "45"
+  },
+  {
+   "server_id": "1011",
+   "server_name": "长安初遇",
+   "area_name": "追忆",
+   "area_id": "45"
+  },
+  {
+   "server_id": "1017",
+   "server_name": "天科",
+   "area_name": "追忆",
+   "area_id": "45"
+  },
+  {
+   "server_id": "72",
+   "server_name": "湖光岩",
+   "area_name": "广东1区",
+   "area_id": "47"
+  },
+  {
+   "server_id": "857",
+   "server_name": "三水荷花",
+   "area_name": "广东1区",
+   "area_id": "47"
+  },
+  {
+   "server_id": "857",
+   "server_name": "十里银滩",
+   "area_name": "广东1区",
+   "area_id": "47"
+  },
+  {
+   "server_id": "942",
+   "server_name": "二沙岛",
+   "area_name": "广东1区",
+   "area_id": "47"
+  },
+  {
+   "server_id": "857",
+   "server_name": "太公岛",
+   "area_name": "广东1区",
+   "area_id": "47"
+  },
+  {
+   "server_id": "1025",
+   "server_name": "大展宏图",
+   "area_name": "广东1区",
+   "area_id": "47"
+  },
+  {
+   "server_id": "1034",
+   "server_name": "扶摇万里",
+   "area_name": "广东1区",
+   "area_id": "47"
+  },
+  {
+   "server_id": "334",
+   "server_name": "燕塞湖",
+   "area_name": "河北2区",
+   "area_id": "48"
+  },
+  {
+   "server_id": "215",
+   "server_name": "燕赵风云",
+   "area_name": "河北2区",
+   "area_id": "48"
+  },
+  {
+   "server_id": "931",
+   "server_name": "观沧海",
+   "area_name": "河北2区",
+   "area_id": "48"
+  },
+  {
+   "server_id": "413",
+   "server_name": "少林寺",
+   "area_name": "河南1区",
+   "area_id": "49"
+  },
+  {
+   "server_id": "197",
+   "server_name": "中岳嵩山",
+   "area_name": "河南1区",
+   "area_id": "49"
+  },
+  {
+   "server_id": "199",
+   "server_name": "汴梁城",
+   "area_name": "河南1区",
+   "area_id": "49"
+  },
+  {
+   "server_id": "799",
+   "server_name": "龙图腾",
+   "area_name": "河南1区",
+   "area_id": "49"
+  },
+  {
+   "server_id": "939",
+   "server_name": "河图洛书",
+   "area_name": "河南1区",
+   "area_id": "49"
+  },
+  {
+   "server_id": "957",
+   "server_name": "九曲黄河",
+   "area_name": "河南1区",
+   "area_id": "49"
+  },
+  {
+   "server_id": "939",
+   "server_name": "华灯初上",
+   "area_name": "河南1区",
+   "area_id": "49"
+  },
+  {
+   "server_id": "1000",
+   "server_name": "鱼跃龙门",
+   "area_name": "河南1区",
+   "area_id": "49"
+  },
+  {
+   "server_id": "414",
+   "server_name": "南阳府",
+   "area_name": "河南3区",
+   "area_id": "50"
+  },
+  {
+   "server_id": "882",
+   "server_name": "逐鹿中原",
+   "area_name": "河南3区",
+   "area_id": "50"
+  },
+  {
+   "server_id": "882",
+   "server_name": "枫桥夜泊",
+   "area_name": "河南3区",
+   "area_id": "50"
+  },
+  {
+   "server_id": "367",
+   "server_name": "医巫闾山",
+   "area_name": "辽宁2区",
+   "area_id": "51"
+  },
+  {
+   "server_id": "167",
+   "server_name": "文殊院",
+   "area_name": "四川2区",
+   "area_id": "52"
+  },
+  {
+   "server_id": "123",
+   "server_name": "德阳文庙",
+   "area_name": "四川2区",
+   "area_id": "52"
+  },
+  {
+   "server_id": "878",
+   "server_name": "黑熊谷",
+   "area_name": "四川2区",
+   "area_id": "52"
+  },
+  {
+   "server_id": "1009",
+   "server_name": "老君阁",
+   "area_name": "四川2区",
+   "area_id": "52"
+  },
+  {
+   "server_id": "133",
+   "server_name": "台州湾",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "132",
+   "server_name": "西栅老街",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "712",
+   "server_name": "文澜阁",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "856",
+   "server_name": "龙泉山",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "841",
+   "server_name": "龙游四海",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "855",
+   "server_name": "桃花坞",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "932",
+   "server_name": "西塘古镇",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "953",
+   "server_name": "团团圆圆",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "987",
+   "server_name": "西湖醋鱼",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "1000",
+   "server_name": "一战成名",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "953",
+   "server_name": "一路有你",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "1007",
+   "server_name": "南屏晚钟",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "987",
+   "server_name": "龙腾九霄",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "932",
+   "server_name": "风华正茂",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "932",
+   "server_name": "乾清宫",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "987",
+   "server_name": "盖世英雄",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "1030",
+   "server_name": "踏浪行舟",
+   "area_name": "浙江1区",
+   "area_id": "54"
+  },
+  {
+   "server_id": "137",
+   "server_name": "苏堤春晓",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "378",
+   "server_name": "灵隐寺",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "677",
+   "server_name": "碧海潮生",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "758",
+   "server_name": "西湖龙井",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "881",
+   "server_name": "彩凤鸣岐",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "881",
+   "server_name": "忆江南",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "881",
+   "server_name": "西湖映月",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "957",
+   "server_name": "山外青山",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "957",
+   "server_name": "九天揽月",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "1002",
+   "server_name": "壮志凌云",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "1002",
+   "server_name": "蛇来运转",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "1002",
+   "server_name": "雪满关山",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "881",
+   "server_name": "纵横驰骋",
+   "area_name": "浙江2区",
+   "area_id": "55"
+  },
+  {
+   "server_id": "146",
+   "server_name": "解放碑",
+   "area_name": "重庆区",
+   "area_id": "56"
+  },
+  {
+   "server_id": "482",
+   "server_name": "茶山竹海",
+   "area_name": "重庆区",
+   "area_id": "56"
+  },
+  {
+   "server_id": "857",
+   "server_name": "洪崖洞",
+   "area_name": "重庆区",
+   "area_id": "56"
+  },
+  {
+   "server_id": "857",
+   "server_name": "神女峰",
+   "area_name": "重庆区",
+   "area_id": "56"
+  },
+  {
+   "server_id": "857",
+   "server_name": "小三峡",
+   "area_name": "重庆区",
+   "area_id": "56"
+  },
+  {
+   "server_id": "482",
+   "server_name": "渤海明珠",
+   "area_name": "重庆区",
+   "area_id": "56"
+  },
+  {
+   "server_id": "173",
+   "server_name": "侠客岛",
+   "area_name": "海外专区",
+   "area_id": "57"
+  },
+  {
+   "server_id": "554",
+   "server_name": "兰亭序",
+   "area_name": "无与伦比",
+   "area_id": "58"
+  },
+  {
+   "server_id": "558",
+   "server_name": "青花瓷",
+   "area_name": "无与伦比",
+   "area_id": "58"
+  },
+  {
+   "server_id": "559",
+   "server_name": "本草纲目",
+   "area_name": "无与伦比",
+   "area_id": "58"
+  },
+  {
+   "server_id": "558",
+   "server_name": "菊花台",
+   "area_name": "无与伦比",
+   "area_id": "58"
+  },
+  {
+   "server_id": "579",
+   "server_name": "千里之外",
+   "area_name": "无与伦比",
+   "area_id": "58"
+  },
+  {
+   "server_id": "583",
+   "server_name": "龙拳",
+   "area_name": "无与伦比",
+   "area_id": "58"
+  },
+  {
+   "server_id": "584",
+   "server_name": "将军",
+   "area_name": "无与伦比",
+   "area_id": "58"
+  },
+  {
+   "server_id": "705",
+   "server_name": "龙马精神",
+   "area_name": "无与伦比",
+   "area_id": "58"
+  },
+  {
+   "server_id": "976",
+   "server_name": "梦幻西游",
+   "area_name": "无与伦比",
+   "area_id": "58"
+  },
+  {
+   "server_id": "982",
+   "server_name": "龙的传人",
+   "area_name": "无与伦比",
+   "area_id": "58"
+  },
+  {
+   "server_id": "1024",
+   "server_name": "MHXY",
+   "area_name": "无与伦比",
+   "area_id": "58"
+  },
+  {
+   "server_id": "723",
+   "server_name": "群星璀璨",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "730",
+   "server_name": "金戈铁马",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "785",
+   "server_name": "逍遥三界",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "791",
+   "server_name": "诗情画意",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "795",
+   "server_name": "超凡入圣",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "881",
+   "server_name": "纵横驰骋",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "855",
+   "server_name": "金榜题名",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "881",
+   "server_name": "天地无极",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "987",
+   "server_name": "盖世英雄",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "1013",
+   "server_name": "荣耀之路",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "1020",
+   "server_name": "青梅竹马",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "1033",
+   "server_name": "刀剑似梦",
+   "area_name": "天下无双",
+   "area_id": "60"
+  },
+  {
+   "server_id": "807",
+   "server_name": "花好月圆",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "811",
+   "server_name": "华山论剑",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "868",
+   "server_name": "纵横天下",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "855",
+   "server_name": "腾云驾雾",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "856",
+   "server_name": "绝代天骄",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "811",
+   "server_name": "泱泱大风",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "856",
+   "server_name": "龙泉山",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "975",
+   "server_name": "长风破浪",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "987",
+   "server_name": "龙腾九霄",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "988",
+   "server_name": "五福临门",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "981",
+   "server_name": "双龙之战",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "1001",
+   "server_name": "平安喜乐",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "1008",
+   "server_name": "仗剑天涯",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "811",
+   "server_name": "天之骄子",
+   "area_name": "笑傲三界",
+   "area_id": "61"
+  },
+  {
+   "server_id": "868",
+   "server_name": "文韬武略",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "878",
+   "server_name": "洋光闪耀",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "882",
+   "server_name": "国泰民安",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "911",
+   "server_name": "恭喜发财",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "939",
+   "server_name": "卧虎藏龙",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "971",
+   "server_name": "万里华夏",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "988",
+   "server_name": "宝藏之夜",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "981",
+   "server_name": "春心萌动",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "1005",
+   "server_name": "天外飞仙",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "868",
+   "server_name": "纵横天下",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "1015",
+   "server_name": "独步天下",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "1021",
+   "server_name": "一代天骄",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "1026",
+   "server_name": "高级神佑",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "939",
+   "server_name": "河图洛书",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "878",
+   "server_name": "三星堆",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "882",
+   "server_name": "逐鹿中原",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "878",
+   "server_name": "彩云归",
+   "area_name": "名扬三界",
+   "area_id": "62"
+  },
+  {
+   "server_id": "892",
+   "server_name": "长安城",
+   "area_name": "山河社稷",
+   "area_id": "63"
+  },
+  {
+   "server_id": "902",
+   "server_name": "东海湾",
+   "area_name": "山河社稷",
+   "area_id": "63"
+  },
+  {
+   "server_id": "926",
+   "server_name": "大唐官府",
+   "area_name": "山河社稷",
+   "area_id": "63"
+  },
+  {
+   "server_id": "989",
+   "server_name": "东海龙宫",
+   "area_name": "山河社稷",
+   "area_id": "63"
+  },
+  {
+   "server_id": "902",
+   "server_name": "燕子矶",
+   "area_name": "山河社稷",
+   "area_id": "63"
+  },
+  {
+   "server_id": "1031",
+   "server_name": "江南野外",
+   "area_name": "山河社稷",
+   "area_id": "63"
+  },
+  {
+   "server_id": "1039",
+   "server_name": "东风御剑",
+   "area_name": "山河社稷",
+   "area_id": "63"
+  },
+  {
+   "server_id": "941",
+   "server_name": "水云归",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "953",
+   "server_name": "一路有你",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "952",
+   "server_name": "玉兔呈祥",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "952",
+   "server_name": "女儿情",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "967",
+   "server_name": "斗战胜佛",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "980",
+   "server_name": "福星高照",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "980",
+   "server_name": "热爱为伍",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "980",
+   "server_name": "巫山曲",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "1010",
+   "server_name": "一见钟情",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "1022",
+   "server_name": "天涯海角",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "1027",
+   "server_name": "万家灯火",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "1037",
+   "server_name": "缘来是你",
+   "area_name": "良辰美景",
+   "area_id": "66"
+  },
+  {
+   "server_id": "962",
+   "server_name": "水木清华",
+   "area_name": "北京3区",
+   "area_id": "67"
+  },
+  {
+   "server_id": "969",
+   "server_name": "紫禁之巅",
+   "area_name": "北京3区",
+   "area_id": "67"
+  },
+  {
+   "server_id": "988",
+   "server_name": "气贯长虹",
+   "area_name": "北京3区",
+   "area_id": "67"
+  },
+  {
+   "server_id": "962",
+   "server_name": "天命之路",
+   "area_name": "北京3区",
+   "area_id": "67"
+  },
+  {
+   "server_id": "988",
+   "server_name": "宝藏之夜",
+   "area_name": "北京3区",
+   "area_id": "67"
+  },
+  {
+   "server_id": "988",
+   "server_name": "五福临门",
+   "area_name": "北京3区",
+   "area_id": "67"
+  },
+  {
+   "server_id": "1000",
+   "server_name": "友情岁月",
+   "area_name": "星辰大海",
+   "area_id": "68"
+  },
+  {
+   "server_id": "1018",
+   "server_name": "风雨同舟",
+   "area_name": "星辰大海",
+   "area_id": "68"
+  },
+  {
+   "server_id": "1028",
+   "server_name": "马上有钱",
+   "area_name": "星辰大海",
+   "area_id": "68"
+  },
+  {
+   "server_id": "1000",
+   "server_name": "鱼跃龙门",
+   "area_name": "星辰大海",
+   "area_id": "68"
+  },
+  {
+   "server_id": "1000",
+   "server_name": "一战成名",
+   "area_name": "星辰大海",
+   "area_id": "68"
+  },
+  {
+   "server_id": "1014",
+   "server_name": "如梦似幻",
+   "area_name": "为爱追寻",
+   "area_id": "69"
+  },
+  {
+   "server_id": "1016",
+   "server_name": "1314",
+   "area_name": "为爱追寻",
+   "area_id": "69"
+  },
+  {
+   "server_id": "1023",
+   "server_name": "三生三世",
+   "area_name": "为爱追寻",
+   "area_id": "69"
+  },
+  {
+   "server_id": "1038",
+   "server_name": "逍遥",
+   "area_name": "为爱追寻",
+   "area_id": "69"
+  },
+  {
+   "server_id": "1036",
+   "server_name": "七十二变",
+   "area_name": "神通广大",
+   "area_id": "70"
+  }
+ ]
+}

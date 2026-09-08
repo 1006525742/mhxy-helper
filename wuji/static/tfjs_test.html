@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>宝图识别 - TF.js模型测试</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; padding: 20px; }
+.container { max-width: 1200px; margin: 0 auto; }
+h1 { color: #e94560; margin-bottom: 20px; }
+h2 { color: #4fc3f7; margin: 10px 0; }
+.row { display: flex; gap: 20px; margin-bottom: 20px; }
+.col { flex: 1; }
+.panel { background: #16213e; border-radius: 8px; padding: 16px; border: 1px solid #0f3460; }
+.panel h3 { color: #4fc3f7; margin-bottom: 12px; }
+.btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin: 4px; }
+.btn-primary { background: #0f3460; color: #eee; }
+.btn-primary:hover { background: #1a5276; }
+.btn-success { background: #1b5e20; color: #eee; }
+.btn-success:hover { background: #2e7d32; }
+.btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+.status { padding: 8px; border-radius: 4px; margin: 10px 0; }
+.status.loading { background: #1a5276; color: #4fc3f7; }
+.status.success { background: #1b5e20; color: #66bb6a; }
+.status.error { background: #4a1a1a; color: #e94560; }
+#preview { max-width: 100%; border-radius: 8px; background: #000; }
+#resultCanvas { max-width: 100%; border-radius: 8px; background: #000; }
+.result-box { background: #1a1a2e; padding: 12px; border-radius: 4px; margin-top: 10px; font-family: monospace; }
+.result-box .label { color: #4fc3f7; margin-bottom: 4px; }
+.result-box .text { color: #fff; white-space: pre-wrap; }
+.result-box .coord { color: #66bb6a; font-weight: bold; }
+.result-box .error { color: #e94560; }
+.upload-area { border: 2px dashed #0f3460; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px; cursor: pointer; }
+.upload-area:hover { border-color: #4fc3f7; }
+#fileInput { display: none; }
+.detection-item { background: #1a1a2e; padding: 8px; margin: 4px 0; border-radius: 4px; border-left: 3px solid #4fc3f7; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>宝图识别 - TF.js模型测试</h1>
+
+  <!-- 模型加载状态 -->
+  <div class="panel">
+    <h3>模型状态</h3>
+    <button class="btn btn-primary" onclick="loadModel()" id="loadBtn">加载TF.js模型</button>
+    <div id="modelStatus" class="status">等待加载模型...</div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <div class="panel">
+        <h3>选择图片</h3>
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+          点击上传截图
+          <input type="file" id="fileInput" accept="image/*" onchange="loadImage(event)">
+        </div>
+        <h3>原图预览</h3>
+        <img id="preview" style="display:none">
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3>检测结果</h3>
+        <button class="btn btn-success" onclick="runDetection()" id="detectBtn" disabled>开始检测</button>
+        <canvas id="resultCanvas" style="display:none"></canvas>
+        <div id="detectionResults"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>识别结果</h3>
+    <div id="results">
+      <div class="result-box">
+        <div class="label">请上传图片进行测试...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let model = null;
+let currentImage = null;
+
+// 类别名称（根据输出维度5个类别推测）
+const CLASS_NAMES = {
+  0: "类别0",
+  1: "类别1",
+  2: "类别2",
+  3: "类别3",
+  4: "类别4"
+};
+
+// 类别颜色
+const CLASS_COLORS = {
+  0: "#FF6B6B",
+  1: "#4ECDC4",
+  2: "#45B7D1",
+  3: "#96CEB4",
+  4: "#FFEAA7"
+};
+
+async function loadModel() {
+  const statusDiv = document.getElementById('modelStatus');
+  const loadBtn = document.getElementById('loadBtn');
+
+  statusDiv.className = 'status loading';
+  statusDiv.textContent = '正在加载模型...';
+  loadBtn.disabled = true;
+
+  try {
+    // 加载TF.js模型
+    const modelPath = '/static/models/tfjs_baotu/model.json';
+    console.log('加载模型:', modelPath);
+
+    model = await tf.loadGraphModel(modelPath);
+
+    statusDiv.className = 'status success';
+    statusDiv.textContent = '模型加载成功！';
+
+    // 打印模型信息
+    console.log('模型输入:', model.inputs);
+    console.log('模型输出:', model.outputs);
+
+    // 如果有图片，启用检测按钮
+    if (currentImage) {
+      document.getElementById('detectBtn').disabled = false;
+    }
+
+  } catch (e) {
+    statusDiv.className = 'status error';
+    statusDiv.textContent = '模型加载失败: ' + e.message;
+    console.error('模型加载错误:', e);
+    loadBtn.disabled = false;
+  }
+}
+
+function loadImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = document.getElementById('preview');
+    img.src = e.target.result;
+    img.style.display = 'block';
+
+    img.onload = () => {
+      currentImage = img;
+      document.getElementById('detectBtn').disabled = (model === null);
+    };
+  };
+  reader.readAsDataURL(file);
+}
+
+async function runDetection() {
+  if (!model) {
+    alert('请先加载模型');
+    return;
+  }
+  if (!currentImage) {
+    alert('请先上传图片');
+    return;
+  }
+
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = '<div class="status loading">正在检测...</div>';
+
+  try {
+    // 获取原始图像尺寸
+    const origWidth = currentImage.naturalWidth;
+    const origHeight = currentImage.naturalHeight;
+
+    // 创建canvas进行预处理
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 640;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(currentImage, 0, 0, 640, 640);
+
+    // 获取像素数据
+    const imageData = ctx.getImageData(0, 0, 640, 640);
+    const pixels = imageData.data; // RGBA格式
+
+    // 转换为模型输入格式 [1, 640, 640, 3] - RGB归一化
+    const inputArray = new Float32Array(640 * 640 * 3);
+    for (let i = 0; i < 640 * 640; i++) {
+      inputArray[i * 3] = pixels[i * 4] / 255.0;         // R
+      inputArray[i * 3 + 1] = pixels[i * 4 + 1] / 255.0; // G
+      inputArray[i * 3 + 2] = pixels[i * 4 + 2] / 255.0; // B
+    }
+
+    // 创建tensor
+    const input = tf.tensor4d(inputArray, [1, 640, 640, 3]);
+
+    // 推理
+    console.log('开始推理...');
+    const startTime = performance.now();
+    const output = await model.predict(input);
+    const endTime = performance.now();
+    console.log(`推理耗时: ${(endTime - startTime).toFixed(2)}ms`);
+
+    // 获取输出数据
+    const outputData = await output.data();
+    console.log('输出形状:', output.shape);
+    console.log('输出数据长度:', outputData.length);
+
+    // 打印前几个检测框的原始数据，分析格式
+    console.log('前3个检测框原始数据:');
+    for (let i = 0; i < 3; i++) {
+      const offset = i * 9;
+      console.log(`框${i}: [${outputData.slice(offset, offset + 9).map(v => v.toFixed(4)).join(', ')}]`);
+    }
+
+    // 找一个高置信度的检测框看看
+    let maxIdx = 0;
+    let maxConf = 0;
+    for (let i = 0; i < 25200; i++) {
+      const offset = i * 9;
+      for (let j = 4; j < 9; j++) {
+        if (outputData[offset + j] > maxConf) {
+          maxConf = outputData[offset + j];
+          maxIdx = i;
+        }
+      }
+    }
+    console.log(`最高置信度检测框${maxIdx}: [${outputData.slice(maxIdx * 9, maxIdx * 9 + 9).map(v => v.toFixed(4)).join(', ')}]`);
+
+    // 解析检测结果
+    const detections = parseDetections(outputData, origWidth, origHeight);
+
+    // 显示结果
+    displayResults(detections, origWidth, origHeight);
+
+    // 清理
+    input.dispose();
+    output.dispose();
+
+  } catch (e) {
+    resultsDiv.innerHTML = '<div class="status error">检测失败: ' + e.message + '</div>';
+    console.error('检测错误:', e);
+  }
+}
+
+function parseDetections(outputData, origWidth, origHeight) {
+  // 输出格式: [1, 25200, 9] 展平为一维数组
+  // 每个检测框: 4坐标(归一化xywh) + 5类别分数
+  // 坐标是归一化的center_x, center_y, width, height
+  const numBoxes = 25200;
+  const numValues = 9;
+  const confThreshold = 0.99;  // 只保留99%以上置信度
+
+  const detections = [];
+
+  for (let i = 0; i < numBoxes; i++) {
+    const offset = i * numValues;
+
+    // 归一化的xywh格式（center_x, center_y, width, height）
+    const cx = outputData[offset];      // 中心x (归一化0-1)
+    const cy = outputData[offset + 1];  // 中心y (归一化0-1)
+    const w = outputData[offset + 2];   // 宽度 (归一化0-1)
+    const h = outputData[offset + 3];   // 高度 (归一化0-1)
+
+    // 获取类别分数
+    const scores = [
+      outputData[offset + 4],
+      outputData[offset + 5],
+      outputData[offset + 6],
+      outputData[offset + 7],
+      outputData[offset + 8]
+    ];
+
+    // 找最大分数
+    let maxScore = 0;
+    let maxClass = 0;
+    for (let j = 0; j < 5; j++) {
+      if (scores[j] > maxScore) {
+        maxScore = scores[j];
+        maxClass = j;
+      }
+    }
+
+    // 只保留99%置信度，且检测区域足够大（排除噪声）
+    const area = w * h;  // 归一化面积
+    if (maxScore >= confThreshold && area > 0.02) {  // 面积大于2%图像
+      // xywh转xyxy，然后乘以原图尺寸
+      const x1 = (cx - w / 2) * origWidth;
+      const y1 = (cy - h / 2) * origHeight;
+      const x2 = (cx + w / 2) * origWidth;
+      const y2 = (cy + h / 2) * origHeight;
+
+      detections.push({
+        classId: maxClass,
+        className: CLASS_NAMES[maxClass],
+        score: maxScore,
+        box: [x1, y1, x2, y2]
+      });
+    }
+  }
+
+  // NMS去重（简化版）
+  return nms(detections, 0.45);
+}
+
+function nms(detections, threshold) {
+  if (detections.length === 0) return [];
+
+  // 按置信度排序
+  detections.sort((a, b) => b.score - a.score);
+
+  const keep = [];
+  const used = new Set();
+
+  for (let i = 0; i < detections.length; i++) {
+    if (used.has(i)) continue;
+    keep.push(detections[i]);
+
+    for (let j = i + 1; j < detections.length; j++) {
+      if (used.has(j)) continue;
+
+      const iou = calculateIoU(detections[i].box, detections[j].box);
+      if (iou > threshold) {
+        used.add(j);
+      }
+    }
+  }
+
+  return keep;
+}
+
+function calculateIoU(box1, box2) {
+  const x1 = Math.max(box1[0], box2[0]);
+  const y1 = Math.max(box1[1], box2[1]);
+  const x2 = Math.min(box1[2], box2[2]);
+  const y2 = Math.min(box1[3], box2[3]);
+
+  const intersection = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+  const area1 = (box1[2] - box1[0]) * (box1[3] - box1[1]);
+  const area2 = (box2[2] - box2[0]) * (box2[3] - box2[1]);
+  const union = area1 + area2 - intersection;
+
+  return union > 0 ? intersection / union : 0;
+}
+
+function displayResults(detections, origWidth, origHeight) {
+  // 在canvas上绘制结果
+  const canvas = document.getElementById('resultCanvas');
+  const ctx = canvas.getContext('2d');
+
+  canvas.width = origWidth;
+  canvas.height = origHeight;
+  canvas.style.display = 'block';
+
+  // 绘制原图
+  ctx.drawImage(currentImage, 0, 0, origWidth, origHeight);
+
+  // 绘制检测框
+  detections.forEach(det => {
+    const [x1, y1, x2, y2] = det.box;
+    const color = CLASS_COLORS[det.classId] || '#FF0000';
+
+    // 绘制边框
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+    // 绘制标签背景
+    const label = `${det.className}: ${det.score.toFixed(2)}`;
+    ctx.font = '14px Arial';
+    const textWidth = ctx.measureText(label).width;
+    ctx.fillStyle = color;
+    ctx.fillRect(x1, y1 - 20, textWidth + 8, 20);
+
+    // 绘制标签文字
+    ctx.fillStyle = '#000';
+    ctx.fillText(label, x1 + 4, y1 - 5);
+  });
+
+  // 显示检测结果列表
+  const resultsDiv = document.getElementById('results');
+  let html = `<div class="result-box">
+    <div class="label">检测到 ${detections.length} 个目标</div>
+  </div>`;
+
+  detections.forEach(det => {
+    html += `<div class="detection-item" style="border-left-color: ${CLASS_COLORS[det.classId]}">
+      <div class="text"><strong>${det.className}</strong></div>
+      <div class="text">置信度: ${det.score.toFixed(3)}</div>
+      <div class="text">位置: [${det.box.map(v => v.toFixed(1)).join(', ')}]</div>
+    </div>`;
+  });
+
+  if (detections.length === 0) {
+    html += '<div class="status error">未检测到任何目标</div>';
+  }
+
+  resultsDiv.innerHTML = html;
+}
+
+// 页面加载时自动尝试加载模型
+window.onload = () => {
+  console.log('TensorFlow.js 版本:', tf.version.tfjs);
+  // 不自动加载，等待用户点击
+};
+</script>
+</body>
+</html>

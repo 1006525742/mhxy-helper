@@ -48,3 +48,9 @@ mh-996cajd/
 backend/preprocess_test.py
 backend/error_analysis.py
 backend/analyze_failed.py
+
+# Vite config 编译产物（tsc/vue-tsc 会生成 .js/.d.ts，Vite 会优先加载 .js 而非 .ts，
+# 导致代理规则失效，务必忽略）
+frontend/vite.config.js
+frontend/vite.config.d.ts
+frontend/vite.config.js.bak

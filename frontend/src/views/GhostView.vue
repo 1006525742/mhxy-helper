@@ -101,7 +101,7 @@ onUnmounted(() => {
     <!-- 左侧面板 -->
     <div class="left-panel">
       <!-- 屏幕共享 -->
-      <ScreenShare ref="screenShareRef" />
+      <ScreenShare ref="screenShareRef" label="抓鬼监控" />
 
       <!-- 截图区域设置 -->
       <RegionSelector @change="onRegionChange" />

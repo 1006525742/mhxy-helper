@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>识别测试 - 模板匹配 vs OCR</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; padding: 20px; }
+.container { max-width: 1200px; margin: 0 auto; }
+h1 { text-align: center; margin-bottom: 20px; color: #e94560; }
+
+.upload-area {
+  background: #16213e; border: 2px dashed #4fc3f7; border-radius: 8px;
+  padding: 40px; text-align: center; margin-bottom: 20px; cursor: pointer;
+  transition: all 0.3s;
+}
+.upload-area:hover { border-color: #e94560; background: #1a1f2e; }
+.upload-area.dragover { border-color: #4caf50; background: rgba(76,175,80,0.1); }
+.upload-icon { font-size: 48px; margin-bottom: 10px; }
+.upload-text { color: #888; }
+
+.preview-container { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+.preview-box { flex: 1; min-width: 300px; background: #16213e; border-radius: 8px; padding: 15px; }
+.preview-box h3 { color: #4fc3f7; margin-bottom: 10px; font-size: 14px; }
+.preview-box img { max-width: 100%; border-radius: 4px; }
+
+.results { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.result-card { background: #16213e; border-radius: 8px; padding: 20px; border: 2px solid #2a3040; }
+.result-card.template { border-color: #4fc3f7; }
+.result-card.ocr { border-color: #4caf50; }
+.result-card h2 { font-size: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+.result-card.template h2 { color: #4fc3f7; }
+.result-card.ocr h2 { color: #4caf50; }
+
+.result-item { background: #1a1f2e; padding: 12px; border-radius: 4px; margin-bottom: 10px; }
+.result-item .label { color: #888; font-size: 12px; margin-bottom: 4px; }
+.result-item .value { font-size: 18px; font-weight: bold; }
+.result-item .value.success { color: #4caf50; }
+.result-item .value.error { color: #e94560; }
+
+.time-badge { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: #2a3040; }
+.time-badge.fast { background: #1b5e20; }
+.time-badge.medium { background: #e65100; }
+.time-badge.slow { background: #b71c1c; }
+
+.btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
+.btn-primary { background: #4fc3f7; color: #000; }
+.btn-success { background: #4caf50; color: #fff; }
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.loading { text-align: center; padding: 40px; color: #888; }
+.loading::after { content: ''; animation: dots 1.5s infinite; }
+@keyframes dots { 0%,20% { content: '.'; } 40% { content: '..'; } 60%,100% { content: '...'; } }
+
+.compare { background: #1a1f2e; border-radius: 8px; padding: 20px; margin-top: 20px; }
+.compare h3 { color: #ffc107; margin-bottom: 15px; }
+.compare-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #2a3040; }
+.compare-label { color: #888; }
+.compare-values { display: flex; gap: 30px; }
+.compare-values span:first-child { color: #4fc3f7; }
+.compare-values span:last-child { color: #4caf50; }
+.match { color: #4caf50 !important; }
+.mismatch { color: #e94560 !important; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🧪 识别测试 - 模板匹配 vs OCR</h1>
+
+  <!-- 上传区域 -->
+  <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon">📁</div>
+    <div class="upload-text">点击或拖拽图片到此处上传</div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none">
+  </div>
+
+  <!-- 图片预览 -->
+  <div class="preview-container" id="previewContainer" style="display:none">
+    <div class="preview-box">
+      <h3>📤 上传的图片</h3>
+      <img id="originalImage">
+    </div>
+    <div class="preview-box">
+      <h3>🟡 黄色提取预览</h3>
+      <canvas id="yellowCanvas"></canvas>
+    </div>
+  </div>
+
+  <!-- 结果对比 -->
+  <div class="results" id="results" style="display:none">
+    <div class="result-card template">
+      <h2>📐 模板匹配</h2>
+      <div class="result-item">
+        <div class="label">地图</div>
+        <div class="value" id="templateMap">-</div>
+      </div>
+      <div class="result-item">
+        <div class="label">坐标</div>
+        <div class="value" id="templateCoord">-</div>
+      </div>
+      <div class="result-item">
+        <div class="label">耗时</div>
+        <div class="value"><span class="time-badge" id="templateTime">-</span></div>
+      </div>
+    </div>
+
+    <div class="result-card ocr">
+      <h2>🔍 OCR 识别</h2>
+      <div class="result-item">
+        <div class="label">地图</div>
+        <div class="value" id="ocrMap">-</div>
+      </div>
+      <div class="result-item">
+        <div class="label">坐标</div>
+        <div class="value" id="ocrCoord">-</div>
+      </div>
+      <div class="result-item">
+        <div class="label">耗时</div>
+        <div class="value"><span class="time-badge" id="ocrTime">-</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结果对比 -->
+  <div class="compare" id="compareBox" style="display:none">
+    <h3>📊 结果对比</h3>
+    <div class="compare-row">
+      <span class="compare-label">地图</span>
+      <div class="compare-values">
+        <span id="compareMapTemplate">-</span>
+        <span id="compareMapOcr">-</span>
+      </div>
+    </div>
+    <div class="compare-row">
+      <span class="compare-label">X坐标</span>
+      <div class="compare-values">
+        <span id="compareXTemplate">-</span>
+        <span id="compareXOcr">-</span>
+      </div>
+    </div>
+    <div class="compare-row">
+      <span class="compare-label">Y坐标</span>
+      <div class="compare-values">
+        <span id="compareYTemplate">-</span>
+        <span id="compareYOcr">-</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = '';
+let currentImage = null;
+
+// 文件上传处理
+document.getElementById('fileInput').addEventListener('change', handleFile);
+document.getElementById('uploadArea').addEventListener('dragover', (e) => {
+  e.preventDefault();
+  e.currentTarget.classList.add('dragover');
+});
+document.getElementById('uploadArea').addEventListener('dragleave', (e) => {
+  e.currentTarget.classList.remove('dragover');
+});
+document.getElementById('uploadArea').addEventListener('drop', (e) => {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  if (e.dataTransfer.files.length) {
+    handleFile({ target: { files: e.dataTransfer.files } });
+  }
+});
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    currentImage = new Image();
+    currentImage.onload = () => {
+      // 显示原图
+      document.getElementById('originalImage').src = evt.target.result;
+      document.getElementById('previewContainer').style.display = 'flex';
+
+      // 黄色提取预览
+      extractYellow(evt.target.result);
+
+      // 自动开始识别
+      runRecognition(evt.target.result);
+    };
+    currentImage.src = evt.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function extractYellow(dataUrl) {
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.getElementById('yellowCanvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i], g = data[i+1], b = data[i+2];
+      // 黄色检测 (简化版 HSV)
+      const isYellow = (r > 150 && g > 150 && b < 100 && r > b && g > b && Math.abs(r-g) < 80);
+      if (isYellow) {
+        // 保持黄色
+      } else {
+        // 变黑
+        data[i] = data[i+1] = data[i+2] = 0;
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+  };
+  img.src = dataUrl;
+}
+
+async function runRecognition(dataUrl) {
+  document.getElementById('results').style.display = 'grid';
+  document.getElementById('compareBox').style.display = 'block';
+
+  // 显示加载状态
+  document.getElementById('templateMap').textContent = '识别中...';
+  document.getElementById('templateCoord').textContent = '-';
+  document.getElementById('ocrMap').textContent = '识别中...';
+  document.getElementById('ocrCoord').textContent = '-';
+
+  const base64Data = dataUrl.split(',')[1];
+
+  try {
+    // 调用组合 API
+    const response = await fetch(`${API_BASE}/api/ghost/capture`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base64Data })
+    });
+    const result = await response.json();
+
+    if (result.success) {
+      // 模板匹配结果
+      const template = result.template || {};
+      document.getElementById('templateMap').textContent = template.map || '-';
+      document.getElementById('templateMap').className = 'value ' + (template.map ? 'success' : 'error');
+      document.getElementById('templateCoord').textContent = template.map ? `${template.x}, ${template.y}` : '-';
+      document.getElementById('templateTime').textContent = `${template.time_ms || 0}ms`;
+      document.getElementById('templateTime').className = 'time-badge ' + getTimeClass(template.time_ms);
+
+      // OCR 结果
+      const ocr = result.ocr || {};
+      document.getElementById('ocrMap').textContent = ocr.map || '-';
+      document.getElementById('ocrMap').className = 'value ' + (ocr.map ? 'success' : 'error');
+      document.getElementById('ocrCoord').textContent = ocr.map ? `${ocr.x}, ${ocr.y}` : '-';
+      document.getElementById('ocrTime').textContent = `${ocr.time_ms || 0}ms`;
+      document.getElementById('ocrTime').className = 'time-badge ' + getTimeClass(ocr.time_ms);
+
+      // 对比
+      updateCompare('Map', template.map, ocr.map);
+      updateCompare('X', template.x, ocr.x);
+      updateCompare('Y', template.y, ocr.y);
+    } else {
+      document.getElementById('templateMap').textContent = '失败';
+      document.getElementById('templateMap').className = 'value error';
+      document.getElementById('ocrMap').textContent = '失败';
+      document.getElementById('ocrMap').className = 'value error';
+    }
+  } catch (e) {
+    console.error('识别失败:', e);
+    document.getElementById('templateMap').textContent = '请求失败';
+    document.getElementById('templateMap').className = 'value error';
+    document.getElementById('ocrMap').textContent = '请求失败';
+    document.getElementById('ocrMap').className = 'value error';
+  }
+}
+
+function getTimeClass(ms) {
+  if (ms < 100) return 'fast';
+  if (ms < 300) return 'medium';
+  return 'slow';
+}
+
+function updateCompare(field, templateVal, ocrVal) {
+  const templateEl = document.getElementById(`compare${field}Template`);
+  const ocrEl = document.getElementById(`compare${field}Ocr`);
+
+  templateEl.textContent = templateVal || '-';
+  ocrEl.textContent = ocrVal || '-';
+
+  // 判断是否匹配
+  const match = templateVal && ocrVal && String(templateVal) === String(ocrVal);
+  templateEl.className = match ? 'match' : (templateVal ? '' : '');
+  ocrEl.className = match ? 'match' : (ocrVal ? 'mismatch' : '');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>996长安酒店 - 抓鬼助手</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; overflow: hidden; }
+
+.header { background: #16213e; padding: 10px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #0f3460; flex-wrap: wrap; justify-content: space-between; }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header h1 { font-size: 18px; color: #e94560; }
+.status-badge { background: #0f3460; padding: 3px 10px; border-radius: 12px; font-size: 12px; color: #4fc3f7; }
+.header-link { color: #4fc3f7; text-decoration: none; font-size: 13px; }
+.header-link:hover { color: #7c4dff; }
+
+.main { display: flex; height: calc(100vh - 56px); }
+
+.left-panel { flex: 1; padding: 15px; display: flex; flex-direction: column; gap: 10px; min-width: 400px; }
+
+/* 屏幕共享区域 */
+.share-container { background: #1a1a2e; border-radius: 8px; padding: 15px; border: 1px solid #0f3460; }
+.share-preview { background: #000; border-radius: 4px; min-height: 200px; display: flex; align-items: center; justify-content: center; color: #555; }
+.share-preview.active { min-height: 300px; }
+#previewImage { max-width: 100%; max-height: 400px; border-radius: 4px; }
+
+/* 控制按钮 */
+.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: #0f3460; color: #eee; }
+.btn-success { background: #1b5e20; color: #eee; }
+.btn-danger { background: #b71c1c; color: #eee; }
+.btn-warning { background: #e65100; color: #eee; }
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* 截图区域选择 */
+.region-selector { background: #1a1a2e; border-radius: 8px; padding: 15px; border: 1px solid #0f3460; }
+.region-selector h3 { color: #4fc3f7; font-size: 14px; margin-bottom: 10px; }
+.region-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.region-inputs .input-group { display: flex; flex-direction: column; gap: 4px; }
+.region-inputs label { font-size: 12px; color: #aaa; }
+.region-inputs input { background: #0f0f23; border: 1px solid #0f3460; color: #eee; padding: 6px 10px; border-radius: 4px; font-size: 13px; }
+
+/* 右侧结果面板 */
+.right-panel { width: 400px; background: #16213e; border-left: 2px solid #0f3460; padding: 15px; overflow-y: auto; }
+
+.result-card { background: #1a1a2e; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #0f3460; }
+.result-card h3 { color: #e94560; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.result-card .coord { font-size: 24px; color: #4fc3f7; font-weight: bold; margin: 10px 0; }
+.result-card .map-name { font-size: 18px; color: #66bb6a; margin-bottom: 10px; }
+
+/* 预测区域列表 */
+.area-list { margin-top: 10px; }
+.area-item { background: #0f0f23; padding: 8px 12px; border-radius: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; font-size: 13px; }
+.area-item .label { color: #aaa; }
+.area-item .value { color: #4fc3f7; font-weight: bold; }
+
+/* 置信度指示 */
+.confidence-bar { height: 4px; background: #0f3460; border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.confidence-fill { height: 100%; background: linear-gradient(90deg, #66bb6a, #4fc3f7); transition: width 0.3s; }
+
+/* 地图预览 */
+.map-preview { text-align: center; margin-top: 15px; }
+.map-preview img { max-width: 100%; border-radius: 8px; border: 2px solid #0f3460; }
+
+/* 历史记录 */
+.history-list { font-size: 12px; max-height: 200px; overflow-y: auto; }
+.history-item { background: #0f0f23; padding: 8px 10px; border-radius: 4px; margin-bottom: 6px; border-left: 3px solid #4fc3f7; }
+.history-item .time { color: #666; font-size: 11px; }
+.history-item .info { color: #eee; margin-top: 4px; }
+
+/* 使用说明 */
+.help-box { background: #0f0f23; border-radius: 8px; padding: 15px; margin-top: 15px; border: 1px solid #0f3460; }
+.help-box h4 { color: #4fc3f7; font-size: 13px; margin-bottom: 8px; }
+.help-box p { font-size: 12px; color: #aaa; line-height: 1.6; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <h1>👻 抓鬼预测 - 云端版</h1>
+    <span class="status-badge" id="statusBadge">未连接</span>
+  </div>
+  <a href="/" class="header-link">🏠 返回首页</a>
+</div>
+
+<div class="main">
+  <div class="left-panel">
+    <!-- 屏幕共享区域 -->
+    <div class="share-container">
+      <h3 style="color:#4fc3f7;font-size:14px;margin-bottom:10px">📺 屏幕共享</h3>
+      <div class="share-preview" id="sharePreview">
+        <span id="previewText">点击下方按钮选择游戏窗口</span>
+        <img id="previewImage" style="display:none">
+      </div>
+      <div class="controls">
+        <button class="btn btn-success" id="btnStartShare" onclick="startScreenShare()">▶ 开始屏幕共享</button>
+        <button class="btn btn-danger" id="btnStopShare" onclick="stopScreenShare()" style="display:none">⏸ 停止共享</button>
+        <button class="btn btn-primary" id="btnStartMonitor" onclick="startMonitor()" style="display:none">🔍 开始监控</button>
+        <button class="btn btn-danger" id="btnStopMonitor" onclick="stopMonitor()" style="display:none">⏹ 停止监控</button>
+      </div>
+    </div>
+
+    <!-- 截图区域选择 -->
+    <div class="region-selector">
+      <h3>📐 截图区域设置</h3>
+      <p style="font-size:12px;color:#aaa;margin-bottom:10px">设置游戏中小鬼坐标显示区域（相对于游戏窗口左上角）</p>
+      <div class="region-inputs">
+        <div class="input-group">
+          <label>X 偏移</label>
+          <input type="number" id="regionX" value="0" min="0">
+        </div>
+        <div class="input-group">
+          <label>Y 偏移</label>
+          <input type="number" id="regionY" value="0" min="0">
+        </div>
+        <div class="input-group">
+          <label>宽度</label>
+          <input type="number" id="regionW" value="600" min="100">
+        </div>
+        <div class="input-group">
+          <label>高度</label>
+          <input type="number" id="regionH" value="180" min="50">
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:#888">
+        💡 建议：游戏中小鬼名字显示区域，如 60,50,500,120
+      </div>
+    </div>
+
+    <!-- 使用说明 -->
+    <div class="help-box">
+      <h4>📋 使用说明</h4>
+      <p>1. 点击「开始屏幕共享」选择游戏窗口</p>
+      <p>2. 设置截图区域（游戏中小鬼名字显示位置）</p>
+      <p>3. 点击「开始监控」自动识别坐标</p>
+      <p>4. 识别成功后自动预测小鬼位置</p>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <!-- 当前识别结果 -->
+    <div class="result-card" id="resultCard" style="display:none">
+      <h3>🎯 当前识别</h3>
+      <div class="map-name" id="mapName">--</div>
+      <div class="coord" id="currentCoord">--, --</div>
+
+      <div class="area-list" id="areaList">
+        <div class="area-item">
+          <span class="label">预测区域</span>
+          <span class="value" id="positionArea">--</span>
+        </div>
+        <div class="area-item">
+          <span class="label">角落区域</span>
+          <span class="value" id="cornerArea">--</span>
+        </div>
+      </div>
+
+      <div class="confidence-bar">
+        <div class="confidence-fill" id="confidenceFill" style="width:0%"></div>
+      </div>
+
+      <!-- 地图预览 -->
+      <div class="map-preview" id="mapPreview">
+        <img id="annotatedMap" style="display:none">
+      </div>
+    </div>
+
+    <!-- 历史记录 -->
+    <div class="result-card">
+      <h3>📜 识别历史</h3>
+      <div class="history-list" id="historyList">
+        <div style="color:#555;text-align:center;padding:20px">暂无记录</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// WebSocket
+let ws = null;
+let sessionId = null;
+
+// 屏幕共享
+let screenStream = null;
+let videoElement = null;
+let canvasElement = null;
+let monitoring = false;
+
+// 历史
+let history = [];
+
+// 初始化
+function init() {
+  connectWs();
+}
+
+// WebSocket连接
+function connectWs() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${location.host}/ws`);
+
+  ws.onopen = () => {
+    document.getElementById('statusBadge').textContent = '已连接';
+    document.getElementById('statusBadge').style.background = '#1b5e20';
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    handleMessage(data);
+  };
+
+  ws.onclose = () => {
+    document.getElementById('statusBadge').textContent = '断开';
+    document.getElementById('statusBadge').style.background = '#b71c1c';
+    setTimeout(connectWs, 3000);
+  };
+}
+
+// 处理消息
+function handleMessage(data) {
+  switch(data.type) {
+    case 'connected':
+      sessionId = data.session_id;
+      break;
+
+    case 'frame_result':
+      // 显示截图
+      if (data.image) {
+        document.getElementById('previewImage').src = 'data:image/jpeg;base64,' + data.image;
+        document.getElementById('previewImage').style.display = 'block';
+        document.getElementById('previewText').style.display = 'none';
+      }
+
+      // 处理坐标识别结果
+      if (data.coords && data.coords.length > 0) {
+        const coord = data.coords[0];
+        showResult(coord);
+      }
+      break;
+
+    case 'ghost_result':
+      // 抓鬼预测结果
+      showGhostResult(data);
+      break;
+  }
+}
+
+// ========== 屏幕共享 ==========
+
+async function startScreenShare() {
+  try {
+    screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { cursor: 'always' },
+      audio: false
+    });
+
+    videoElement = document.createElement('video');
+    videoElement.srcObject = screenStream;
+    await videoElement.play();
+
+    canvasElement = document.createElement('canvas');
+
+    screenStream.getVideoTracks()[0].onended = () => {
+      stopScreenShare();
+    };
+
+    document.getElementById('sharePreview').classList.add('active');
+    document.getElementById('btnStartShare').style.display = 'none';
+    document.getElementById('btnStopShare').style.display = 'inline-block';
+    document.getElementById('btnStartMonitor').style.display = 'inline-block';
+
+    // 开始预览
+    startPreview();
+
+  } catch (e) {
+    alert('屏幕共享失败: ' + e.message);
+  }
+}
+
+function stopScreenShare() {
+  if (screenStream) {
+    screenStream.getTracks().forEach(track => track.stop());
+    screenStream = null;
+  }
+
+  monitoring = false;
+
+  document.getElementById('sharePreview').classList.remove('active');
+  document.getElementById('btnStartShare').style.display = 'inline-block';
+  document.getElementById('btnStopShare').style.display = 'none';
+  document.getElementById('btnStartMonitor').style.display = 'none';
+  document.getElementById('btnStopMonitor').style.display = 'none';
+
+  document.getElementById('previewImage').style.display = 'none';
+  document.getElementById('previewText').style.display = 'inline';
+}
+
+function startPreview() {
+  const previewLoop = () => {
+    if (!screenStream || !videoElement) return;
+
+    canvasElement.width = videoElement.videoWidth;
+    canvasElement.height = videoElement.videoHeight;
+
+    const ctx = canvasElement.getContext('2d');
+    ctx.drawImage(videoElement, 0, 0);
+
+    document.getElementById('previewImage').src = canvasElement.toDataURL('image/jpeg', 0.5);
+
+    if (!monitoring) {
+      requestAnimationFrame(previewLoop);
+    }
+  };
+  requestAnimationFrame(previewLoop);
+}
+
+// ========== 监控 ==========
+
+function startMonitor() {
+  monitoring = true;
+  document.getElementById('btnStartMonitor').style.display = 'none';
+  document.getElementById('btnStopMonitor').style.display = 'inline-block';
+
+  monitorLoop();
+}
+
+function stopMonitor() {
+  monitoring = false;
+  document.getElementById('btnStartMonitor').style.display = 'inline-block';
+  document.getElementById('btnStopMonitor').style.display = 'none';
+
+  startPreview();
+}
+
+async function monitorLoop() {
+  while (monitoring && screenStream && ws && ws.readyState === WebSocket.OPEN) {
+    await captureAndSend();
+    await sleep(500); // 2fps
+  }
+}
+
+async function captureAndSend() {
+  if (!videoElement || !canvasElement) return;
+
+  const fullWidth = videoElement.videoWidth;
+  const fullHeight = videoElement.videoHeight;
+
+  if (fullWidth === 0 || fullHeight === 0) return;
+
+  // 获取区域设置
+  const rx = parseInt(document.getElementById('regionX').value) || 0;
+  const ry = parseInt(document.getElementById('regionY').value) || 0;
+  const rw = parseInt(document.getElementById('regionW').value) || 600;
+  const rh = parseInt(document.getElementById('regionH').value) || 180;
+
+  canvasElement.width = fullWidth;
+  canvasElement.height = fullHeight;
+
+  const ctx = canvasElement.getContext('2d');
+  ctx.drawImage(videoElement, 0, 0);
+
+  // 裁剪指定区域
+  const regionCanvas = document.createElement('canvas');
+  regionCanvas.width = rw;
+  regionCanvas.height = rh;
+  const regionCtx = regionCanvas.getContext('2d');
+  regionCtx.drawImage(canvasElement, rx, ry, rw, rh, 0, 0, rw, rh);
+
+  const imageBase64 = regionCanvas.toDataURL('image/jpeg', 0.7);
+
+  ws.send(JSON.stringify({
+    type: 'frame',
+    image: imageBase64
+  }));
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ========== 结果显示 ==========
+
+function showResult(coord) {
+  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('mapName').textContent = coord.map || '未知';
+  document.getElementById('currentCoord').textContent = `${coord.x}, ${coord.y}`;
+
+  // 添加到历史
+  addToHistory(coord);
+}
+
+function showGhostResult(data) {
+  if (!data.success) return;
+
+  document.getElementById('mapName').textContent = data.map;
+  document.getElementById('currentCoord').textContent = `${data.x}, ${data.y}`;
+
+  if (data.position_areas && data.position_areas.length > 0) {
+    document.getElementById('positionArea').textContent = data.position_areas.join(', ');
+  }
+
+  if (data.corner_areas && data.corner_areas.length > 0) {
+    document.getElementById('cornerArea').textContent = data.corner_areas.join(', ');
+  }
+
+  if (data.confidence) {
+    document.getElementById('confidenceFill').style.width = (data.confidence * 100) + '%';
+  }
+
+  if (data.annotated_image) {
+    document.getElementById('annotatedMap').src = 'data:image/png;base64,' + data.annotated_image;
+    document.getElementById('annotatedMap').style.display = 'block';
+  }
+
+  addToHistory(data);
+}
+
+function addToHistory(data) {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('zh-CN');
+
+  history.unshift({
+    time: timeStr,
+    map: data.map,
+    x: data.x,
+    y: data.y
+  });
+
+  // 最多保留20条
+  if (history.length > 20) history.pop();
+
+  // 更新列表
+  const list = document.getElementById('historyList');
+  list.innerHTML = history.map(h => `
+    <div class="history-item">
+      <div class="time">${h.time}</div>
+      <div class="info">${h.map} (${h.x}, ${h.y})</div>
+    </div>
+  `).join('');
+}
+
+// 初始化
+init();
+</script>
+</body>
+</html>

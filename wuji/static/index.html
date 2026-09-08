@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>梦幻西游挖图助手</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; overflow: hidden; }
+.header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 10px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 2px solid #0f3460; }
+.header h1 { font-size: 16px; color: #e94560; }
+.window-selector { display: flex; align-items: center; gap: 8px; flex: 1; }
+.window-selector select { background: #1a1a2e; color: #eee; border: 1px solid #0f3460; border-radius: 4px; padding: 5px 10px; font-size: 12px; min-width: 200px; }
+.btn { padding: 5px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+.btn-primary { background: #0f3460; color: #eee; }
+.btn-primary:hover { background: #e94560; }
+.btn-success { background: #1b5e20; color: #eee; }
+.btn-danger { background: #b71c1c; color: #eee; }
+.btn-warning { background: #e65100; color: #eee; }
+.status-bar { background: #16213e; padding: 6px 20px; display: flex; align-items: center; gap: 15px; font-size: 12px; border-bottom: 1px solid #0f3460; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.status-dot.connected { background: #4caf50; }
+.status-dot.disconnected { background: #f44336; }
+.status-dot.monitoring { background: #ff9800; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.main { display: flex; height: calc(100vh - 80px); }
+
+/* 左侧监控区域 - 更大 */
+.left-panel { flex: 2; display: flex; flex-direction: column; padding: 10px; min-width: 600px; }
+
+.video-wrapper { flex: 1; background: #000; border-radius: 8px; overflow: auto; position: relative; border: 2px solid #0f3460; display: flex; align-items: flex-start; justify-content: center; }
+.video-container { position: relative; }
+#videoFrame { display: block; }
+.placeholder { color: #555; font-size: 14px; text-align: center; padding: 50px; }
+
+.zoom-controls { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.zoom-slider { width: 150px; }
+.zoom-label { font-size: 12px; color: #aaa; min-width: 60px; }
+
+.controls { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.log { background: #0a0a1a; padding: 8px; border-radius: 4px; font-size: 11px; font-family: monospace; max-height: 100px; overflow-y: auto; margin-top: 8px; }
+.log-entry { padding: 2px 0; border-bottom: 1px solid #111; }
+
+/* 右侧面板 - 背包格子为主 */
+.right-panel { width: 350px; background: #16213e; border-left: 2px solid #0f3460; padding: 10px; overflow-y: auto; }
+.panel-title { font-size: 13px; color: #e94560; margin-bottom: 8px; font-weight: bold; }
+
+/* 背包格子网格 - 4行5列 */
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 6px;
+  background: #0a0a1a;
+  padding: 10px;
+  border-radius: 8px;
+}
+.inventory-slot {
+  background: #1a1a2e;
+  border: 2px solid #0f3460;
+  border-radius: 6px;
+  padding: 6px;
+  text-align: center;
+  min-height: 55px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.inventory-slot:hover { border-color: #4fc3f7; }
+.inventory-slot.has-item { border-color: #66bb6a; background: #1b5e20; }
+.inventory-slot .slot-num { font-size: 10px; color: #555; }
+.inventory-slot .coord-text { font-size: 11px; color: #4fc3f7; font-weight: bold; word-break: break-all; }
+.inventory-slot .conf { font-size: 9px; color: #66bb6a; }
+
+/* 检测列表 */
+.detection-list { font-size: 11px; max-height: 120px; overflow-y: auto; }
+.detection-item { background: #1a1a2e; padding: 6px; margin-bottom: 4px; border-radius: 4px; border-left: 3px solid #0f3460; }
+.detection-item .cls { color: #4fc3f7; font-weight: bold; }
+.detection-item .conf { color: #66bb6a; }
+
+/* 坐标收集 */
+.coord-list { font-size: 11px; max-height: 150px; overflow-y: auto; }
+.coord-item { background: #1a1a2e; padding: 6px; margin-bottom: 4px; border-radius: 4px; border-left: 3px solid #66bb6a; display: flex; justify-content: space-between; }
+.coord-item .map { color: #4fc3f7; font-weight: bold; }
+.coord-item .xy { color: #66bb6a; }
+
+.model-badge { background: #0f3460; padding: 2px 8px; border-radius: 10px; font-size: 10px; color: #4fc3f7; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🎮 梦幻西游挖图助手</h1>
+  <div class="window-selector">
+    <span style="font-size:12px;color:#aaa">窗口：</span>
+    <select id="windowSelect"><option value="">-- 加载中 --</option></select>
+    <button class="btn btn-primary" onclick="refreshWindows()">🔄</button>
+    <button class="btn btn-success" onclick="selectWindow()">✅ 选择</button>
+    <span class="model-badge" id="modelBadge">模型</span>
+  </div>
+</div>
+
+<div class="status-bar">
+  <span><span class="status-dot disconnected" id="wsStatus"></span><span id="wsText">未连接</span></span>
+  <span>窗口: <span id="windowTitle" style="color:#4fc3f7">未选择</span></span>
+  <span>检测: <span id="detCount">0</span></span>
+  <span>宝图: <span id="treasureCount" style="color:#66bb6a">0</span></span>
+</div>
+
+<div class="main">
+  <div class="left-panel">
+    <div class="video-wrapper">
+      <div class="video-container" id="videoContainer">
+        <div class="placeholder" id="placeholder">👆 请选择游戏窗口并点击「开始监控」</div>
+        <img id="videoFrame" style="display:none" alt="监控画面">
+      </div>
+    </div>
+    <div class="zoom-controls">
+      <span class="zoom-label">缩放:</span>
+      <input type="range" class="zoom-slider" id="zoomSlider" min="50" max="200" value="100" oninput="setZoom(this.value)">
+      <span class="zoom-label" id="zoomValue">100%</span>
+    </div>
+    <div class="controls">
+      <button class="btn btn-success" id="btnStart" onclick="startMonitor()">▶ 开始监控</button>
+      <button class="btn btn-danger" id="btnStop" onclick="stopMonitor()" style="display:none">⏸ 停止</button>
+      <button class="btn btn-warning" onclick="startAutoCollect()">📸 自动收集</button>
+      <button class="btn btn-danger" id="btnStopAutoCollect" onclick="stopAutoCollect()" style="display:none">⏹ 停止收集</button>
+    </div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <div class="right-panel">
+    <div class="panel-title">🎯 检测结果</div>
+    <div class="detection-list" id="detectionList"><div style="color:#555">等待检测...</div></div>
+
+    <div class="panel-title" style="margin-top:12px">🎒 背包格子 (4行×5列)</div>
+    <div class="inventory-grid" id="inventoryGrid"></div>
+
+    <div class="panel-title" style="margin-top:12px">📍 收集的坐标 (<span id="coordCount">0</span>)</div>
+    <div class="coord-list" id="coordList"><div style="color:#555">暂无坐标</div></div>
+    <button class="btn btn-primary" onclick="loadCoords()" style="margin-top:8px;width:100%">🔄 刷新坐标</button>
+    <button class="btn btn-danger" onclick="clearCoords()" style="margin-top:4px;width:100%">🗑 清空坐标</button>
+
+    <div class="panel-title" style="margin-top:12px">📋 说明</div>
+    <div style="font-size:11px;color:#aaa;line-height:1.6">
+      1. 选择游戏窗口 → 开始监控<br>
+      2. 打开背包，自动检测宝图位置<br>
+      3. 鼠标悬停宝图会识别坐标<br>
+      4. 坐标保存到右侧列表
+    </div>
+  </div>
+</div>
+
+<script>
+let ws = null;
+let monitoring = false;
+let selectedHwnd = null;
+let currentZoom = 100;
+let treasureCoords = {}; // 格子号 -> 坐标信息
+
+function log(msg) {
+  const el = document.getElementById('log');
+  const time = new Date().toLocaleTimeString('zh-CN');
+  el.innerHTML = `<div class="log-entry">[${time}] ${msg}</div>` + el.innerHTML;
+  if (el.children.length > 20) el.removeChild(el.lastChild);
+}
+
+function setZoom(val) {
+  currentZoom = val;
+  document.getElementById('zoomValue').textContent = val + '%';
+  const img = document.getElementById('videoFrame');
+  img.style.width = val + '%';
+  img.style.height = 'auto';
+}
+
+function refreshWindows() {
+  fetch('/api/windows').then(r => r.json()).then(windows => {
+    const sel = document.getElementById('windowSelect');
+    sel.innerHTML = '<option value="">-- 请选择窗口 --</option>';
+    windows.forEach(w => {
+      sel.innerHTML += `<option value="${w.hwnd}">${w.title} (${w.width}x${w.height})</option>`;
+    });
+    log(`找到 ${windows.length} 个窗口`);
+  }).catch(e => log('刷新失败'));
+}
+
+function selectWindow() {
+  const hwnd = document.getElementById('windowSelect').value;
+  if (!hwnd) { alert('请选择窗口！'); return; }
+  fetch('/api/select-window', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({hwnd: parseInt(hwnd)})
+  }).then(r => r.json()).then(data => {
+    if (data.error) { alert(data.error); return; }
+    selectedHwnd = hwnd;
+    document.getElementById('windowTitle').textContent = data.title;
+    log('已选择: ' + data.title);
+  });
+}
+
+function connectWs() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${location.host}/ws`);
+
+  ws.onopen = () => {
+    document.getElementById('wsStatus').className = 'status-dot connected';
+    document.getElementById('wsText').textContent = '已连接';
+    log('WebSocket 已连接');
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    handleMessage(data);
+  };
+
+  ws.onclose = () => {
+    document.getElementById('wsStatus').className = 'status-dot disconnected';
+    document.getElementById('wsText').textContent = '断开';
+    setTimeout(connectWs, 3000);
+  };
+}
+
+function handleMessage(data) {
+  switch(data.type) {
+    case 'model_info':
+      document.getElementById('modelBadge').textContent = data.model;
+      break;
+
+    case 'frame':
+      const img = document.getElementById('videoFrame');
+      img.src = 'data:image/jpeg;base64,' + data.image;
+      img.style.display = 'block';
+      img.style.width = currentZoom + '%';
+      document.getElementById('placeholder').style.display = 'none';
+
+      updateDetections(data.detections || []);
+      document.getElementById('detCount').textContent = data.detections.length;
+
+      // 统计宝图数量
+      const treasureMaps = (data.detections || []).filter(d => d.class === 'treasure_map');
+      document.getElementById('treasureCount').textContent = treasureMaps.length;
+
+      if (data.coords && data.coords.length > 0) {
+        updateCoords(data.coords);
+      }
+      if (data.inventory) {
+        updateInventory(data.inventory);
+      }
+      break;
+
+    case 'status':
+      monitoring = data.monitoring;
+      document.getElementById('btnStart').style.display = monitoring ? 'none' : 'inline-block';
+      document.getElementById('btnStop').style.display = monitoring ? 'inline-block' : 'none';
+      document.getElementById('wsStatus').className = monitoring ? 'status-dot monitoring' : 'status-dot connected';
+      document.getElementById('wsText').textContent = monitoring ? '监控中' : '已连接';
+      break;
+
+    case 'auto_collect_status':
+      document.getElementById('btnStopAutoCollect').style.display = data.auto_collect ? 'inline-block' : 'none';
+      break;
+
+    case 'error':
+      log('错误: ' + data.msg);
+      break;
+  }
+}
+
+function updateDetections(detections) {
+  const list = document.getElementById('detectionList');
+  if (detections.length === 0) {
+    list.innerHTML = '<div style="color:#555">未检测到</div>';
+    return;
+  }
+  list.innerHTML = detections.map(d =>
+    `<div class="detection-item"><span class="cls">${d.class}</span> <span class="conf">${(d.confidence*100).toFixed(0)}%</span></div>`
+  ).join('');
+}
+
+function updateInventory(inventory) {
+  const grid = document.getElementById('inventoryGrid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= 20; i++) {
+    const slotData = inventory.slots?.find(s => s.slot === i);
+    const div = document.createElement('div');
+    div.className = 'inventory-slot' + (slotData?.item ? ' has-item' : '');
+
+    if (slotData?.coord) {
+      // 显示坐标信息
+      div.innerHTML = `<div class="slot-num">${i}</div>
+        <div class="coord-text">${slotData.coord}</div>
+        <div class="conf">${(slotData.confidence*100).toFixed(0)}%</div>`;
+    } else if (slotData?.item) {
+      div.innerHTML = `<div class="slot-num">${i}</div>
+        <div class="coord-text">宝图</div>
+        <div class="conf">${(slotData.confidence*100).toFixed(0)}%</div>`;
+    } else {
+      div.innerHTML = `<div class="slot-num">${i}</div>`;
+    }
+
+    grid.appendChild(div);
+  }
+}
+
+function updateCoords(coords) {
+  coords.forEach(c => log(`识别: ${c.map} (${c.x}, ${c.y})`));
+  loadCoords();
+}
+
+function loadCoords() {
+  fetch('/api/coords').then(r => r.json()).then(data => {
+    document.getElementById('coordCount').textContent = data.count;
+    const list = document.getElementById('coordList');
+    if (data.coords && data.coords.length > 0) {
+      list.innerHTML = data.coords.slice(-30).reverse().map(c =>
+        `<div class="coord-item"><span class="map">${c.map}</span><span class="xy">(${c.x},${c.y})</span></div>`
+      ).join('');
+    } else {
+      list.innerHTML = '<div style="color:#555">暂无坐标</div>';
+    }
+  });
+}
+
+function clearCoords() {
+  if (!confirm('确定清空所有坐标？')) return;
+  fetch('/api/coords/clear', {method: 'POST'}).then(r => r.json()).then(data => {
+    log('已清空坐标');
+    loadCoords();
+  });
+}
+
+function startMonitor() {
+  if (!selectedHwnd) { alert('请先选择窗口！'); return; }
+  ws.send(JSON.stringify({cmd: 'start'}));
+  log('开始监控');
+}
+
+function stopMonitor() {
+  ws.send(JSON.stringify({cmd: 'stop'}));
+  log('停止监控');
+}
+
+function startAutoCollect() {
+  if (!selectedHwnd) { alert('请先选择窗口！'); return; }
+  ws.send(JSON.stringify({cmd: 'start_auto_collect'}));
+  log('开始自动收集');
+}
+
+function stopAutoCollect() {
+  ws.send(JSON.stringify({cmd: 'stop_auto_collect'}));
+  log('停止收集');
+}
+
+// 初始化
+connectWs();
+setTimeout(refreshWindows, 500);
+loadCoords();
+</script>
+</body>
+</html>

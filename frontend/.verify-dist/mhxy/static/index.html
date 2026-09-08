@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>泰迪熊工具箱</title>
+    <!-- 站点图标：内联 SVG（黑白棋棋子），无需额外文件请求，外网直接显示 -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231f2630'/%3E%3Ccircle cx='11' cy='11' r='6' fill='%23f2f2f2'/%3E%3Ccircle cx='21' cy='21' r='6' fill='%23111'/%3E%3C/svg%3E" />
+    <!-- Swiper轮播库 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="/mhxy/static/css/style.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="navbar">
+        <div class="navbar-inner">
+            <div class="navbar-brand">
+                <span class="logo">🏔️</span>
+                <h1>泰迪熊工具箱</h1>
+            </div>
+            <div class="navbar-menu">
+                <a href="#" class="nav-item active">首页</a>
+                <a href="#" class="nav-item">工具</a>
+                <a href="#" class="nav-item">关于</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 今日活动条 -->
+    <div class="activity-bar" id="activityBar">
+        <div class="activity-bar-inner">
+            <!-- 时间提醒 -->
+            <div class="home-reminder">
+                <div class="home-reminder-item" id="homeReminderFB">
+                    <span class="home-reminder-label">⏰ 副本</span>
+                    <span class="home-reminder-value" id="homeFBRefreshTime">--</span>
+                </div>
+                <div class="home-reminder-item" id="homeReminderFestival" style="display:none;">
+                    <span class="home-reminder-label festival">🎉</span>
+                    <span class="home-reminder-value festival" id="homeFestivalName">--</span>
+                </div>
+                <div class="home-reminder-item" id="homeReminderNext">
+                    <span class="home-reminder-label">🎊 节日</span>
+                    <span class="home-reminder-value" id="homeNextFestival">--</span>
+                </div>
+            </div>
+
+            <!-- 分隔线 -->
+            <div class="activity-divider"></div>
+
+            <!-- 中间：今日活动列表（可滑动） -->
+            <div class="activity-list-wrapper">
+                <div class="activity-list" id="activityList">
+                    <div class="activity-loading">加载中...</div>
+                </div>
+            </div>
+
+            <!-- 右侧：展开按钮 -->
+            <div class="activity-expand" id="activityExpand">
+                <span>本月活动</span>
+                <span class="expand-icon">▼</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 日历弹窗 -->
+    <div class="calendar-modal" id="calendarModal">
+        <div class="calendar-modal-content">
+            <div class="calendar-header">
+                <h3>📅 本月活动日历</h3>
+                <span class="calendar-close" id="calendarClose">×</span>
+            </div>
+            <div class="calendar-body">
+                <!-- 月历视图 -->
+                <div class="calendar-month-header">
+                    <button class="month-arrow" id="monthPrev">◀</button>
+                    <span class="month-title" id="monthTitle">2026年6月</span>
+                    <button class="month-arrow" id="monthNext">▶</button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-weekdays">
+                        <span>周日</span><span>周一</span><span>周二</span><span>周三</span><span>周四</span><span>周五</span><span>周六</span>
+                    </div>
+                    <div class="calendar-days" id="calendarDays">
+                        <!-- 动态生成日期格子 -->
+                    </div>
+                </div>
+
+                <!-- 选中日期的活动列表（小程序样式） -->
+                <div class="calendar-activity-panel" id="calendarActivityPanel">
+                    <div class="panel-header">
+                        <div class="panel-date-info">
+                            <button class="date-nav-btn" id="panelDatePrev">◀</button>
+                            <span class="panel-date-text" id="panelDateText">6月11日 周三</span>
+                            <button class="date-nav-btn" id="panelDateNext">▶</button>
+                        </div>
+                        <button class="back-to-today-btn" id="backToToday">今天</button>
+                    </div>
+                    <div class="panel-activity-list" id="panelActivityList">
+                        <!-- 动态生成活动列表 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 活动详情弹窗 -->
+    <div class="activity-detail-modal" id="activityDetailModal">
+        <div class="activity-detail-content">
+            <div class="activity-detail-header">
+                <h3 id="activityDetailTitle">活动详情</h3>
+                <span class="activity-detail-close" id="activityDetailClose">×</span>
+            </div>
+            <div class="activity-detail-body" id="activityDetailBody">
+                <!-- 动态填充活动详情 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="main-container">
+        <!-- 大型轮播横幅（支持视频/图片） -->
+        <div class="hero-banner">
+            <div class="swiper heroSwiper">
+                <div class="swiper-wrapper">
+                    <!-- Slide 1 - 山河画境 -->
+                    <div class="swiper-slide hero-slide" data-module="huajing">
+                        <div class="slide-bg" style="background: linear-gradient(135deg, #0a3d2a 0%, #0d2818 50%, #061a0f 100%);"></div>
+                        <div class="slide-content">
+                            <div class="slide-left">
+                                <div class="slide-tag">🔥 热门推荐</div>
+                                <h2 class="slide-title">山河画境</h2>
+                                <p class="slide-desc">探索神秘的画境世界，挑战各类怪物Boss，收集稀有道具与宝藏。</p>
+                                <div class="slide-actions">
+                                    <a href="/mhxy/static/monster.html" class="btn-primary" target="_top">
+                                        <span>👹</span> 怪物图鉴
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slide-right">
+                                <div class="slide-visual">
+                                    <span class="visual-icon">🏔️</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 2 - 抓鬼助手 -->
+                    <div class="swiper-slide hero-slide" data-module="ghost">
+                        <div class="slide-bg" style="background: linear-gradient(135deg, #2d1a3d 0%, #1a0f28 50%, #0f0818 100%);"></div>
+                        <div class="slide-content">
+                            <div class="slide-left">
+                                <div class="slide-tag">👻 幽灵猎人</div>
+                                <h2 class="slide-title">抓鬼狂魔</h2>
+                                <p class="slide-desc">实时坐标追踪，一键导航至鬼怪位置，大幅提升抓鬼效率。</p>
+                                <div class="slide-actions">
+                                    <a href="/ghost_monitor.html" class="btn-primary" target="_top">
+                                        <span>📍</span> 坐标可视化
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slide-right">
+                                <div class="slide-visual">
+                                    <span class="visual-icon">👻</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 3 - 物价手册 -->
+                    <div class="swiper-slide hero-slide" data-module="jizhang">
+                        <div class="slide-bg" style="background: linear-gradient(135deg, #3d1a1a 0%, #281010 50%, #150808 100%);"></div>
+                        <div class="slide-content">
+                            <div class="slide-left">
+                                <div class="slide-tag">📊 市场分析</div>
+                                <h2 class="slide-title">物价手册</h2>
+                                <p class="slide-desc">记录每一笔交易，追踪物价波动，把握市场脉搏，成为商业大亨。</p>
+                                <div class="slide-actions">
+                                    <a href="/wuji/" class="btn-primary">
+                                        <span>💰</span> 物价宝鉴
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slide-right">
+                                <div class="slide-visual">
+                                    <span class="visual-icon">📒</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 4 - 答题助手 -->
+                    <div class="swiper-slide hero-slide" data-module="quiz">
+                        <div class="slide-bg" style="background: linear-gradient(135deg, #1a2d3d 0%, #0f1a28 50%, #081018 100%);"></div>
+                        <div class="slide-content">
+                            <div class="slide-left">
+                                <div class="slide-tag">📚 学霸必备</div>
+                                <h2 class="slide-title">答题助手</h2>
+                                <p class="slide-desc">海量题库收录，智能搜索匹配，实时答题辅助，轻松应对科举考试。</p>
+                                <div class="slide-actions">
+                                    <a href="/mhxy/static/keju.html" class="btn-primary" target="_top">
+                                        <span>📖</span> 科举识题
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slide-right">
+                                <div class="slide-visual">
+                                    <span class="visual-icon">📖</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 5 - 分图助手 -->
+                    <div class="swiper-slide hero-slide" data-module="fentu">
+                        <div class="slide-bg" style="background: linear-gradient(135deg, #0a3d3d 0%, #072828 50%, #041818 100%);"></div>
+                        <div class="slide-content">
+                            <div class="slide-left">
+                                <div class="slide-tag">🗺️ 宝图神器</div>
+                                <h2 class="slide-title">分图助手</h2>
+                                <p class="slide-desc">YOLO 实时识别藏宝图位置，自动分类整理背包宝图，挖图效率翻倍。</p>
+                                <div class="slide-actions">
+                                    <a href="/fentu" class="btn-primary" target="_top">
+                                        <span>🗺️</span> 开始分图
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slide-right">
+                                <div class="slide-visual">
+                                    <span class="visual-icon">🗺️</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 6 - 挖图助手 -->
+                    <div class="swiper-slide hero-slide" data-module="watu">
+                        <div class="slide-bg" style="background: linear-gradient(135deg, #3d2a0a 0%, #281c07 50%, #181206 100%);"></div>
+                        <div class="slide-content">
+                            <div class="slide-left">
+                                <div class="slide-tag">⛏️ 挖图利器</div>
+                                <h2 class="slide-title">挖图助手</h2>
+                                <p class="slide-desc">自动识别宝图坐标，BFS 路径规划最优挖图路线，目标点可视化一目了然。</p>
+                                <div class="slide-actions">
+                                    <a href="/watu" class="btn-primary" target="_top">
+                                        <span>⛏️</span> 开始挖图
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slide-right">
+                                <div class="slide-visual">
+                                    <span class="visual-icon">⛏️</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 分页指示器 -->
+                <div class="swiper-pagination"></div>
+                <!-- 导航按钮 -->
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-button-next"></div>
+            </div>
+        </div>
+
+        <!-- 功能导航栏 - 一排横向排列 -->
+        <div class="quick-nav">
+            <div class="nav-title">
+                <span>快捷入口</span>
+                <span class="nav-subtitle">选择功能快速开始</span>
+            </div>
+            <div class="nav-grid">
+                <a href="/mhxy/static/monster.html" class="nav-card" data-color="green" target="_top">
+                    <div class="nav-card-icon">🏔️</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">山河画境</span>
+                        <span class="nav-card-sub">怪物图鉴</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/ghost_monitor.html" class="nav-card" data-color="orange" target="_top">
+                    <div class="nav-card-icon">👻</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">抓鬼狂魔</span>
+                        <span class="nav-card-sub">是男人就抓200鬼</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/wuji/" class="nav-card" data-color="red">
+                    <div class="nav-card-icon">📒</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">物价手册</span>
+                        <span class="nav-card-sub">物价宝鉴</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/mhxy/static/keju.html" class="nav-card" data-color="blue" target="_top">
+                    <div class="nav-card-icon">📖</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">科举识题</span>
+                        <span class="nav-card-sub">实时答题识别</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/fentu" class="nav-card" data-color="cyan" target="_top">
+                    <div class="nav-card-icon">🗺️</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">分图助手</span>
+                        <span class="nav-card-sub">宝图自动分类</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/watu" class="nav-card" data-color="gold" target="_top">
+                    <div class="nav-card-icon">⛏️</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">挖图助手</span>
+                        <span class="nav-card-sub">路径规划可视化</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/jiankong" class="nav-card" data-color="red" target="_top">
+                    <div class="nav-card-icon">🔔</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">通用监控</span>
+                        <span class="nav-card-sub">画面变化提醒</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/jiankong4" class="nav-card" data-color="orange" target="_top">
+                    <div class="nav-card-icon">🥊</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">自动战斗监控</span>
+                        <span class="nav-card-sub">掉线/卡死提醒</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/jiankong4-test" class="nav-card" data-color="cyan" target="_top">
+                    <div class="nav-card-icon">🔬</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">模型图片测试</span>
+                        <span class="nav-card-sub">上传截图验精度</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/cixin" class="nav-card" data-color="purple" target="_top">
+                    <div class="nav-card-icon"><span class="cixin-disc"></span></div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">慈心下棋</span>
+                        <span class="nav-card-sub">棋盘识别·地图落点</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/fishing" class="nav-card" data-color="teal" target="_top">
+                    <div class="nav-card-icon">🐟</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">金牌钓手</span>
+                        <span class="nav-card-sub">本地OCR识别·槽位锁定</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/calc" class="nav-card" data-color="violet" target="_top">
+                    <div class="nav-card-icon">🧮</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">数值计算器</span>
+                        <span class="nav-card-sub">养成·合成成本估算</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <span>泰迪熊工具箱</span>
+            <span class="divider">|</span>
+            <span>本站仅供学习研究使用</span>
+        </div>
+    </footer>
+
+    <!-- 梦幻精灵 - 右下角悬浮客服 -->
+    <style>
+        .sprite-fab{position:fixed;right:22px;bottom:22px;z-index:9998;display:flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid rgba(255,255,255,.07);border-radius:22px;background:rgba(30,33,46,.7);color:#9aa3b2;cursor:pointer;box-shadow:none;backdrop-filter:blur(6px);transition:transform .2s,color .2s,background .2s}
+        .sprite-fab:hover{transform:scale(1.03);color:#e6e9f0;background:rgba(40,44,58,.9)}
+        .sprite-fab .label{font-size:13px;font-weight:500;line-height:1;white-space:nowrap}
+        .sprite-panel{position:fixed;right:22px;bottom:92px;width:430px;max-width:92vw;height:640px;max-height:84vh;background:#0f1115;border:1px solid #2a2e38;border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);z-index:9999;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;transform:translateY(24px) scale(.98);opacity:0;pointer-events:none;transition:transform .25s,opacity .25s}
+        .sprite-panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto}
+        .sprite-panel-header{display:flex;align-items:center;gap:8px;padding:14px 16px;background:linear-gradient(135deg,#3a1d5e,#241038);color:#fff}
+        .sprite-panel-header .title{font-size:16px;font-weight:600;flex:1}
+        .sprite-panel-header .hbtn{cursor:pointer;font-size:13px;background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 11px;border-radius:8px}
+        .sprite-panel-header .hbtn:hover{background:rgba(255,255,255,.28)}
+        .sprite-panel-header .close{font-size:22px;line-height:1;opacity:.85;cursor:pointer}
+        .sprite-panel-header .close:hover{opacity:1}
+        .sprite-body{flex:1;position:relative;display:flex;min-height:0}
+        .sprite-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:#0f1115}
+        .sprite-welcome{color:#9aa3b2;font-size:13px;text-align:center;padding:8px 0}
+        .sprite-msg{max-width:85%;padding:10px 13px;border-radius:12px;font-size:14px;line-height:1.6;word-break:break-word}
+        .sprite-msg.user{align-self:flex-end;background:linear-gradient(135deg,#ff8a3d,#ff6a00);color:#fff;border-bottom-right-radius:4px}
+        .sprite-msg.sprite{align-self:flex-start;background:#1c2030;color:#e6e9f0;border-bottom-left-radius:4px}
+        .sprite-msg.loading{color:#9aa3b2;font-style:italic}
+        .sprite-messages a.sprite_color_link{color:#ffb74d !important;cursor:pointer;text-decoration:underline}
+        .sprite-messages .sprite_color_text{color:#ffd9a0}
+        .sprite-history{position:absolute;inset:0;background:#0f1115;z-index:5;display:none;flex-direction:column}
+        .sprite-history.open{display:flex}
+        .sprite-history h4{margin:0;padding:14px 16px;color:#cdd3e0;font-size:14px;border-bottom:1px solid #2a2e38;background:#151821}
+        .sprite-history-list{flex:1;overflow-y:auto;padding:8px}
+        .sprite-history-item{padding:10px 12px;margin-bottom:8px;background:#1c2030;color:#e6e9f0;border-radius:10px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
+        .sprite-history-item:hover{background:#262b3d}
+        .sprite-history-item .q{word-break:break-word}
+        .sprite-history-item .re{color:#ffb74d;font-size:12px;white-space:nowrap}
+        .sprite-history-empty{color:#9aa3b2;font-size:13px;text-align:center;padding:30px 10px}
+        .sprite-input-area{display:flex;gap:8px;padding:12px;border-top:1px solid #2a2e38;background:#151821}
+        .sprite-input-area input{flex:1;padding:11px 13px;border:1px solid #2a2e38;border-radius:9px;background:#0f1115;color:#fff;font-size:14px;outline:none}
+        .sprite-input-area input:focus{border-color:#7c4dff}
+        .sprite-input-area button{padding:0 18px;border:none;border-radius:9px;background:linear-gradient(135deg,#7c4dff,#5b2ee0);color:#fff;font-size:14px;cursor:pointer;font-weight:600}
+        .sprite-input-area button:disabled{opacity:.5;cursor:not-allowed}
+        /* 慈心首页图标：与棋盘白子同款白色圆盘，紫底上清晰可见 */
+        .nav-card-icon-img{width:28px;height:28px;object-fit:contain;display:inline-block;vertical-align:middle}
+        .nav-card-icon .cixin-disc{display:inline-block;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffff,#cfcfcf);box-shadow:inset 0 1px 2px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.3)}
+    </style>
+
+    <!-- 梦幻精灵悬浮客服 -->
+    <button class="sprite-fab" id="spriteFab" title="梦幻精灵"><span class="label">梦幻精灵</span></button>
+
+    <div class="sprite-panel" id="spritePanel">
+        <div class="sprite-panel-header">
+            <span class="title">🧚 梦幻精灵</span>
+            <button class="hbtn" id="spriteHistoryBtn">历史</button>
+            <span class="close" id="spriteClose">×</span>
+        </div>
+        <div class="sprite-body">
+            <div class="sprite-messages" id="spriteMessages">
+                <div class="sprite-welcome">你好，我是梦幻精灵，问问关于梦幻西游的一切吧～</div>
+            </div>
+            <div class="sprite-history" id="spriteHistory">
+                <h4>最近提问（点击重新提问）</h4>
+                <div class="sprite-history-list" id="spriteHistoryList"></div>
+            </div>
+        </div>
+        <div class="sprite-input-area">
+            <input type="text" id="spriteInput" placeholder="例如：如何加点快捷 / 师门任务怎么做" autocomplete="off" />
+            <button id="spriteSend">发送</button>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        var fab = document.getElementById('spriteFab');
+        var panel = document.getElementById('spritePanel');
+        var closeBtn = document.getElementById('spriteClose');
+        var historyBtn = document.getElementById('spriteHistoryBtn');
+        var historyPanel = document.getElementById('spriteHistory');
+        var historyList = document.getElementById('spriteHistoryList');
+        var messages = document.getElementById('spriteMessages');
+        var input = document.getElementById('spriteInput');
+        var sendBtn = document.getElementById('spriteSend');
+
+        var STORE_KEY = 'mhxy_sprite_history';
+        var MAX_HISTORY = 10;
+
+        function loadHistory(){
+            try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
+            catch(e){ return []; }
+        }
+        function saveHistory(list){
+            try { localStorage.setItem(STORE_KEY, JSON.stringify(list.slice(-MAX_HISTORY))); } catch(e){}
+        }
+
+        function appendMsg(role, content, isHtml){
+            var el = document.createElement('div');
+            el.className = 'sprite-msg ' + role;
+            if(isHtml){ el.innerHTML = content; } else { el.textContent = content; }
+            messages.appendChild(el);
+            messages.scrollTop = messages.scrollHeight;
+            return el;
+        }
+
+        // 打开面板时，从 localStorage 恢复最近 10 条对话
+        function restoreChat(){
+            var list = loadHistory();
+            messages.innerHTML = '';
+            if(!list.length){
+                var w = document.createElement('div');
+                w.className = 'sprite-welcome';
+                w.textContent = '你好，我是梦幻精灵，问问关于梦幻西游的一切吧～';
+                messages.appendChild(w);
+                return;
+            }
+            list.forEach(function(item){
+                appendMsg('user', item.q, false);
+                appendMsg('sprite', item.a, true);
+            });
+        }
+
+        function renderHistory(){
+            var list = loadHistory();
+            historyList.innerHTML = '';
+            if(!list.length){
+                var empty = document.createElement('div');
+                empty.className = 'sprite-history-empty';
+                empty.textContent = '还没有提问记录～';
+                historyList.appendChild(empty);
+                return;
+            }
+            list.slice().reverse().forEach(function(item){
+                var row = document.createElement('div');
+                row.className = 'sprite-history-item';
+                var q = document.createElement('span'); q.className = 'q'; q.textContent = item.q;
+                var re = document.createElement('span'); re.className = 're'; re.textContent = '重新问';
+                row.appendChild(q); row.appendChild(re);
+                row.addEventListener('click', function(){ closeHistory(); sendSprite(item.q); });
+                historyList.appendChild(row);
+            });
+        }
+
+        function openHistory(){ renderHistory(); historyPanel.classList.add('open'); }
+        function closeHistory(){ historyPanel.classList.remove('open'); }
+
+        function openPanel(){
+            panel.classList.add('open');
+            restoreChat();
+            setTimeout(function(){ input.focus(); }, 250);
+        }
+        function closePanel(){ panel.classList.remove('open'); closeHistory(); }
+
+        // 供精灵回答中的「再问」链接调用（网易 answer 内联 onclick="return reask('...')"）
+        window.reask = function(q){ input.value=''; sendSprite(q); return false; };
+
+        function sendSprite(q){
+            q = (q || '').trim();
+            if(!q) return;
+            appendMsg('user', q, false);
+            input.value = '';
+            sendBtn.disabled = true;
+            var loading = appendMsg('sprite loading', '精灵思考中…', false);
+
+            fetch('/api/sprite?question=' + encodeURIComponent(q), { credentials: 'include' })
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    if(loading.parentNode) loading.parentNode.removeChild(loading);
+                    if(!d || d.result === 'error' || !d.answer){
+                        appendMsg('sprite', (d && d.error) ? d.error : '精灵暂时没有回答，换个问法试试～', false);
+                        return;
+                    }
+                    appendMsg('sprite', d.answer, true);
+                    // 仅成功且拿到答案时写入历史（最多保留 10 条）
+                    var list = loadHistory();
+                    list.push({ q: q, a: d.answer, ts: Date.now() });
+                    saveHistory(list);
+                })
+                .catch(function(e){
+                    if(loading.parentNode) loading.parentNode.removeChild(loading);
+                    appendMsg('sprite', '网络异常：' + e.message, false);
+                })
+                .finally(function(){ sendBtn.disabled = false; });
+        }
+
+        fab.addEventListener('click', openPanel);
+        closeBtn.addEventListener('click', closePanel);
+
+        // 点击面板之外区域自动关闭（fab 与面板内部不触发）
+        document.addEventListener('click', function(e){
+            if(!panel.classList.contains('open')) return;
+            if(panel.contains(e.target) || fab.contains(e.target)) return;
+            closePanel();
+        });
+
+        historyBtn.addEventListener('click', function(){
+            if(historyPanel.classList.contains('open')) closeHistory(); else openHistory();
+        });
+
+        sendBtn.addEventListener('click', function(){ sendSprite(input.value); });
+        input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ sendSprite(input.value); } });
+    })();
+    </script>
+
+    <script src="/mhxy/static/js/app.js?v=20260611h"></script>
+
+</body>
+</html>

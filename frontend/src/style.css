@@ -1,16 +1,26 @@
 :root {
-  --bg-dark: #0f0f23;
-  --bg-panel: #16213e;
-  --bg-card: #1a1a2e;
-  --bg-input: #0f0f23;
-  --border-color: #0f3460;
-  --color-primary: #e94560;
-  --color-secondary: #4fc3f7;
-  --color-success: #66bb6a;
-  --color-warning: #ff9800;
-  --color-danger: #f44336;
-  --color-text: #e0e0e0;
-  --color-text-muted: #aaa;
+  /* ===== 像素赛博主题 · 配色 ===== */
+  --bg-dark: #070a12;
+  --bg-panel: rgba(4, 6, 14, 0.94);
+  --bg-card: rgba(255, 255, 255, 0.012);
+  --bg-input: rgba(255, 255, 255, 0.02);
+  --border-color: rgba(0, 229, 255, 0.06);
+  --border-strong: rgba(0, 229, 0, 0.16);
+
+  --color-primary: #22d3ee;   /* cyber cyan 主色 */
+  --color-accent: #ffd700;    /* 亮金 强调 */
+  --color-secondary: #a78bfa; /* 紫 */
+  --color-success: #34d399;   /* 绿 上涨/在售 */
+  --color-warning: #ffd700;
+  --color-danger: #f43f5e;    /* 红 已售/跌 */
+
+  --color-text: #c8d0dc;
+  --color-text-muted: #4a5568;
+
+  /* ===== 字体 ===== */
+  --font-pixel: 'Press Start 2P', 'Courier New', monospace;       /* 拉丁像素：标题/标签/价格 */
+  --font-mono: 'VT323', 'Courier New', 'PingFang SC', 'Microsoft YaHei', monospace; /* 终端等宽：正文/数值 */
+  --font-cn: 'PingFang SC', 'Microsoft YaHei', sans-serif;         /* 中文正文 */
 }
 
 * {
@@ -22,77 +32,180 @@
 body {
   background: var(--bg-dark);
   color: var(--color-text);
-  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: var(--font-mono);
   min-height: 100vh;
+  /* 极淡斜纹背景，强化赛博底纹 */
+  background-image:
+    repeating-linear-gradient(45deg, rgba(0, 229, 255, 0.015) 0, rgba(0, 229, 255, 0.015) 1px, transparent 1px, transparent 7px);
 }
 
 a {
-  color: var(--color-secondary);
+  color: var(--color-primary);
   text-decoration: none;
 }
 
 a:hover {
-  color: #7c4dff;
+  color: var(--color-accent);
 }
 
-/* 通用按钮样式 */
+/* ===== 通用按钮 · 像素发光 ===== */
 .btn {
   padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
+  border: 2px solid var(--border-strong);
+  border-radius: 3px;
   cursor: pointer;
   font-size: 13px;
-  transition: all 0.2s;
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+  transition: 0.08s linear;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  background: var(--bg-card);
+  color: var(--color-text);
 }
 
 .btn-primary {
-  background: #0f3460;
-  color: #eee;
+  background: var(--color-primary);
+  color: #06121a;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.15);
 }
 .btn-primary:hover {
-  background: var(--color-primary);
+  background: #5fe3f5;
+  box-shadow: 0 0 36px rgba(34, 211, 238, 0.4);
 }
 
 .btn-success {
-  background: #1b5e20;
-  color: #eee;
+  background: var(--color-success);
+  color: #06140e;
+  border-color: var(--color-success);
 }
 .btn-success:hover {
-  background: #2e7d32;
+  background: #5eead4;
 }
 
 .btn-danger {
-  background: #b71c1c;
-  color: #eee;
+  background: var(--color-danger);
+  color: #1a0608;
+  border-color: var(--color-danger);
 }
 .btn-danger:hover {
-  background: #c62828;
+  background: #fb7185;
 }
 
 .btn-warning {
-  background: #e65100;
-  color: #eee;
+  background: var(--color-accent);
+  color: #1a1402;
+  border-color: var(--color-accent);
+}
+.btn-warning:hover {
+  background: #fde047;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.35);
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-/* 通用卡片样式 */
+/* ===== 通用卡片 · 马赛克斜纹 ===== */
 .card {
+  position: relative;
   background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 15px;
-  border: 1px solid var(--border-color);
   margin-bottom: 15px;
+  overflow: hidden;
+}
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(0, 229, 255, 0.03) 0,
+    rgba(0, 229, 255, 0.03) 2px,
+    transparent 2px,
+    transparent 6px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.card > * {
+  position: relative;
+  z-index: 1;
+}
+.card h3 {
+  color: var(--color-primary);
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
 }
 
-.card h3 {
-  color: var(--color-secondary);
-  font-size: 14px;
-  margin-bottom: 10px;
+/* ===== 通用标签 / 徽章 ===== */
+.tag {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  padding: 3px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 2px;
+  color: var(--color-text-muted);
+  background: var(--bg-card);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.tag.active {
+  border-color: rgba(255, 215, 0, 0.4);
+  color: var(--color-accent);
+  background: rgba(255, 215, 0, 0.05);
+}
+.badge {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  padding: 0 10px;
+  border-radius: 2px;
+  background: rgba(34, 211, 238, 0.06);
+  color: var(--color-primary);
+  border: 1px solid rgba(34, 211, 238, 0.08);
+}
+
+/* ===== 表单控件 ===== */
+input, select, textarea {
+  font-family: var(--font-mono);
+  background: var(--bg-input);
+  color: var(--color-text);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.12);
+}
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0a0e18; }
+::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.22); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(34, 211, 238, 0.45); }
+
+::selection {
+  background: rgba(255, 215, 0, 0.3);
+  color: #fff;
+}
+
+/* ===== 表格（其他视图通用） ===== */
+table { border-collapse: collapse; }
+th {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }

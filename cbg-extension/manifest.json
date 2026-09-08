@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "梦幻藏宝阁助手",
+  "version": "0.1.0",
+  "description": "在藏宝阁页面登录后自动记录装备价格与成交历史，数据按用户隔离。",
+  "permissions": ["storage", "cookies", "activeTab", "tabs", "alarms", "scripting"],
+  "host_permissions": [
+    "https://xyq.cbg.163.com/*",
+    "https://*.163.com/*",
+    "http://localhost:8006/*",
+    "http://127.0.0.1:8006/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://xyq.cbg.163.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["bridge.js"],
+      "matches": ["https://xyq.cbg.163.com/*"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "藏宝阁助手"
+  }
+}

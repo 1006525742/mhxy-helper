@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>996长安酒店 - 宝图助手</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+.header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 10px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 2px solid #0f3460; justify-content: space-between; }
+.header h1 { font-size: 16px; color: #e94560; }
+.header-left { display: flex; align-items: center; gap: 15px; }
+.header-link { color: #4fc3f7; text-decoration: none; font-size: 13px; }
+.header-link:hover { color: #7c4dff; }
+.model-badge { background: #0f3460; padding: 2px 8px; border-radius: 10px; font-size: 10px; color: #4fc3f7; }
+.session-badge { background: #1b5e20; padding: 2px 8px; border-radius: 10px; font-size: 10px; color: #66bb6a; }
+
+.status-bar { background: #16213e; padding: 6px 20px; display: flex; align-items: center; gap: 15px; font-size: 12px; border-bottom: 1px solid #0f3460; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.status-dot.connected { background: #4caf50; }
+.status-dot.disconnected { background: #f44336; }
+.status-dot.monitoring { background: #ff9800; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.main { display: flex; height: calc(100vh - 80px); }
+
+/* 左侧监控区域 */
+.left-panel { flex: 2; display: flex; flex-direction: column; padding: 10px; min-width: 600px; }
+
+.video-wrapper { flex: 1; background: #000; border-radius: 8px; overflow: auto; position: relative; border: 2px solid #0f3460; display: flex; align-items: flex-start; justify-content: center; }
+.video-container { position: relative; max-width: 100%; }
+#videoFrame { display: block; max-width: 100%; height: auto; }
+.placeholder { color: #555; font-size: 14px; text-align: center; padding: 50px; }
+.placeholder .icon { font-size: 48px; margin-bottom: 20px; }
+.placeholder .tip { color: #4fc3f7; margin-top: 10px; }
+
+.zoom-controls { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.zoom-slider { width: 150px; }
+.zoom-label { font-size: 12px; color: #aaa; min-width: 60px; }
+
+.controls { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+
+.btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: #0f3460; color: #eee; }
+.btn-primary:hover { background: #e94560; }
+.btn-success { background: #1b5e20; color: #eee; }
+.btn-success:hover { background: #2e7d32; }
+.btn-danger { background: #b71c1c; color: #eee; }
+.btn-danger:hover { background: #c62828; }
+.btn-warning { background: #e65100; color: #eee; }
+.btn-warning:hover { background: #ef6c00; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.log { background: #0a0a1a; padding: 8px; border-radius: 4px; font-size: 11px; font-family: monospace; max-height: 100px; overflow-y: auto; margin-top: 8px; }
+.log-entry { padding: 2px 0; border-bottom: 1px solid #111; }
+.log-entry.success { color: #66bb6a; }
+.log-entry.error { color: #f44336; }
+
+/* 右侧面板 */
+.right-panel { width: 350px; background: #16213e; border-left: 2px solid #0f3460; padding: 10px; overflow-y: auto; }
+.panel-title { font-size: 13px; color: #e94560; margin-bottom: 8px; font-weight: bold; }
+
+/* 背包格子网格 */
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 6px;
+  background: #0a0a1a;
+  padding: 10px;
+  border-radius: 8px;
+}
+.inventory-slot {
+  background: #1a1a2e;
+  border: 2px solid #0f3460;
+  border-radius: 6px;
+  padding: 6px;
+  text-align: center;
+  min-height: 55px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.inventory-slot.has-item { border-color: #66bb6a; background: #1b5e20; }
+.inventory-slot .slot-num { font-size: 10px; color: #555; }
+.inventory-slot .coord-text { font-size: 11px; color: #4fc3f7; font-weight: bold; word-break: break-all; }
+.inventory-slot .conf { font-size: 9px; color: #66bb6a; }
+
+/* 检测列表 */
+.detection-list { font-size: 11px; max-height: 120px; overflow-y: auto; }
+.detection-item { background: #1a1a2e; padding: 6px; margin-bottom: 4px; border-radius: 4px; border-left: 3px solid #0f3460; }
+.detection-item .cls { color: #4fc3f7; font-weight: bold; }
+.detection-item .conf { color: #66bb6a; }
+
+/* 坐标收集 */
+.coord-list { font-size: 11px; max-height: 150px; overflow-y: auto; }
+.coord-item { background: #1a1a2e; padding: 6px; margin-bottom: 4px; border-radius: 4px; border-left: 3px solid #66bb6a; display: flex; justify-content: space-between; }
+.coord-item .map { color: #4fc3f7; font-weight: bold; }
+.coord-item .xy { color: #66bb6a; }
+
+/* 说明 */
+.help-section { font-size: 11px; color: #aaa; line-height: 1.6; margin-top: 12px; }
+.help-section h4 { color: #4fc3f7; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <h1>🎮 宝图助手 - 云端版</h1>
+    <span class="model-badge" id="modelBadge">模型</span>
+    <span class="session-badge" id="sessionBadge">会话: --</span>
+  </div>
+  <a href="/" class="header-link">🏠 返回首页</a>
+</div>
+
+<div class="status-bar">
+  <span><span class="status-dot disconnected" id="wsStatus"></span><span id="wsText">未连接</span></span>
+  <span>屏幕共享: <span id="shareStatus" style="color:#f44336">未开启</span></span>
+  <span>检测: <span id="detCount">0</span></span>
+  <span>宝图: <span id="treasureCount" style="color:#66bb6a">0</span></span>
+</div>
+
+<div class="main">
+  <div class="left-panel">
+    <div class="video-wrapper">
+      <div class="video-container" id="videoContainer">
+        <div class="placeholder" id="placeholder">
+          <div class="icon">📺</div>
+          <p>点击「开始屏幕共享」选择游戏窗口</p>
+          <p class="tip">浏览器会弹窗让你选择要共享的窗口</p>
+        </div>
+        <img id="videoFrame" style="display:none" alt="监控画面">
+      </div>
+    </div>
+
+    <div class="zoom-controls">
+      <span class="zoom-label">缩放:</span>
+      <input type="range" class="zoom-slider" id="zoomSlider" min="50" max="200" value="100" oninput="setZoom(this.value)">
+      <span class="zoom-label" id="zoomValue">100%</span>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-success" id="btnStartShare" onclick="startScreenShare()">▶ 开始屏幕共享</button>
+      <button class="btn btn-danger" id="btnStopShare" onclick="stopScreenShare()" style="display:none">⏸ 停止共享</button>
+      <button class="btn btn-primary" id="btnStartMonitor" onclick="startMonitor()" style="display:none">🔍 开始监控</button>
+      <button class="btn btn-danger" id="btnStopMonitor" onclick="stopMonitor()" style="display:none">⏹ 停止监控</button>
+      <button class="btn btn-warning" onclick="captureOnce()" id="btnCapture" style="display:none">📸 单次截图</button>
+    </div>
+
+    <div class="log" id="log"></div>
+  </div>
+
+  <div class="right-panel">
+    <div class="panel-title">🎯 检测结果</div>
+    <div class="detection-list" id="detectionList"><div style="color:#555">等待检测...</div></div>
+
+    <div class="panel-title" style="margin-top:12px">🎒 背包格子 (4行×5列)</div>
+    <div class="inventory-grid" id="inventoryGrid"></div>
+
+    <div class="panel-title" style="margin-top:12px">📍 收集的坐标 (<span id="coordCount">0</span>)</div>
+    <div class="coord-list" id="coordList"><div style="color:#555">暂无坐标</div></div>
+    <button class="btn btn-primary" onclick="loadCoords()" style="margin-top:8px;width:100%">🔄 刷新坐标</button>
+    <button class="btn btn-danger" onclick="clearCoords()" style="margin-top:4px;width:100%">🗑 清空坐标</button>
+
+    <div class="help-section">
+      <h4>📋 使用说明</h4>
+      <p>1. 点击「开始屏幕共享」</p>
+      <p>2. 浏览器弹窗选择游戏窗口</p>
+      <p>3. 点击「开始监控」自动检测</p>
+      <p>4. 宝图坐标自动识别保存</p>
+      <hr style="margin:8px 0;border-color:#0f3460">
+      <h4>💡 提示</h4>
+      <p>- 选择"应用窗口"而非"整个屏幕"</p>
+      <p>- 确保游戏窗口可见（不被遮挡）</p>
+      <p>- 鼠标悬停宝图可触发坐标弹窗</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// WebSocket连接
+let ws = null;
+let sessionId = null;
+let monitoring = false;
+
+// 屏幕共享相关
+let screenStream = null;
+let videoElement = null;
+let canvasElement = null;
+let captureInterval = null;
+
+// 初始化
+function init() {
+  connectWs();
+  initInventoryGrid();
+}
+
+// WebSocket连接
+function connectWs() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${location.host}/ws`);
+
+  ws.onopen = () => {
+    document.getElementById('wsStatus').className = 'status-dot connected';
+    document.getElementById('wsText').textContent = '已连接';
+    log('WebSocket 已连接');
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    handleMessage(data);
+  };
+
+  ws.onclose = () => {
+    document.getElementById('wsStatus').className = 'status-dot disconnected';
+    document.getElementById('wsText').textContent = '断开';
+    log('WebSocket 断开，3秒后重连...');
+    setTimeout(connectWs, 3000);
+  };
+
+  ws.onerror = (e) => {
+    log('WebSocket错误', 'error');
+  };
+}
+
+// 处理消息
+function handleMessage(data) {
+  switch(data.type) {
+    case 'connected':
+      sessionId = data.session_id;
+      document.getElementById('sessionBadge').textContent = '会话: ' + sessionId;
+      document.getElementById('modelBadge').textContent = data.model;
+      log('会话创建: ' + sessionId);
+      break;
+
+    case 'frame_result':
+      // 显示标注后的图片
+      const img = document.getElementById('videoFrame');
+      img.src = 'data:image/jpeg;base64,' + data.image;
+      img.style.display = 'block';
+      document.getElementById('placeholder').style.display = 'none';
+
+      // 更新检测结果
+      updateDetections(data.detections || []);
+      document.getElementById('detCount').textContent = data.detections.length;
+
+      // 统计宝图数量
+      const treasureMaps = (data.detections || []).filter(d => d.class === 'treasure_map');
+      document.getElementById('treasureCount').textContent = treasureMaps.length;
+
+      // 更新背包格子
+      if (data.inventory) {
+        updateInventory(data.inventory);
+      }
+
+      // 显示新识别的坐标
+      if (data.coords && data.coords.length > 0) {
+        data.coords.forEach(c => log(`识别: ${c.map} (${c.x}, ${c.y})`, 'success'));
+        loadCoords();
+      }
+      break;
+
+    case 'coords':
+      document.getElementById('coordCount').textContent = data.count;
+      updateCoordList(data.coords);
+      break;
+
+    case 'coords_cleared':
+      log('坐标已清空');
+      loadCoords();
+      break;
+
+    case 'error':
+      log('错误: ' + data.msg, 'error');
+      break;
+
+    case 'pong':
+      // 心跳响应
+      break;
+  }
+}
+
+// 日志
+function log(msg, type = '') {
+  const el = document.getElementById('log');
+  const time = new Date().toLocaleTimeString('zh-CN');
+  const cls = type ? ` class="${type}"` : '';
+  el.innerHTML = `<div class="log-entry"${cls}>[${time}] ${msg}</div>` + el.innerHTML;
+  if (el.children.length > 20) el.removeChild(el.lastChild);
+}
+
+// ========== 屏幕共享 ==========
+
+async function startScreenShare() {
+  try {
+    // 请求屏幕共享
+    screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: {
+        cursor: 'always'
+      },
+      audio: false
+    });
+
+    log('屏幕共享已开启');
+
+    // 创建video元素播放屏幕流
+    videoElement = document.createElement('video');
+    videoElement.srcObject = screenStream;
+    videoElement.play();
+
+    // 创建canvas用于截图
+    canvasElement = document.createElement('canvas');
+
+    // 监听流结束（用户点击停止共享）
+    screenStream.getVideoTracks()[0].onended = () => {
+      stopScreenShare();
+    };
+
+    // 更新UI
+    document.getElementById('shareStatus').textContent = '已开启';
+    document.getElementById('shareStatus').style.color = '#66bb6a';
+    document.getElementById('btnStartShare').style.display = 'none';
+    document.getElementById('btnStopShare').style.display = 'inline-block';
+    document.getElementById('btnStartMonitor').style.display = 'inline-block';
+    document.getElementById('btnCapture').style.display = 'inline-block';
+
+    // 显示实时画面（本地预览）
+    const previewImg = document.getElementById('videoFrame');
+    previewImg.style.display = 'block';
+    document.getElementById('placeholder').style.display = 'none';
+
+    // 本地预览循环
+    startLocalPreview();
+
+  } catch (e) {
+    log('屏幕共享失败: ' + e.message, 'error');
+    console.error(e);
+  }
+}
+
+function stopScreenShare() {
+  if (screenStream) {
+    screenStream.getTracks().forEach(track => track.stop());
+    screenStream = null;
+  }
+
+  if (captureInterval) {
+    clearInterval(captureInterval);
+    captureInterval = null;
+  }
+
+  monitoring = false;
+
+  // 更新UI
+  document.getElementById('shareStatus').textContent = '未开启';
+  document.getElementById('shareStatus').style.color = '#f44336';
+  document.getElementById('btnStartShare').style.display = 'inline-block';
+  document.getElementById('btnStopShare').style.display = 'none';
+  document.getElementById('btnStartMonitor').style.display = 'none';
+  document.getElementById('btnStopMonitor').style.display = 'none';
+  document.getElementById('btnCapture').style.display = 'none';
+
+  document.getElementById('placeholder').style.display = 'block';
+  document.getElementById('videoFrame').style.display = 'none';
+
+  log('屏幕共享已停止');
+}
+
+function startLocalPreview() {
+  // 本地预览（直接显示屏幕流，不经过服务器）
+  const previewImg = document.getElementById('videoFrame');
+
+  const previewLoop = () => {
+    if (!screenStream || !videoElement) return;
+
+    canvasElement.width = videoElement.videoWidth;
+    canvasElement.height = videoElement.videoHeight;
+
+    const ctx = canvasElement.getContext('2d');
+    ctx.drawImage(videoElement, 0, 0);
+
+    previewImg.src = canvasElement.toDataURL('image/jpeg', 0.5);
+
+    if (!monitoring) {
+      requestAnimationFrame(previewLoop);
+    }
+  };
+
+  requestAnimationFrame(previewLoop);
+}
+
+// ========== 监控与截图 ==========
+
+function startMonitor() {
+  if (!screenStream) {
+    log('请先开启屏幕共享', 'error');
+    return;
+  }
+
+  monitoring = true;
+  document.getElementById('btnStartMonitor').style.display = 'none';
+  document.getElementById('btnStopMonitor').style.display = 'inline-block';
+
+  log('开始监控');
+
+  // 开始截图上传循环
+  captureLoop();
+}
+
+function stopMonitor() {
+  monitoring = false;
+
+  if (captureInterval) {
+    clearInterval(captureInterval);
+    captureInterval = null;
+  }
+
+  document.getElementById('btnStartMonitor').style.display = 'inline-block';
+  document.getElementById('btnStopMonitor').style.display = 'none';
+
+  log('停止监控');
+
+  // 恢复本地预览
+  startLocalPreview();
+}
+
+function captureOnce() {
+  if (!screenStream) {
+    log('请先开启屏幕共享', 'error');
+    return;
+  }
+
+  captureAndSend();
+  log('单次截图已发送');
+}
+
+async function captureLoop() {
+  while (monitoring && screenStream && ws && ws.readyState === WebSocket.OPEN) {
+    await captureAndSend();
+    await sleep(100); // 10fps
+  }
+}
+
+async function captureAndSend() {
+  if (!videoElement || !canvasElement) return;
+
+  const width = videoElement.videoWidth;
+  const height = videoElement.videoHeight;
+
+  if (width === 0 || height === 0) return;
+
+  canvasElement.width = width;
+  canvasElement.height = height;
+
+  const ctx = canvasElement.getContext('2d');
+  ctx.drawImage(videoElement, 0, 0);
+
+  // 转为base64
+  const imageBase64 = canvasElement.toDataURL('image/jpeg', 0.7);
+
+  // 发送到服务器
+  ws.send(JSON.stringify({
+    type: 'frame',
+    image: imageBase64
+  }));
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ========== 检测结果显示 ==========
+
+function updateDetections(detections) {
+  const list = document.getElementById('detectionList');
+  if (detections.length === 0) {
+    list.innerHTML = '<div style="color:#555">未检测到</div>';
+    return;
+  }
+  list.innerHTML = detections.map(d =>
+    `<div class="detection-item"><span class="cls">${d.class}</span> <span class="conf">${(d.confidence*100).toFixed(0)}%</span></div>`
+  ).join('');
+}
+
+function initInventoryGrid() {
+  const grid = document.getElementById('inventoryGrid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= 20; i++) {
+    const div = document.createElement('div');
+    div.className = 'inventory-slot';
+    div.innerHTML = `<div class="slot-num">${i}</div>`;
+    grid.appendChild(div);
+  }
+}
+
+function updateInventory(inventory) {
+  const grid = document.getElementById('inventoryGrid');
+  grid.innerHTML = '';
+
+  for (let i = 1; i <= 20; i++) {
+    const slotData = inventory.slots?.find(s => s.slot === i);
+    const div = document.createElement('div');
+    div.className = 'inventory-slot' + (slotData?.item ? ' has-item' : '');
+
+    if (slotData?.coord) {
+      div.innerHTML = `<div class="slot-num">${i}</div>
+        <div class="coord-text">${slotData.coord}</div>
+        <div class="conf">${(slotData.confidence*100).toFixed(0)}%</div>`;
+    } else if (slotData?.item) {
+      div.innerHTML = `<div class="slot-num">${i}</div>
+        <div class="coord-text">宝图</div>
+        <div class="conf">${(slotData.confidence*100).toFixed(0)}%</div>`;
+    } else {
+      div.innerHTML = `<div class="slot-num">${i}</div>`;
+    }
+
+    grid.appendChild(div);
+  }
+}
+
+function updateCoordList(coords) {
+  const list = document.getElementById('coordList');
+  if (coords && coords.length > 0) {
+    list.innerHTML = coords.slice(-30).reverse().map(c =>
+      `<div class="coord-item"><span class="map">${c.map}</span><span class="xy">(${c.x},${c.y})</span></div>`
+    ).join('');
+  } else {
+    list.innerHTML = '<div style="color:#555">暂无坐标</div>';
+  }
+}
+
+// ========== 坐标API ==========
+
+function loadCoords() {
+  if (!sessionId) return;
+  ws.send(JSON.stringify({ type: 'get_coords' }));
+}
+
+function clearCoords() {
+  if (!confirm('确定清空所有坐标？')) return;
+  ws.send(JSON.stringify({ type: 'clear_coords' }));
+}
+
+// ========== 缩放 ==========
+
+function setZoom(val) {
+  document.getElementById('zoomValue').textContent = val + '%';
+  const img = document.getElementById('videoFrame');
+  img.style.maxWidth = val + '%';
+}
+
+// 初始化
+init();
+</script>
+</body>
+</html>

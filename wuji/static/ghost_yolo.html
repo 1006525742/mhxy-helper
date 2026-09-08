@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>抓鬼识别 - YOLO+OCR纯前端</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f23; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+.header { background: #16213e; padding: 10px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #0f3460; flex-wrap: wrap; }
+.header h1 { font-size: 16px; color: #e94560; }
+.btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+.btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-primary { background: #0f3460; color: #eee; }
+.btn-success { background: #1b5e20; color: #eee; }
+.btn-danger { background: #b71c1c; color: #eee; }
+.btn-warning { background: #e65100; color: #eee; }
+.status-badge { padding: 3px 10px; border-radius: 10px; font-size: 11px; background: #0f3460; }
+.status-badge.loading { background: #e65100; animation: pulse 1s infinite; }
+.status-badge.ready { background: #1b5e20; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+.main { display: flex; flex: 1; padding: 12px; gap: 12px; height: calc(100vh - 50px); }
+.left-panel { width: 320px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+.section { background: #16213e; padding: 12px; border-radius: 6px; }
+.section h2 { font-size: 14px; color: #e94560; margin-bottom: 8px; }
+.info-item { background: #1a1a2e; padding: 8px; border-radius: 4px; margin-bottom: 6px; }
+.info-item .label { color: #888; font-size: 11px; }
+.info-item .value { color: #4fc3f7; font-size: 14px; font-weight: bold; }
+.info-item .areas { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.quadrant-btn { padding: 4px 8px; border-radius: 3px; font-size: 11px; border: 1px solid #0f3460; }
+.quadrant-btn.active { background: #ffc107; color: #000; border-color: #ffc107; }
+.quadrant-btn.inactive { background: #1a1a2e; color: #555; }
+.quadrant-btn.corner { background: #ff9800; color: #000; border-color: #ff9800; font-weight: bold; }
+.right-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; gap: 12px; }
+.video-container { flex: 1; background: #16213e; border-radius: 6px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 300px; }
+#sharedVideo { max-width: 100%; max-height: 100%; object-fit: contain; }
+#overlayCanvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+.placeholder { color: #555; font-size: 14px; text-align: center; padding: 20px; }
+.progress-bar { width: 100%; height: 4px; background: #1a1a2e; border-radius: 2px; overflow: hidden; margin-top: 8px; }
+.progress-bar .progress { height: 100%; background: #4fc3f7; transition: width 0.3s; }
+.log-box { max-height: 120px; overflow-y: auto; font-size: 11px; color: #888; background: #1a1a2e; padding: 8px; border-radius: 4px; }
+.log-item { margin-bottom: 2px; }
+.log-item.error { color: #e94560; }
+.log-item.success { color: #4fc3f7; }
+.ocr-preview { background: #1a1a2e; padding: 8px; border-radius: 4px; margin-top: 8px; }
+.ocr-preview img { max-width: 100%; border: 1px solid #0f3460; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>抓鬼识别 (YOLO+OCR纯前端)</h1>
+  <span class="status-badge" id="statusBadge">加载模型...</span>
+  <button class="btn btn-primary" id="btnInit" onclick="initModels()" style="display:none">初始化模型</button>
+  <button class="btn btn-success" id="btnShare" onclick="startShare()" disabled>共享窗口</button>
+  <button class="btn btn-warning" id="btnCapture" onclick="captureAndDetect()" disabled>识别</button>
+  <button class="btn btn-danger" id="btnStop" onclick="stopShare()" disabled>停止</button>
+  <span id="fpsDisplay" style="color:#4fc3f7;font-size:12px;"></span>
+</div>
+
+<div class="main">
+  <div class="left-panel">
+    <div class="section">
+      <h2>模型状态</h2>
+      <div class="info-item">
+        <div class="label">YOLO模型 (11.7MB)</div>
+        <div class="value" id="yoloStatus">未加载</div>
+        <div class="progress-bar" id="yoloProgress" style="display:none">
+          <div class="progress" id="yoloProgressBar" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="label">OCR引擎 (ONNX)</div>
+        <div class="value" id="ocrStatus">未加载</div>
+        <div class="progress-bar" id="ocrProgress" style="display:none">
+          <div class="progress" id="ocrProgressBar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>识别结果</h2>
+      <div class="info-item">
+        <div class="label">地图</div>
+        <div class="value" id="resultMap">-</div>
+      </div>
+      <div class="info-item">
+        <div class="label">坐标</div>
+        <div class="value" id="resultCoord">-</div>
+      </div>
+      <div class="info-item">
+        <div class="label">鬼名</div>
+        <div class="value" id="resultGhost">-</div>
+      </div>
+      <div class="info-item">
+        <div class="label">YOLO置信度</div>
+        <div class="value" id="resultConf">-</div>
+      </div>
+      <div class="info-item">
+        <div class="label">识别耗时</div>
+        <div class="value" id="resultTime">-</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>OCR预览</h2>
+      <div class="ocr-preview" id="ocrPreview" style="display:none">
+        <img id="ocrImage">
+      </div>
+      <div class="info-item" id="ocrTextBox" style="display:none">
+        <div class="label">OCR识别文字</div>
+        <div class="value" id="ocrText" style="font-size:12px;word-break:break-all"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>日志</h2>
+      <div class="log-box" id="logBox"></div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="video-container" id="videoContainer">
+      <div class="placeholder" id="placeholder">点击"共享窗口"选择游戏窗口</div>
+      <video id="sharedVideo" style="display:none" autoplay playsinline></video>
+      <canvas id="overlayCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ONNX Runtime Web (用于OCR) -->
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort.min.js"></script>
+<!-- TensorFlow.js (用于YOLO) -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0"></script>
+<script>
+// 配置ONNX Runtime环境 - 强制单线程，避免跨域隔离问题
+if (typeof ort !== 'undefined') {
+  ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/';
+  ort.env.wasm.numThreads = 1;  // 单线程模式，无需跨域隔离
+}
+</script>
+
+<script>
+// 配置
+const CONFIG = {
+  yoloModelPath: '/static/models/model.json',  // 新YOLO模型 (TF.js格式)
+  ocrModelPath: '/static/ocr_models/rec.onnx',
+  dictPath: '/static/ocr_models/ppocrv5_dict.txt',
+  confidenceThreshold: 0.4,  // 新模型阈值
+  nmsThreshold: 0.45,
+  inputSize: 480,  // 新模型输入尺寸
+  // 新模型类别 (8类)
+  classes: ['任务追踪', '钟馗', '黑无常', '店小二', '接引仙女', '左侧干扰', '驿站老板', '强盗对话'],
+  // 抓鬼任务配置
+  maps: ['女儿村', '五庄观', '建邺城', '大唐境外', '西梁女国', '傲来国', '朱紫国', '普陀山', '长寿村', '大唐国境', '长安城', '江南野外', '东海湾', '花果山', '北俱芦洲', '长寿郊外', '麒麟山', '宝象国', '碗子山', '波月洞', '解阳山', '境外郊外'],
+  ghostTypes: ['幽灵', '绵缠鬼', '黑眼鬼', '撩桥鬼', '僵尸', '急急鬼', '讨吃鬼', '龌龊鬼', '挖渣鬼', '山鬼', '捣大鬼', '低达鬼', '遭瘟鬼', '有穷鬼', '仔细鬼', '也斜鬼', '伶俐鬼', '叫街鬼', '要碗鬼', '发贱鬼', '穷鬼', '涎脸鬼', '牛头', '马面', '狡猾鬼', '粗鲁鬼', '贪吃鬼', '懒惰鬼', '暴躁鬼'],
+  timePrefixes: ['子时', '丑时', '寅时', '卯时', '辰时', '巳时', '午时', '未时', '申时', '酉时', '戌时', '亥时'],
+  timeSuffixes: ['一刻', '二刻', '三刻', '四刻', '初', '正']
+};
+
+// 全局状态
+let yoloSession = null;
+let ocrSession = null;
+let ocrDict = null;
+let videoStream = null;
+let isRunning = false;
+let lastFrameTime = 0;
+let frameCount = 0;
+
+// 日志
+function log(msg, type = 'info') {
+  const logBox = document.getElementById('logBox');
+  const item = document.createElement('div');
+  item.className = 'log-item' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
+  item.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  logBox.appendChild(item);
+  logBox.scrollTop = logBox.scrollHeight;
+  console.log(msg);
+}
+
+function setStatus(text, type = '') {
+  const badge = document.getElementById('statusBadge');
+  badge.textContent = text;
+  badge.className = 'status-badge' + (type ? ' ' + type : '');
+}
+
+// 初始化模型（已在DOMContentLoaded自动执行）
+async function initModels() {
+  // 保留空函数以防按钮调用
+  log('模型已在页面加载时自动初始化');
+}
+
+// 开始共享窗口
+async function startShare() {
+  try {
+    videoStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { cursor: 'never' },
+      audio: false
+    });
+
+    const video = document.getElementById('sharedVideo');
+    video.srcObject = videoStream;
+    video.style.display = 'block';
+    document.getElementById('placeholder').style.display = 'none';
+
+    document.getElementById('btnShare').disabled = true;
+    document.getElementById('btnCapture').disabled = false;
+    document.getElementById('btnStop').disabled = false;
+
+    setStatus('共享中', 'ready');
+    log('开始共享窗口');
+
+    // 监听停止
+    videoStream.getVideoTracks()[0].onended = () => {
+      stopShare();
+    };
+
+  } catch (e) {
+    log('共享窗口失败: ' + e.message, 'error');
+    if (e.name === 'NotAllowedError') {
+      log('用户取消了窗口共享');
+    }
+  }
+}
+
+// 停止共享
+function stopShare() {
+  if (videoStream) {
+    videoStream.getTracks().forEach(track => track.stop());
+    videoStream = null;
+  }
+  const video = document.getElementById('sharedVideo');
+  video.style.display = 'none';
+  video.srcObject = null;
+  document.getElementById('placeholder').style.display = 'block';
+  document.getElementById('overlayCanvas').width = 0;
+
+  document.getElementById('btnShare').disabled = false;
+  document.getElementById('btnCapture').disabled = true;
+  document.getElementById('btnStop').disabled = true;
+
+  setStatus('就绪', 'ready');
+  log('停止共享');
+}
+
+// 截图并检测
+async function captureAndDetect() {
+  const video = document.getElementById('sharedVideo');
+  if (!video.videoWidth) {
+    log('视频未准备好', 'error');
+    return;
+  }
+
+  const t0 = performance.now();
+  setStatus('识别中...', 'loading');
+
+  try {
+    // 创建canvas截图
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    log(`截图尺寸: ${canvas.width}x${canvas.height}`);
+
+    // YOLO检测
+    const t1 = performance.now();
+    const detections = await runYOLO(imageData);
+    const t2 = performance.now();
+    log(`YOLO检测: ${(t2-t1).toFixed(1)}ms, 检测到${detections.length}个目标`);
+
+    // 绘制所有检测框
+    drawAllDetections(canvas, detections);
+
+    if (detections.length === 0) {
+      log('未检测到目标', 'error');
+      setStatus('未检测到目标', 'error');
+      return;
+    }
+
+    // 按类别分组
+    const byClass = {};
+    detections.forEach(d => {
+      if (!byClass[d.classId]) byClass[d.classId] = [];
+      byClass[d.classId].push(d);
+    });
+
+    // 优先找钟馗或黑无常（抓鬼NPC）
+    let ghostNpc = byClass[1]?.[0] || byClass[2]?.[0]; // 钟馗=1, 黑无常=2
+
+    // 或者找任务追踪作为定位锚
+    const taskTrack = byClass[0]?.[0]; // 任务追踪=0
+
+    let ocrBox = null;
+    let best = null;
+
+    if (ghostNpc) {
+      // 找到了抓鬼NPC，在NPC下方区域做OCR
+      best = ghostNpc;
+      log(`检测到: ${best.className}, 置信度: ${(best.conf*100).toFixed(1)}%`);
+
+      const npcHeight = best.y2 - best.y1;
+      const npcWidth = best.x2 - best.x1;
+      ocrBox = {
+        x1: Math.max(0, best.x1 - npcWidth * 0.5),
+        y1: best.y2,
+        x2: Math.min(canvas.width, best.x2 + npcWidth * 0.5),
+        y2: Math.min(canvas.height, best.y2 + npcHeight * 3)
+      };
+    } else if (taskTrack) {
+      // 用任务追踪作为定位锚
+      best = taskTrack;
+      log(`检测到任务追踪, 置信度: ${(best.conf*100).toFixed(1)}%`);
+
+      const trackHeight = best.y2 - best.y1;
+      ocrBox = {
+        x1: best.x1,
+        y1: best.y2,
+        x2: best.x2,
+        y2: Math.min(canvas.height, best.y2 + trackHeight * 2.7)
+      };
+    } else {
+      // 取最高置信度的检测
+      best = detections.sort((a, b) => b.conf - a.conf)[0];
+      log(`检测到: ${best.className}, 置信度: ${(best.conf*100).toFixed(1)}%`);
+
+      const boxHeight = best.y2 - best.y1;
+      ocrBox = {
+        x1: best.x1,
+        y1: best.y2,
+        x2: best.x2,
+        y2: Math.min(canvas.height, best.y2 + boxHeight * 2)
+      };
+    }
+
+    document.getElementById('resultConf').textContent = (best.conf * 100).toFixed(1) + '%';
+
+    const boxWidth = best.x2 - best.x1;
+    const boxHeight = best.y2 - best.y1;
+    log(`检测区域: (${best.x1.toFixed(0)}, ${best.y1.toFixed(0)}, ${boxWidth.toFixed(0)}x${boxHeight.toFixed(0)})`);
+    log(`OCR区域: (${ocrBox.x1.toFixed(0)}, ${ocrBox.y1.toFixed(0)}, ${(ocrBox.x2-ocrBox.x1).toFixed(0)}x${(ocrBox.y2-ocrBox.y1).toFixed(0)})`);
+
+    // 裁剪OCR区域
+    const ocrCrop = cropImage(canvas, ocrBox);
+
+    // 显示裁剪预览
+    const cropCanvas = document.createElement('canvas');
+    cropCanvas.width = ocrCrop.width;
+    cropCanvas.height = ocrCrop.height;
+    cropCanvas.getContext('2d').putImageData(ocrCrop, 0, 0);
+    document.getElementById('ocrImage').src = cropCanvas.toDataURL();
+    document.getElementById('ocrPreview').style.display = 'block';
+
+    // OCR识别
+    const t3 = performance.now();
+    const ocrResult = await runOCR(ocrCrop);
+    const t4 = performance.now();
+    log(`OCR识别: ${(t4-t3).toFixed(1)}ms`);
+    log(`OCR文字: ${ocrResult.text}`);
+
+    document.getElementById('ocrText').textContent = ocrResult.text || '(无)';
+    document.getElementById('ocrTextBox').style.display = 'block';
+
+    // 解析结果
+    const parsed = parseGhostTask(ocrResult.text);
+    log(`解析结果: 地图=${parsed.map}, 坐标=(${parsed.x}, ${parsed.y}), 鬼名=${parsed.ghost_name}`);
+
+    // 显示结果
+    document.getElementById('resultMap').textContent = parsed.map || '未识别';
+    document.getElementById('resultCoord').textContent = parsed.x && parsed.y ? `(${parsed.x}, ${parsed.y})` : '未识别';
+    document.getElementById('resultGhost').textContent = parsed.ghost_name || '未识别';
+
+    const t5 = performance.now();
+    document.getElementById('resultTime').textContent = ((t5-t0)/1000).toFixed(2) + 's';
+
+    // 绘制叠加层 - 显示任务栏(绿)和OCR区域(蓝)
+    drawOverlay(canvas, best, ocrBox, parsed);
+
+    setStatus('识别完成', 'ready');
+
+  } catch (e) {
+    log('识别失败: ' + e.message, 'error');
+    setStatus('识别失败', 'error');
+    console.error(e);
+  }
+}
+
+// YOLO推理 (使用 TensorFlow.js GraphModel)
+async function runYOLO(imageData) {
+  // 预处理: RGBA -> RGB, 缩放到480x480, 归一化
+  const { width, height, data } = imageData;
+  const inputSize = CONFIG.inputSize;
+
+  // 创建输入tensor (1, 480, 480, 3) - NHWC格式
+  const input = tf.tensor3d(new Float32Array(inputSize * inputSize * 3), [inputSize, inputSize, 3]);
+
+  // 缩放并归一化
+  const scaleX = width / inputSize;
+  const scaleY = height / inputSize;
+
+  for (let y = 0; y < inputSize; y++) {
+    for (let x = 0; x < inputSize; x++) {
+      const srcX = Math.floor(x * scaleX);
+      const srcY = Math.floor(y * scaleY);
+      const srcIdx = (srcY * width + srcX) * 4;
+
+      // RGB归一化到0-1
+      const r = data[srcIdx] / 255;
+      const g = data[srcIdx + 1] / 255;
+      const b = data[srcIdx + 2] / 255;
+
+      // NHWC格式
+      const dstIdx = (y * inputSize + x) * 3;
+      input.data[dstIdx] = r;
+      input.data[dstIdx + 1] = g;
+      input.data[dstIdx + 2] = b;
+    }
+  }
+
+  // 添加batch维度: (1, 480, 480, 3)
+  const batchInput = input.expandDims(0);
+
+  // 执行推理
+  const output = await yoloSession.executeAsync({ images: batchInput });
+  const outputData = await output.data();
+  const dims = output.shape;
+  log(`YOLO输出shape: [${dims.join(', ')}]`);
+
+  // 解析输出: [1, 12, 4725]
+  // 通道0-3: bbox坐标 (cx, cy, w, h)
+  // 通道4-11: 8个类别置信度
+  const numAnchors = dims[2]; // 4725
+  const numClasses = 8;
+
+  const boxes = [];
+  let maxConf = 0;
+
+  for (let i = 0; i < numAnchors; i++) {
+    // 读取 cx, cy, w, h
+    const cx = outputData[0 * numAnchors + i];
+    const cy = outputData[1 * numAnchors + i];
+    const w = outputData[2 * numAnchors + i];
+    const h = outputData[3 * numAnchors + i];
+
+    // 找最大类别置信度
+    let maxClassConf = 0;
+    let classId = 0;
+    for (let c = 4; c < 12; c++) {
+      const conf = outputData[c * numAnchors + i];
+      if (conf > maxClassConf) {
+        maxClassConf = conf;
+        classId = c - 4;
+      }
+    }
+
+    if (maxClassConf > maxConf) maxConf = maxClassConf;
+
+    if (maxClassConf > CONFIG.confidenceThreshold) {
+      boxes.push({
+        x1: (cx - w/2) * width / inputSize,
+        y1: (cy - h/2) * height / inputSize,
+        x2: (cx + w/2) * width / inputSize,
+        y2: (cy + h/2) * height / inputSize,
+        conf: maxClassConf,
+        classId: classId,
+        className: CONFIG.classes[classId]
+      });
+    }
+  }
+
+  log(`最高置信度: ${(maxConf*100).toFixed(1)}%, 通过阈值${CONFIG.confidenceThreshold}的: ${boxes.length}个`);
+
+  // NMS
+  return nms(boxes, CONFIG.nmsThreshold);
+}
+
+// 非极大值抑制
+function nms(boxes, threshold) {
+  if (boxes.length === 0) return [];
+
+  boxes.sort((a, b) => b.conf - a.conf);
+  const keep = [];
+
+  while (boxes.length > 0) {
+    const best = boxes.shift();
+    keep.push(best);
+
+    boxes.forEach((box, i) => {
+      const iou = calcIOU(best, box);
+      if (iou > threshold) {
+        boxes.splice(i, 1);
+      }
+    });
+  }
+
+  return keep;
+}
+
+function calcIOU(a, b) {
+  const x1 = Math.max(a.x1, b.x1);
+  const y1 = Math.max(a.y1, b.y1);
+  const x2 = Math.min(a.x2, b.x2);
+  const y2 = Math.min(a.y2, b.y2);
+
+  const interArea = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+  const areaA = (a.x2 - a.x1) * (a.y2 - a.y1);
+  const areaB = (b.x2 - b.x1) * (b.y2 - b.y1);
+
+  return interArea / (areaA + areaB - interArea);
+}
+
+// 裁剪图像
+function cropImage(sourceCanvas, box) {
+  const x = Math.max(0, Math.floor(box.x1));
+  const y = Math.max(0, Math.floor(box.y1));
+  const w = Math.min(sourceCanvas.width - x, Math.ceil(box.x2 - box.x1));
+  const h = Math.min(sourceCanvas.height - y, Math.ceil(box.y2 - box.y1));
+
+  const ctx = sourceCanvas.getContext('2d');
+  return ctx.getImageData(x, y, w, h);
+}
+
+// OCR识别 - 纯前端ONNX推理
+async function runOCR(imageData) {
+  if (!ocrSession || !ocrDict) {
+    log('OCR模型未加载', 'error');
+    return { text: '', confidence: 0 };
+  }
+
+  try {
+    const { width, height, data } = imageData;
+
+    // PaddleOCR rec模型输入: [1, 3, 48, 320] (高度固定48, 宽度最大320)
+    // 需要保持宽高比缩放
+    const targetHeight = 48;
+    const maxWidth = 320;
+    const scale = targetHeight / height;
+    let targetWidth = Math.min(Math.round(width * scale), maxWidth);
+
+    // 创建输入tensor
+    const input = new Float32Array(3 * targetHeight * targetWidth);
+
+    // 缩放并归一化
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(createImageBitmapFromImageData(imageData), 0, 0, targetWidth, targetHeight);
+    const scaledData = ctx.getImageData(0, 0, targetWidth, targetHeight).data;
+
+    // CHW格式，归一化
+    for (let y = 0; y < targetHeight; y++) {
+      for (let x = 0; x < targetWidth; x++) {
+        const srcIdx = (y * targetWidth + x) * 4;
+        input[0 * targetHeight * targetWidth + y * targetWidth + x] = (scaledData[srcIdx] / 255 - 0.5) / 0.5;
+        input[1 * targetHeight * targetWidth + y * targetWidth + x] = (scaledData[srcIdx + 1] / 255 - 0.5) / 0.5;
+        input[2 * targetHeight * targetWidth + y * targetWidth + x] = (scaledData[srcIdx + 2] / 255 - 0.5) / 0.5;
+      }
+    }
+
+    const tensor = new ort.Tensor('float32', input, [1, 3, targetHeight, targetWidth]);
+    const results = await ocrSession.run({ 'x': tensor });
+
+    // 解码输出 - [1, num_chars, dict_size]
+    const outputName = ocrSession.outputNames[0];
+    const output = results[outputName].data;
+    const dims = results[outputName].dims;
+
+    log(`OCR输出dims: [${dims.join(', ')}]`);
+
+    // CTC解码
+    const numChars = dims[1];
+    const dictSize = dims[2];
+    let text = '';
+    let lastIdx = 0;
+
+    for (let t = 0; t < numChars; t++) {
+      // 找最大概率的字符
+      let maxProb = -Infinity;
+      let maxIdx = 0;
+      for (let c = 0; c < dictSize; c++) {
+        const prob = output[t * dictSize + c];
+        if (prob > maxProb) {
+          maxProb = prob;
+          maxIdx = c;
+        }
+      }
+
+      // CTC: 去重，忽略blank (通常是索引0)
+      if (maxIdx > 0 && maxIdx !== lastIdx) {
+        if (maxIdx < ocrDict.length) {
+          text += ocrDict[maxIdx];
+        }
+      }
+      lastIdx = maxIdx;
+    }
+
+    log(`OCR识别: ${text}`);
+    return { text: text.trim(), confidence: 90 };
+
+  } catch (e) {
+    log(`OCR推理失败: ${e.message}`, 'error');
+    console.error(e);
+    return { text: '', confidence: 0 };
+  }
+}
+
+// 辅助函数：从ImageData创建可用于drawImage的对象
+function createImageBitmapFromImageData(imageData) {
+  const canvas = document.createElement('canvas');
+  canvas.width = imageData.width;
+  canvas.height = imageData.height;
+  canvas.getContext('2d').putImageData(imageData, 0, 0);
+  return canvas;
+}
+
+// 解析抓鬼任务文字
+function parseGhostTask(text) {
+  const result = { map: null, x: null, y: null, ghost_name: null };
+
+  // OCR错误修正
+  text = text.replace(/钟道/g, '钟馗').replace(/提鬼/g, '捉鬼').replace(/安儿村/g, '女儿村');
+
+  // 提取地图
+  if (text.includes('去')) {
+    const match = text.match(/去([^\d]+?)(\d)/);
+    if (match) {
+      const candidate = match[1].trim();
+      for (const map of CONFIG.maps) {
+        if (candidate.includes(map) || map.includes(candidate)) {
+          result.map = map;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!result.map) {
+    for (const map of CONFIG.maps) {
+      if (text.includes(map)) {
+        result.map = map;
+        break;
+      }
+    }
+  }
+
+  // 提取坐标
+  const coordMatch = text.match(/(\d{1,3})[，,\s]+(\d{1,3})/);
+  if (coordMatch) {
+    result.x = parseInt(coordMatch[1]);
+    result.y = parseInt(coordMatch[2]);
+  }
+
+  // 提取鬼名
+  const ghostMatch = text.match(/附近抓(.+)/);
+  if (ghostMatch) {
+    const ghostText = ghostMatch[1].trim();
+
+    // 找时辰
+    let timeFull = '';
+    for (const prefix of CONFIG.timePrefixes) {
+      if (ghostText.includes(prefix)) {
+        timeFull = prefix;
+        for (const suffix of CONFIG.timeSuffixes) {
+          if (ghostText.includes(prefix + suffix)) {
+            timeFull = prefix + suffix;
+            break;
+          }
+        }
+        break;
+      }
+    }
+
+    // 找鬼类型
+    for (const ghost of CONFIG.ghostTypes) {
+      if (ghostText.includes(ghost)) {
+        result.ghost_name = timeFull + ghost;
+        break;
+      }
+    }
+
+    if (!result.ghost_name) {
+      result.ghost_name = ghostText.substring(0, 10);
+    }
+  }
+
+  return result;
+}
+
+// 绘制叠加层 - 显示任务栏(绿)和OCR区域(蓝)
+// 绘制所有检测结果
+function drawAllDetections(sourceCanvas, detections) {
+  const video = document.getElementById('sharedVideo');
+  const overlay = document.getElementById('overlayCanvas');
+  const container = document.getElementById('videoContainer');
+
+  // 设置canvas尺寸
+  overlay.width = container.clientWidth;
+  overlay.height = container.clientHeight;
+
+  const ctx = overlay.getContext('2d');
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+  if (!detections || detections.length === 0) return;
+
+  // 计算缩放比例
+  const scaleX = overlay.width / video.videoWidth;
+  const scaleY = overlay.height / video.videoHeight;
+  const scale = Math.min(scaleX, scaleY);
+
+  const drawWidth = video.videoWidth * scale;
+  const drawHeight = video.videoHeight * scale;
+  const offsetX = (overlay.width - drawWidth) / 2;
+  const offsetY = (overlay.height - drawHeight) / 2;
+
+  // 类别颜色映射
+  const classColors = {
+    0: '#a29bfe', // 任务追踪 - 紫色
+    1: '#ff6b6b', // 钟馗 - 红色
+    2: '#4ecdc4', // 黑无常 - 青色
+    3: '#45b7d1', // 店小二 - 蓝色
+    4: '#96ceb4', // 接引仙女 - 绿色
+    5: '#636e72', // 左侧干扰 - 灰色
+    6: '#ffeaa7', // 驿站老板 - 黄色
+    7: '#dfe6e9'  // 强盗对话 - 白色
+  };
+
+  // 绘制每个检测框
+  detections.forEach(d => {
+    const x1 = offsetX + d.x1 * scale;
+    const y1 = offsetY + d.y1 * scale;
+    const x2 = offsetX + d.x2 * scale;
+    const y2 = offsetY + d.y2 * scale;
+
+    const color = classColors[d.classId] || '#ffffff';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+    // 显示类别和置信度
+    const label = `${d.className || CONFIG.classes[d.classId]} ${(d.conf*100).toFixed(0)}%`;
+    ctx.font = '12px sans-serif';
+    const textWidth = ctx.measureText(label).width;
+    ctx.fillStyle = color;
+    ctx.fillRect(x1, y1 - 16, textWidth + 6, 16);
+    ctx.fillStyle = '#000';
+    ctx.fillText(label, x1 + 3, y1 - 4);
+  });
+}
+
+function drawOverlay(sourceCanvas, taskBarBox, ocrBox, parsed) {
+  const video = document.getElementById('sharedVideo');
+  const overlay = document.getElementById('overlayCanvas');
+  const container = document.getElementById('videoContainer');
+
+  // 设置canvas尺寸
+  overlay.width = container.clientWidth;
+  overlay.height = container.clientHeight;
+
+  const ctx = overlay.getContext('2d');
+
+  // 计算缩放比例
+  const scaleX = overlay.width / video.videoWidth;
+  const scaleY = overlay.height / video.videoHeight;
+  const scale = Math.min(scaleX, scaleY);
+
+  const drawWidth = video.videoWidth * scale;
+  const drawHeight = video.videoHeight * scale;
+  const offsetX = (overlay.width - drawWidth) / 2;
+  const offsetY = (overlay.height - drawHeight) / 2;
+
+  // 绘制任务栏检测框 (绿色)
+  if (taskBarBox) {
+    const x1 = offsetX + taskBarBox.x1 * scale;
+    const y1 = offsetY + taskBarBox.y1 * scale;
+    const x2 = offsetX + taskBarBox.x2 * scale;
+    const y2 = offsetY + taskBarBox.y2 * scale;
+
+    ctx.strokeStyle = '#00ff00';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+    // 显示置信度
+    ctx.fillStyle = '#00ff00';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(`任务栏 ${(taskBarBox.conf*100).toFixed(0)}%`, x1, y1 - 5);
+  }
+
+  // 绘制OCR区域框 (蓝色)
+  if (ocrBox) {
+    const x1 = offsetX + ocrBox.x1 * scale;
+    const y1 = offsetY + ocrBox.y1 * scale;
+    const x2 = offsetX + ocrBox.x2 * scale;
+    const y2 = offsetY + ocrBox.y2 * scale;
+
+    ctx.strokeStyle = '#00aaff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+    // 标签
+    ctx.fillStyle = '#00aaff';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('OCR区域', x1, y1 - 5);
+  }
+
+  // 显示解析结果
+  if (parsed && parsed.map) {
+    const text = `${parsed.map} (${parsed.x}, ${parsed.y})`;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(10, 10, 200, 60);
+    ctx.fillStyle = '#4fc3f7';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillText(parsed.map, 20, 30);
+    ctx.fillText(`(${parsed.x}, ${parsed.y})`, 20, 50);
+    if (parsed.ghost_name) {
+      ctx.fillText(parsed.ghost_name, 20, 65);
+    }
+  }
+}
+
+// 页面加载完成 - 自动初始化模型
+document.addEventListener('DOMContentLoaded', async () => {
+  log('页面加载完成，自动初始化模型...');
+
+  // 自动开始初始化
+  const btnInit = document.getElementById('btnInit');
+  btnInit.disabled = true;
+  setStatus('加载模型中...', 'loading');
+
+  try {
+    // 加载YOLO TensorFlow.js模型
+    log('下载YOLO模型 (11.7MB)...');
+    document.getElementById('yoloStatus').textContent = '下载中...';
+    document.getElementById('yoloProgress').style.display = 'block';
+
+    const t0 = performance.now();
+
+    yoloSession = await tf.loadGraphModel(CONFIG.yoloModelPath);
+
+    const t1 = performance.now();
+    document.getElementById('yoloProgressBar').style.width = '100%';
+    document.getElementById('yoloStatus').textContent = '已加载';
+    document.getElementById('yoloStatus').style.color = '#4fc3f7';
+    log(`YOLO模型加载成功 (${((t1-t0)/1000).toFixed(1)}s)`, 'success');
+
+    setStatus('就绪', 'ready');
+    document.getElementById('btnShare').disabled = false;
+    log('YOLO模型加载完成', 'success');
+
+    // 加载OCR ONNX模型 (rec.onnx)
+    log('下载OCR识别模型 (16.5MB)...');
+    document.getElementById('ocrStatus').textContent = '下载中...';
+    document.getElementById('ocrProgress').style.display = 'block';
+
+    const ocrResponse = await fetch(CONFIG.ocrModelPath);
+    const ocrTotal = parseInt(ocrResponse.headers.get('content-length'), 10) || 16500000;
+    let ocrLoaded = 0;
+    const ocrReader = ocrResponse.body.getReader();
+    const ocrChunks = [];
+
+    while(true) {
+      const {done, value} = await ocrReader.read();
+      if (done) break;
+      ocrChunks.push(value);
+      ocrLoaded += value.length;
+      const percent = Math.round((ocrLoaded / ocrTotal) * 100);
+      document.getElementById('ocrProgressBar').style.width = percent + '%';
+      document.getElementById('ocrStatus').textContent = `下载 ${percent}%`;
+    }
+
+    const ocrBuffer = new Uint8Array(ocrLoaded);
+    let ocrOffset = 0;
+    for (const chunk of ocrChunks) {
+      ocrBuffer.set(chunk, ocrOffset);
+      ocrOffset += chunk.length;
+    }
+
+    log('创建OCR推理会话...');
+    document.getElementById('ocrStatus').textContent = '初始化...';
+    ocrSession = await ort.InferenceSession.create(ocrBuffer, {
+      executionProviders: ['wasm'],
+      graphOptimizationLevel: 'all'
+    });
+    document.getElementById('ocrProgressBar').style.width = '100%';
+
+    // 加载字典文件
+    log('加载字符字典...');
+    const dictResponse = await fetch(CONFIG.dictPath);
+    const dictText = await dictResponse.text();
+    // 字典每行一个字符
+    ocrDict = dictText.split(/\r?\n/);
+    // PaddleOCR字典在开头需要加blank，并在结尾加特殊符号
+    // 实际推理时索引0通常是blank (CTC)
+    log(`字典加载完成: ${ocrDict.length}个字符`);
+
+    document.getElementById('ocrStatus').textContent = '已加载';
+    document.getElementById('ocrStatus').style.color = '#4fc3f7';
+    log('OCR模型加载完成', 'success');
+
+    setStatus('就绪', 'ready');
+    document.getElementById('btnShare').disabled = false;
+    log('所有模型加载完成，可以开始使用', 'success');
+
+  } catch (e) {
+    log('模型加载失败: ' + e.message, 'error');
+    setStatus('加载失败', 'error');
+    console.error(e);
+    // 显示详细错误
+    if (e.message.includes('fetch')) {
+      log('提示：请确保服务器正在运行，模型路径正确', 'error');
+    }
+  }
+});
+</script>
+</body>
+</html>

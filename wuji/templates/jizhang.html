@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梦幻西游·物价宝鉴</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-body: #0f0f23;
+            --bg-panel: #16213e;
+            --bg-card: #1a1a2e;
+            --bg-input: #1a1a2e;
+            --border-color: #0f3460;
+            --text-title: #4fc3f7;
+            --text-normal: #e0e0e0;
+            --text-muted: #888888;
+            --accent-color: #4fc3f7;
+            --accent-hover: #7dd8f9;
+            --accent-light: #1a2a4e;
+        }
+        .light-mode {
+            --bg-body: #f0f2f5;
+            --bg-panel: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --border-color: #e0e0e0;
+            --text-title: #333333;
+            --text-normal: #333333;
+            --text-muted: #888888;
+            --accent-color: #ff6b35;
+            --accent-hover: #ff8555;
+            --accent-light: #fff3e6;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        html { font-size: 24px; }
+        body { background: var(--bg-body); min-height: 100vh; color: var(--text-normal); font-size: 0.67rem; }
+        .main-container { display: flex; height: 100vh; }
+
+        /* 左侧 */
+        .left-panel {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-panel);
+        }
+
+        .header {
+            padding: 12px 16px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .header h1 { font-size: 1.3rem; color: var(--text-title); }
+        .server-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-light);
+            padding: 4px 12px;
+            border-radius: 16px;
+            border: 1px solid var(--accent-color);
+        }
+        .server-info input {
+            background: transparent;
+            border: none;
+            color: var(--accent-color);
+            font-weight: 600;
+            width: 130px;
+            text-align: right;
+        }
+        .stats-info { color: var(--text-muted); font-size: 0.8rem; }
+        .server-info select {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 2px 5px;
+            border-radius: 5px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            padding: 8px 12px;
+            background: var(--bg-input);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .filter-bar input, .filter-bar select {
+            padding: 5px 10px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-normal);
+            font-size: 0.8rem;
+        }
+        .btn-small {
+            padding: 5px 12px;
+            border-radius: 14px;
+            border: none;
+            background: var(--accent-color);
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .btn-small:hover { background: var(--accent-hover); }
+
+        /* 物品列表 - 分栏显示 */
+        .items-container { flex: 1; overflow-y: auto; padding: 10px; }
+
+        .category-section {
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .category-header {
+            background: var(--bg-panel);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .category-header h3 {
+            color: var(--text-title);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .category-header .count {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+        .category-header .toggle {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        .category-content {
+            padding: 8px;
+            display: none;
+        }
+        .category-content.show { display: block; }
+        .flat-mode .category-section { border: none; margin-bottom: 0; }
+        .flat-mode .category-header { display: none; }
+        .flat-mode .category-content { display: block !important; padding: 8px 0; border-bottom: 1px solid var(--border-color); }
+        .flat-mode .category-content:last-child { border-bottom: none; }
+        .flat-mode .category-content h3 { display: none; }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 8px;
+        }
+        .price-card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 8px 4px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .price-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(255,215,112,0.3);
+        }
+        .price-card img { width: 32px; height: 32px; object-fit: contain; margin-bottom: 4px; }
+        .price-card .name { font-size: 0.7rem; color: var(--text-normal); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; min-height: 1.8em; word-break: break-all; }
+        .price-card .buy-price { font-size: 0.65rem; color: #ffd970; font-weight: 600; }
+        .price-card .sell-price { font-size: 0.65rem; color: #ff6b35; font-weight: 600; }
+        .price-card .date { font-size: 0.55rem; color: var(--text-muted); }
+        .price-card .trend-up { color: #ff4444; font-weight: 700; }
+        .price-card .trend-down { color: #44aa44; font-weight: 700; }
+        /* 展开面板 */
+        .price-expand {
+            position: absolute;
+            left: 100%;
+            top: 0;
+            display: none;
+            background: var(--bg-panel);
+            border-radius: 10px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            z-index: 100;
+            min-width: 200px;
+        }
+        .price-card:hover { z-index: 10; }
+        .price-card:hover .price-expand { display: flex; gap: 8px; }
+        .expand-card {
+            flex: 1;
+            text-align: center;
+            padding: 4px;
+            background: var(--bg-card);
+            border-radius: 6px;
+        }
+        .expand-title {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            padding-bottom: 2px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .expand-price {
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin: 2px 0;
+        }
+        .expand-price.buy { color: #ffd970; }
+        .expand-price.sell { color: #ff6b35; }
+        .expand-price.market { color: #4fc3f7; }
+        .expand-trend { font-size: 0.6rem; margin-top: 2px; }
+        .card-actions { position: absolute; top: 3px; right: 3px; display: flex; gap: 2px; opacity: 0; }
+        .price-card:hover .card-actions { opacity: 1; }
+        .card-btn {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            border: none;
+            background: var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.55rem;
+            cursor: pointer;
+        }
+        .card-btn.del:hover { background: var(--accent-color); color: #ffffff; }
+        .empty-msg { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.8rem; }
+
+        /* 分割条 */
+        .resizer {
+            width: 5px;
+            background: var(--border-color);
+            cursor: col-resize;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .resizer:hover, .resizer.dragging { background: var(--accent-color); }
+
+        /* 右侧 */
+        .right-panel {
+            width: 260px;
+            min-width: 180px;
+            max-width: 450px;
+            background: var(--bg-input);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border-color);
+        }
+        .panel-title {
+            padding: 10px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 700;
+            color: var(--text-title);
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .refresh-btn {
+            background: var(--accent-color);
+            border: none;
+            color: #ffffff;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            cursor: pointer;
+        }
+        .refresh-btn:hover { background: var(--accent-hover); }
+
+        /* 分类 */
+        .category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            padding: 6px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .cat-tab {
+            padding: 3px 8px;
+            border-radius: 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .cat-tab:hover { background: var(--accent-light); border-color: var(--accent-color); }
+        .cat-tab.active { background: var(--accent-color); color: #ffffff; border-color: var(--accent-color); }
+
+        .gallery-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px; padding-right: 20px; }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            max-width: 100%;
+        }
+        .gallery-item {
+            background: var(--bg-card);
+            border-radius: 6px;
+            padding: 4px 2px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            transition: all 0.15s ease;
+            min-width: 50px;
+        }
+        .gallery-item:hover {
+            background: var(--accent-light);
+            border-color: var(--accent-color);
+            transform: scale(1.08);
+            box-shadow: 0 4px 12px rgba(255,215,112,0.3);
+        }
+        .gallery-item img { width: 32px; height: 32px; object-fit: contain; }
+        .gallery-item .name { font-size: 0.55rem; color: var(--text-muted); margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.2; min-height: 1.3em; word-break: break-all; }
+        .gallery-item { position: relative; }
+        .variant-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: var(--accent-color);
+            color: #ffffff;
+            font-size: 0.5rem;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: flex;
+            align: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        /* 手动添加 */
+        .manual-add-section {
+            padding: 8px;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border-color);
+        }
+        .manual-add-section input, .manual-add-section select {
+            width: 100%;
+            padding: 5px 8px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-normal);
+            font-size: 0.75rem;
+            margin-bottom: 5px;
+        }
+        .manual-row { display: flex; gap: 5px; }
+        .manual-row input { flex: 1; }
+        .btn-add {
+            width: 100%;
+            padding: 6px;
+            border-radius: 14px;
+            border: none;
+            background: var(--accent-color);
+            color: #ffffff;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .btn-add:hover { background: var(--accent-hover); }
+
+        /* 模态框 */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-box { background: var(--bg-panel); border-radius: 16px; padding: 20px; width: 90%; max-width: 340px; border: 1px solid var(--border-color); }
+        .modal-box h3 { color: var(--text-title); margin-bottom: 12px; text-align: center; font-size: 1rem; }
+        .modal-preview { text-align: center; margin-bottom: 12px; padding: 10px; background: var(--bg-card); border-radius: 10px; }
+        .modal-preview img { width: 40px; height: 40px; }
+        .modal-preview .name { color: var(--text-title); font-weight: 600; margin-top: 5px; }
+        .input-row { margin-bottom: 10px; }
+        .input-row label { display: block; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 3px; }
+        .input-row input, .input-row select { width: 100%; padding: 8px 12px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-normal); }
+        .modal-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+        .btn-cancel { padding: 6px 16px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-muted); cursor: pointer; }
+        .btn-save { padding: 6px 16px; border-radius: 14px; border: none; background: var(--accent-color); color: #ffffff; font-weight: 600; cursor: pointer; }
+        .btn-save:hover { background: var(--accent-hover); }
+        .btn-delete { padding: 6px 16px; border-radius: 14px; border: none; background: var(--border-color); color: var(--text-muted); cursor: pointer; }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg-body); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+        /* 子选项弹窗 */
+        .variant-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1100; }
+        .variant-modal.show { display: flex; }
+        .variant-box { background: var(--bg-panel); border-radius: 16px; padding: 16px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border-color); }
+        .variant-box h3 { color: var(--text-title); margin-bottom: 10px; text-align: center; font-size: 0.9rem; }
+        .variant-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .variant-item { background: var(--bg-card); border-radius: 8px; padding: 6px; text-align: center; cursor: pointer; border: 1px solid var(--border-color); }
+        .variant-item:hover { background: var(--accent-light); border-color: var(--accent-color); }
+        .variant-item img { width: 28px; height: 28px; }
+        .variant-item .name { font-size: 0.5rem; color: var(--text-muted); margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.2; word-break: break-all; }
+
+        .toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--accent-color); color: #ffffff; padding: 6px 16px; border-radius: 16px; z-index: 2000;
+        }
+
+        /* 模式切换按钮 */
+        .mode-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-title);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mode-toggle:hover { border-color: var(--accent-color); }
+
+        @media (max-width: 600px) {
+            .main-container { flex-direction: column; }
+            .right-panel { width: 100%; height: 35vh; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <div class="left-panel">
+        <div class="header">
+            <h1><i class="fas fa-coins"></i> 梦幻物价宝鉴</h1>
+            <button class="btn-small" id="syncBtn" title="同步市场价">🔄 同步</button>
+            <button class="btn-small" id="clearBtn" style="display:none;background:#e74c3c;" title="清空数据">🗑️ 清空</button>
+            <span id="syncStatus" style="color:var(--text-muted);font-size:0.65rem;"></span>
+            <div class="server-info">
+                <span><i class="fas fa-server"></i></span>
+                <select id="serverSelect">
+                    <option value="my">我的物价</option>
+                    <option value="mhxy">梦幻西游</option>
+                    <option value="zjzd">紫禁之巅</option>
+                    <option value="zjc">紫禁城</option>
+                    <option value="ltx">兰亭序</option>
+                    <option value="srkl">生日快乐</option>
+                    <option value="dyd">钓鱼岛</option>
+                    <option value="2008">2008</option>
+                    <option value="zbg">珍宝阁</option>
+                    <option value="jj">将军</option>
+                    <option value="dtgf">大唐官府</option>
+                    <option value="qfkmg">曲阜孔庙</option>
+                    <option value="ysxs">沂水雪山</option>
+                </select>
+            </div>
+            <div class="stats-info"><i class="fas fa-boxes"></i> <span id="totalCount">0</span> 件</div>
+            <button class="mode-toggle" id="modeToggle" title="切换模式">🌙</button>
+        </div>
+        <div class="filter-bar">
+            <input type="text" id="searchInput" placeholder="搜索" style="width:100px">
+            <select id="sortSelect">
+                <option value="timeDesc">最新</option>
+                <option value="priceDesc">高价</option>
+                <option value="priceAsc">低价</option>
+            </select>
+            <button class="btn-small" id="expandAllBtn">展开全部</button>
+            <button class="btn-small" id="collapseAllBtn">折叠全部</button>
+            <button class="btn-small" id="toggleViewBtn">平铺模式</button>
+        </div>
+        <div class="items-container">
+            <div id="itemsList"></div>
+        </div>
+    </div>
+
+    <div class="resizer" id="resizer"></div>
+
+    <div class="right-panel" id="rightPanel">
+        <div class="panel-title">
+            <span><i class="fas fa-th"></i> 物品图鉴</span>
+            <button class="refresh-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i></button>
+        </div>
+        <div class="category-tabs" id="categoryTabs"></div>
+        <div class="gallery-scroll">
+            <div class="gallery-grid" id="galleryGrid"></div>
+        </div>
+        <div class="manual-add-section">
+            <input type="text" id="manualName" placeholder="物品名">
+            <div class="manual-row">
+                <input type="number" id="manualPrice" placeholder="价格" step="0.1">
+                <select id="manualCategory"></select>
+            </div>
+            <button class="btn-add" id="manualAddBtn"><i class="fas fa-plus"></i> 添加</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="quickModal">
+    <div class="modal-box">
+        <h3>登记物价</h3>
+        <div class="modal-preview">
+            <img id="quickIcon" src="">
+            <div class="name" id="quickName"></div>
+        </div>
+        <input type="hidden" id="quickIconFile">
+        <div class="input-row">
+            <label>价格类型</label>
+            <select id="quickType">
+                <option value="buy">收购价</option>
+                <option value="sell">卖出价</option>
+            </select>
+        </div>
+        <div class="input-row">
+            <label>价格 (万两)</label>
+            <input type="number" id="quickPrice" step="0.1" placeholder="输入价格" autofocus>
+        </div>
+        <div class="input-row">
+            <label>类别</label>
+            <select id="quickCategory"></select>
+        </div>
+        <div class="modal-btns">
+            <button class="btn-cancel" id="quickCancel">取消</button>
+            <button class="btn-save" id="quickSave">登记</button>
+        </div>
+    </div>
+</div>
+
+<!-- 子选项选择弹窗 -->
+<div class="variant-modal" id="variantModal">
+    <div class="variant-box">
+        <h3 id="variantTitle">选择类型</h3>
+        <div class="variant-grid" id="variantGrid"></div>
+        <div style="text-align:center;margin-top:10px;">
+            <button class="btn-cancel" onclick="document.getElementById('variantModal').classList.remove('show')">取消</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="detailModal">
+    <div class="modal-box">
+        <h3>编辑物价</h3>
+        <div class="modal-preview">
+            <img id="detailIcon" src="">
+            <div class="name" id="detailName"></div>
+        </div>
+        <input type="hidden" id="detailId">
+        <div class="input-row">
+            <label>收购价 (万两)</label>
+            <input type="number" id="detailBuyPrice" step="0.1" placeholder="未记录">
+        </div>
+        <div class="input-row">
+            <label>卖出价 (万两)</label>
+            <input type="number" id="detailSellPrice" step="0.1" placeholder="未记录">
+        </div>
+        <div class="input-row">
+            <label>类别</label>
+            <select id="detailCategory"></select>
+        </div>
+        <div class="input-row">
+            <label>时间</label>
+            <input type="text" id="detailTime" readonly style="background:#2c241a80">
+        </div>
+        <div class="modal-btns">
+            <button class="btn-delete" id="detailDelete">删除</button>
+            <button class="btn-cancel" id="detailCancel">取消</button>
+            <button class="btn-save" id="detailSave">保存</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="clearModal">
+    <div class="modal-box" style="max-width:350px;">
+        <h3>清空数据</h3>
+        <div id="clearCategoryList" style="max-height:300px;overflow-y:auto;margin:10px 0;"></div>
+        <div class="modal-btns">
+            <button class="btn-cancel" id="clearCancel">取消</button>
+            <button class="btn-small" id="clearSelectedBtn" style="background:#e67e22;color:#fff;">清空选中</button>
+            <button class="btn-delete" id="clearAllBtn">清空全部</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let items = [];
+let icons = [];
+let marketData = {};  // 市场价数据
+let trendsData = {};  // 涨跌趋势数据
+let categories = [];
+let currentCategory = '全部';
+let currentServer = 'my';  // 当前区服：my/mhxy/zjzd/zjc/ltx/srkl/dyd/2008/zbg/jj/dtgf/qfkmg/ysxs
+
+// 区服代码到名称映射
+const SERVER_CODE_TO_NAME = {
+    'my': null,
+    'mhxy': '梦幻西游',
+    'zjzd': '紫禁之巅',
+    'zjc': '紫禁城',
+    'ltx': '兰亭序',
+    'srkl': '生日快乐',
+    'dyd': '钓鱼岛',
+    '2008': '2008',
+    'zbg': '珍宝阁',
+    'jj': '将军',
+    'dtgf': '大唐官府',
+    'qfkmg': '曲阜孔庙',
+    'ysxs': '沂水雪山'
+};
+let filters = { keyword: '', sort: 'timeDesc', flatMode: false };
+let expandedCategories = {};  // 记录每个分类的展开状态
+
+// 物品名映射：本地名 -> API名
+const NAME_TO_API = {
+    // 炼妖石
+    '炼妖石_75': '75炼妖石', '炼妖石_85': '85炼妖石', '炼妖石_95': '95炼妖石',
+    '炼妖石_105': '105炼妖石', '炼妖石_115': '115炼妖石', '炼妖石_125': '125炼妖石',
+    '炼妖石_135': '135炼妖石', '炼妖石': '145炼妖石',
+    // 附魔
+    '附魔宝珠_80': '80附魔', '附魔宝珠_100': '100附魔', '附魔宝珠_110': '110附魔',
+    '附魔宝珠_120': '120附魔', '附魔宝珠_130': '130附魔', '附魔宝珠_140': '140附魔',
+    '附魔宝珠': '150附魔',
+    '附魔宝珠_80级': '80附魔', '附魔宝珠_100级': '100附魔', '附魔宝珠_110级': '110附魔',
+    '附魔宝珠_120级': '120附魔', '附魔宝珠_130级': '130附魔', '附魔宝珠_140级': '140附魔',
+    // 珍珠
+    '珍珠_60级': '60珍珠', '珍珠_70级': '70珍珠', '珍珠_80级': '80珍珠',
+    '珍珠_90级': '90珍珠', '珍珠_100级': '100珍珠', '珍珠_110级': '110珍珠',
+    '珍珠_120级': '120珍珠', '珍珠_130级': '130珍珠',
+    // 晶石
+    '元灵晶石_60级': '60晶石', '元灵晶石_80级': '80晶石', '元灵晶石_100级': '100晶石',
+    '元灵晶石_120级': '120晶石', '元灵晶石_140级': '140晶石',
+    // 灵饰书
+    '灵饰书_戒指_60级': '60戒指书', '灵饰书_戒指_80级': '80戒指书',
+    '灵饰书_戒指_100级': '100戒指书', '灵饰书_戒指_120级': '120戒指书', '灵饰书_戒指_140级': '140戒指书',
+    '灵饰书_耳饰_60级': '60耳饰书', '灵饰书_耳饰_80级': '80耳饰书',
+    '灵饰书_耳饰_100级': '100耳饰书', '灵饰书_耳饰_120级': '120耳饰书', '灵饰书_耳饰_140级': '140耳饰书',
+    '灵饰书_手镯_60级': '60手镯书', '灵饰书_手镯_80级': '80手镯书',
+    '灵饰书_手镯_100级': '100手镯书', '灵饰书_手镯_120级': '120手镯书', '灵饰书_手镯_140级': '140手镯书',
+    '灵饰书_配饰_60级': '60配饰书', '灵饰书_配饰_80级': '80配饰书',
+    '灵饰书_配饰_100级': '100配饰书', '灵饰书_配饰_120级': '120配饰书', '灵饰书_配饰_140级': '140配饰书',
+    // 如意丹
+    '如意丹_金': '金如意丹', '如意丹_木': '木如意丹', '如意丹_水': '水如意丹',
+    '如意丹_火': '火如意丹', '如意丹_土': '土如意丹',
+    // 原初魔石
+    '原初魔石_白': '原初魔石·白', '原初魔石_黑': '原初魔石·黑', '原初魔石_红': '原初魔石·红',
+    '原初魔石_黄': '原初魔石·黄', '原初魔石_蓝': '原初魔石·蓝', '原初魔石_绿': '原初魔石·绿',
+    '原初魔石_紫': '原初魔石·紫',
+    // 兽决
+    '兽决_必杀': '必杀', '兽决_连击': '连击', '兽决_吸血': '吸血', '兽决_感知': '感知',
+    '兽决_强力': '强力', '兽决_防御': '防御', '兽决_幸运': '幸运', '兽决_反击': '反击',
+    '兽决_反震': '反震', '兽决_夜战': '夜战', '兽决_鬼魂术': '鬼魂术', '兽决_神迹': '神迹',
+    '兽决_冥思': '冥思', '兽决_再生': '再生', '兽决_隐身': '隐身', '兽决_魔之心': '魔之心',
+    '兽决_法术连击': '法术连击', '兽决_法术暴击': '法术暴击', '兽决_法术波动': '法术波动',
+    '兽决_毒': '毒', '兽决_驱鬼': '驱鬼', '兽决_敏捷': '敏捷', '兽决_飞行': '飞行',
+    '兽决_慧根': '慧根', '兽决_永恒': '永恒', '兽决_精神集中': '精神集中',
+    '兽决_否定信仰': '否定信仰', '兽决_招架': '招架', '兽决_迟钝': '迟钝',
+    '兽决_神佑复生': '神佑复生', '兽决_偷袭': '偷袭', '兽决_属性吸收': '吸收',
+    '兽决_单法': '小法',
+    // 内丹
+    '内丹_矫健': '矫健', '内丹_静岳': '静岳', '内丹_灵身': '灵身', '内丹_灵光': '灵光',
+    '内丹_狂怒': '狂怒', '内丹_连环': '连环', '内丹_阴伤': '阴伤', '内丹_撞击': '撞击',
+    '内丹_深思': '深思', '内丹_擅咒': '擅咒', '内丹_无畏': '无畏', '内丹_圣洁': '圣洁',
+    '内丹_协力': '协力', '内丹_迅敏': '迅敏', '内丹_坚甲': '坚甲', '内丹_钢化': '钢化',
+    '内丹_愤恨': '愤恨', '内丹_慧心': '慧心', '内丹_狙刺': '狙刺', '内丹_淬毒': '淬毒',
+};
+
+// 根据物品名获取分类（用于区服数据）
+function getCategoryByName(name) {
+    // 先尝试通过图标匹配
+    for (const icon of icons) {
+        if (icon.name === name) return icon.category;
+        // 检查variants
+        if (icon.variants && icon.variants.some(v => name.includes(v.name) || v.name.includes(name))) {
+            return icon.category;
+        }
+    }
+    // 通过名称关键词匹配分类
+    if (name.includes('戒指书') || name.includes('耳饰书') || name.includes('手镯书') || name.includes('配饰书') || name.includes('晶石')) return '人物灵饰';
+    if (name.includes('附魔')) return '附魔宝珠';
+    if (name.includes('珍珠')) return '珍珠';
+    if (name.includes('炼妖石')) return '炼妖石';
+    // 制造指南书
+    if (name.includes('宝珠书') || name.includes('弓书') || name.includes('剑书') || name.includes('扇书') || name.includes('头盔书')) return '装备';
+    // 装备
+    if (name.includes('装备') || name.includes('武器') || name.includes('灵饰') || name.includes('防具')) return '装备';
+    // 兽决（包括单字名称）
+    const shoujueKeywords = ['必杀','连击','吸血','感知','强力','防御','幸运','反击','反震','夜战','鬼魂术','神迹','冥思','再生','隐身','魔之心','法术连击','法术暴击','法术波动','法术抵抗','毒','驱鬼','敏捷','飞行','慧根','永恒','精神集中','否定信仰','招架','迟钝','神佑复生','偷袭','小法','吸收','合纵','盾气','遗志','进击必杀','进击法暴','垃圾'];
+    if (name.includes('兽决') || name.includes('兽诀') || shoujueKeywords.some(k => name === k || name.includes(k))) return '兽决';
+    // 内丹
+    const neidanKeywords = ['矫健','静岳','灵身','灵光','狂怒','连环','阴伤','撞击','深思','擅咒','无畏','圣洁','协力','迅敏','坚甲','钢化','愤恨','慧心','狙刺','淬毒'];
+    if (name.includes('内丹') || neidanKeywords.some(k => name === k || name.includes(k))) return '内丹';
+    if (name.includes('如意丹')) return '如意丹';
+    if (name.includes('修炼果')) return '其他';
+    return '其他';
+}
+
+// 市场价名称 -> 图标名映射
+const MARKET_TO_ICON = {
+    // 灵饰书 (市场价格式: "60戒指书" 或 "100 戒指书")
+    '戒指书': '灵饰书_戒指', '耳饰书': '灵饰书_耳饰', '手镯书': '灵饰书_手镯', '配饰书': '灵饰书_配饰',
+    // 晶石 (市场价格式: "60晶石")
+    '晶石': '元灵晶石',
+    // 附魔 (市场价格式: "100附魔")
+    '附魔': '附魔宝珠',
+    // 珍珠 (市场价格式: "60珍珠")
+    '珍珠': '珍珠',
+    // 炼妖石 (市场价格式: "105炼妖石")
+    '炼妖石': '炼妖石',
+    // 如意丹
+    '如意丹': '如意丹',
+    // 制造指南书
+    '宝珠书': '制造指南书', '弓书': '制造指南书', '剑书': '制造指南书', '扇书': '制造指南书', '头盔书': '制造指南书',
+    // 装备
+    '装备': '装备', '武器': '武器', '灵饰': '任意灵饰', '防具': '装备',
+    // 兽决
+    '兽决': '兽决', '兽诀': '兽决',
+    // 内丹
+    '内丹': '低级召唤兽内丹',
+};
+
+// 单字兽决名称列表
+const SHOUJUE_NAMES = ['必杀','连击','吸血','感知','强力','防御','幸运','反击','反震','夜战','鬼魂术','神迹','冥思','再生','隐身','魔之心','法术连击','法术暴击','法术波动','法术抵抗','毒','驱鬼','敏捷','飞行','慧根','永恒','精神集中','否定信仰','招架','迟钝','神佑复生','偷袭','小法','吸收','合纵','盾气','遗志','进击必杀','进击法暴'];
+const NEIDAN_NAMES = ['矫健','静岳','灵身','灵光','狂怒','连环','阴伤','撞击','深思','擅咒','无畏','圣洁','协力','迅敏','坚甲','钢化','愤恨','慧心','狙刺','淬毒'];
+
+// 根据物品名获取图标路径（用于区服数据）
+function getIconByName(name) {
+    // 1. 精确匹配
+    for (const icon of icons) {
+        if (icon.name === name) {
+            return icon.path || icon.icon;
+        }
+    }
+
+    // 2. 通过映射匹配
+    for (const [key, iconBase] of Object.entries(MARKET_TO_ICON)) {
+        if (name.includes(key)) {
+            // 找到对应的图标
+            for (const icon of icons) {
+                if (icon.name === iconBase || icon.name.includes(iconBase)) {
+                    return icon.path || icon.icon;
+                }
+            }
+        }
+    }
+
+    // 3. 单字兽决/内丹匹配
+    if (SHOUJUE_NAMES.some(k => name === k || name.includes(k))) {
+        for (const icon of icons) {
+            if (icon.name === '兽决') return icon.path || icon.icon;
+        }
+    }
+    if (NEIDAN_NAMES.some(k => name === k || name.includes(k))) {
+        for (const icon of icons) {
+            if (icon.name === '低级召唤兽内丹') return icon.path || icon.icon;
+        }
+    }
+
+    // 4. 关键词匹配
+    for (const icon of icons) {
+        // 检查variants
+        if (icon.variants) {
+            for (const v of icon.variants) {
+                if (name.includes(v.name) || v.name.includes(name)) {
+                    return v.path || icon.path || icon.icon;
+                }
+            }
+        }
+        // 检查名称包含
+        if (name.includes(icon.name) || icon.name.includes(name)) {
+            return icon.path || icon.icon;
+        }
+    }
+
+    return '';
+}
+
+// 获取显示名称（去掉前缀）
+function getDisplayName(name) {
+    if (name.includes('_')) {
+        return name.substring(name.indexOf('_') + 1);
+    }
+    return name;
+}
+
+// 获取物品的市场价信息
+function getMarketInfo(name) {
+    const result = { mh: null, zj: null, trend: null };
+    const apiName = NAME_TO_API[name] || name;  // 映射到API名称
+
+    if (marketData.servers) {
+        result.mh = marketData.servers['梦幻西游']?.prices?.[apiName];
+        result.zj = marketData.servers['紫禁之巅']?.prices?.[apiName];
+    } else if (marketData.prices) {
+        result.mh = marketData.prices['梦幻西游']?.[apiName];
+        result.zj = marketData.prices['紫禁之巅']?.[apiName];
+    }
+    // 调试：输出匹配结果
+    if (name === '修炼果' || name === '100附魔') {
+        console.log(`getMarketInfo(${name} -> ${apiName}): mh=${result.mh}, zj=${result.zj}`);
+    }
+    if (trendsData.trends && trendsData.trends[name]) {
+        result.trend = trendsData.trends[name];
+    }
+    return result;
+}
+
+// 格式化涨跌显示
+function formatTrend(change) {
+    if (!change) return '';
+    const cls = change > 0 ? 'trend-up' : 'trend-down';
+    const arrow = change > 0 ? '↑' : '↓';
+    return `<span class="${cls}">${arrow}${Math.abs(change).toFixed(1)}%</span>`;
+}
+
+// ===== 分割线拖拽 =====
+const resizer = document.getElementById('resizer');
+const rightPanel = document.getElementById('rightPanel');
+let isDragging = false;
+
+resizer.addEventListener('mousedown', e => {
+    isDragging = true;
+    resizer.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+});
+document.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const newWidth = document.body.clientWidth - e.clientX;
+    if (newWidth >= 180 && newWidth <= 450) {
+        rightPanel.style.width = newWidth + 'px';
+    }
+});
+document.addEventListener('mouseup', () => {
+    isDragging = false;
+    resizer.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+});
+
+// ===== API调用 =====
+async function fetchData() {
+    try {
+        const res = await fetch('/api/data');
+        const data = await res.json();
+        items = data.items || [];
+        // 不在这里渲染，等市场价加载后再渲染
+    } catch (e) {
+        console.error('加载数据失败', e);
+        showToast('加载数据失败');
+    }
+}
+
+async function fetchIcons() {
+    try {
+        const res = await fetch('/api/icons');
+        const data = await res.json();
+        icons = data.icons || [];
+        categories = data.categories || [];
+        renderCategoryTabs();
+        renderGallery();
+        updateCategorySelects();
+    } catch (e) {
+        console.error('加载图标失败', e);
+    }
+}
+
+async function apiAddItem(item) {
+    const res = await fetch('/api/item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item)
+    });
+    return res.json();
+}
+
+async function apiUpdateItem(id, buyPrice, sellPrice, category) {
+    const res = await fetch('/api/item', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, buyPrice, sellPrice, category })
+    });
+    return res.json();
+}
+
+async function apiDeleteItem(id) {
+    const res = await fetch('/api/item/' + id, { method: 'DELETE' });
+    return res.json();
+}
+
+// ===== 同步市场价 =====
+async function syncMarket() {
+    const btn = document.getElementById('syncBtn');
+    const status = document.getElementById('syncStatus');
+    btn.disabled = true;
+    btn.textContent = '🔄 同步中...';
+    status.textContent = '';
+
+    try {
+        const res = await fetch('/api/sync', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            const result = data.result;
+            // 显示同步结果
+            const updated = result.updated || [];
+            const skipped = result.skipped || [];
+            if (updated.length > 0) {
+                status.textContent = `已更新 ${updated.map(s => s.server + '(' + s.date + ')').join(', ')}`;
+                status.style.color = '#4fc3f7';
+                // 重新加载数据
+                await fetchData();
+                await fetchMarketData();
+            } else if (skipped.length > 0) {
+                status.textContent = `${skipped[0].date} 数据已存在`;
+                status.style.color = '#888';
+            } else {
+                status.textContent = '同步完成';
+            }
+            showToast('同步完成');
+        }
+    } catch (e) {
+        status.textContent = '同步失败';
+        showToast('同步失败: ' + e.message);
+    }
+    btn.disabled = false;
+    btn.textContent = '🔄 同步';
+}
+
+async function fetchMarketData() {
+    try {
+        const res = await fetch('/api/market');
+        const data = await res.json();
+        if (data.success) {
+            marketData = data.data || {};
+            updateServerSelectDates();
+        }
+    } catch (e) {
+        console.error('获取市场价失败', e);
+    }
+}
+
+function updateServerSelectDates() {
+    const select = document.getElementById('serverSelect');
+    const options = select.querySelectorAll('option');
+
+    options.forEach(opt => {
+        if (opt.value === 'my') return;
+        const serverName = SERVER_CODE_TO_NAME[opt.value];
+        const date = marketData.servers?.[serverName]?.date;
+        if (date) {
+            opt.textContent = `${serverName}_${date}`;
+        }
+    });
+}
+
+async function fetchTrends() {
+    try {
+        const res = await fetch('/api/trends');
+        const data = await res.json();
+        if (data.success) {
+            trendsData = data.data || {};
+        }
+    } catch (e) {
+        console.error('获取趋势失败', e);
+    }
+}
+
+async function apiSetServer(server) {
+    const res = await fetch('/api/server', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ server })
+    });
+    return res.json();
+}
+
+// ===== 更新分类选择框 =====
+function updateCategorySelects() {
+    const selects = ['manualCategory', 'quickCategory', 'detailCategory'];
+    selects.forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) {
+            sel.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+    });
+}
+
+// ===== 渲染分类标签 =====
+function renderCategoryTabs() {
+    const container = document.getElementById('categoryTabs');
+    const counts = { '全部': icons.length };
+    icons.forEach(g => { counts[g.category] = (counts[g.category] || 0) + 1; });
+
+    let html = '<div class="cat-tab ' + (currentCategory === '全部' ? 'active' : '') + '" onclick="setCategory(\'全部\')">全部(' + icons.length + ')</div>';
+    categories.forEach(c => {
+        html += '<div class="cat-tab ' + (currentCategory === c ? 'active' : '') + '" onclick="setCategory(\'' + c + '\')">' + c + '(' + (counts[c] || 0) + ')</div>';
+    });
+    container.innerHTML = html;
+}
+
+function setCategory(c) {
+    currentCategory = c;
+    renderCategoryTabs();
+    renderGallery();
+}
+
+function renderGallery() {
+    const container = document.getElementById('galleryGrid');
+    let list = currentCategory === '全部' ? icons : icons.filter(g => g.category === currentCategory);
+
+    if (!list.length) {
+        container.innerHTML = '<div class="empty-msg">暂无图标</div>';
+        return;
+    }
+
+    // 人物灵饰分类特殊排序：戒指书、耳饰书、手镯书、配饰书、元灵晶石，每种按等级低到高
+    if (currentCategory === '人物灵饰') {
+        const order = ['戒指', '耳饰', '手镯', '配饰', '晶石'];
+        list = list.sort((a, b) => {
+            // 找到所属类型
+            const aType = order.find(t => a.name.includes(t)) || '';
+            const bType = order.find(t => b.name.includes(t)) || '';
+            const aIdx = order.indexOf(aType);
+            const bIdx = order.indexOf(bType);
+            // 先按类型排序
+            if (aIdx !== bIdx) return aIdx - bIdx;
+            // 同类型按等级排序（从variants取第一个的sortNum）
+            const aLevel = a.variants && a.variants[0] ? a.variants[0].sortNum : 99999;
+            const bLevel = b.variants && b.variants[0] ? b.variants[0].sortNum : 99999;
+            return aLevel - bLevel;
+        });
+    }
+
+    // 用事件委托，避免特殊字符导致onclick解析错误
+    let html = '';
+    list.forEach((g, idx) => {
+        // 如果有多个子选项，显示小角标（单个不显示）
+        const badge = g.variants && g.variants.length > 1 ? `<span class="variant-badge">${g.variants.length}</span>` : '';
+        html += `<div class="gallery-item" data-idx="${idx}" title="${escapeHtml(g.name)}">
+            ${badge}
+            <img src="/static/icons/${g.path || g.icon}" alt="">
+            <div class="name">${escapeHtml(g.name)}</div>
+        </div>`;
+    });
+    container.innerHTML = html;
+
+    // 绑定点击事件
+    container.querySelectorAll('.gallery-item').forEach((el, i) => {
+        el.onclick = () => {
+            const g = list[i];
+            // 如果有子选项，打开选择弹窗
+            if (g.variants && g.variants.length > 0) {
+                openVariantModal(g);
+            } else {
+                openQuickModal(g.name, g.category, g.path || g.icon);
+            }
+        };
+    });
+}
+
+// ===== 渲染物品列表 - 分栏显示 =====
+function renderItems() {
+    const container = document.getElementById('itemsList');
+
+    // 根据区服获取数据
+    let displayItems = [];
+    let yxbHtml = '';
+    if (currentServer === 'my') {
+        displayItems = items;
+    } else {
+        // 从市场价数据提取
+        const serverName = SERVER_CODE_TO_NAME[currentServer] || '梦幻西游';
+        const prices = marketData.servers?.[serverName]?.prices || {};
+        const yxb = marketData.servers?.[serverName]?.yxb;
+
+        // 金价显示
+        if (yxb && yxb.price) {
+            const upDown7 = yxb.upDown7 || '';
+            const upDown1 = yxb.upDown1 || '';
+            const trendColor = upDown7.startsWith('+') ? '#4caf50' : (upDown7.startsWith('-') ? '#f44336' : '#888');
+            yxbHtml = `
+                <div class="yxb-info" style="display:flex;align-items:center;padding:8px 10px;background:var(--bg-panel);border-bottom:1px solid var(--border-color);gap:10px;">
+                    <img src="/static/icons/道具/梦幻币.png" style="width:24px;height:24px;" onerror="this.style.display='none'">
+                    <span style="font-weight:bold;color:var(--text-title);">金价</span>
+                    <span style="font-size:1.1em;color:#4fc3f7;">${yxb.price}万</span>
+                    <span style="font-size:0.7em;color:${trendColor};">7日${upDown7}</span>
+                    <span style="font-size:0.65em;color:var(--text-muted);">(${yxb.date || ''})</span>
+                </div>
+            `;
+        }
+
+        displayItems = Object.entries(prices).map(([name, price], idx) => ({
+            id: idx,
+            name: name,
+            price: price,
+            category: getCategoryByName(name)
+        }));
+    }
+
+    document.getElementById('totalCount').textContent = displayItems.length;
+
+    if (!displayItems.length) {
+        container.innerHTML = '<div class="empty-msg">暂无记录</div>';
+        return;
+    }
+
+    // 搜索过滤
+    let filtered = [...displayItems];
+    if (filters.keyword) {
+        const kw = filters.keyword.toLowerCase();
+        filtered = filtered.filter(i => i.name.toLowerCase().includes(kw));
+    }
+
+    // 排序
+    if (currentServer === 'my') {
+        const getMaxPrice = i => Math.max(i.buyPrice||0, i.sellPrice||0, i.price||0);
+        if (filters.sort === 'priceDesc') {
+            filtered.sort((a, b) => getMaxPrice(b) - getMaxPrice(a));
+        } else if (filters.sort === 'priceAsc') {
+            filtered.sort((a, b) => getMaxPrice(a) - getMaxPrice(b));
+        } else {
+            filtered.sort((a, b) => (b.time || '').localeCompare(a.time || ''));
+        }
+    } else {
+        // 区服数据按价格排序
+        if (filters.sort === 'priceDesc') {
+            filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+        } else if (filters.sort === 'priceAsc') {
+            filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+        }
+    }
+
+    // 区服模式
+    if (currentServer !== 'my') {
+        // 平铺模式：直接渲染所有物品
+        if (filters.flatMode) {
+            container.innerHTML = `
+                ${yxbHtml}
+                <div class="category-section flat-mode">
+                    <div class="category-content show">
+                        <div class="items-grid">
+                            ${filtered.map(i => {
+                                const price = i.price ? Number(i.price).toFixed(1) : '--';
+                                return `
+                                <div class="price-card" title="${escapeHtml(i.name)}">
+                                    <img src="/static/icons/${getIconByName(i.name)}" onerror="this.style.display='none'">
+                                    <div class="name">${escapeHtml(getDisplayName(i.name))}</div>
+                                    <div class="sell-price" style="color:#4fc3f7;">${price}万</div>
+                                </div>
+                            `;}).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        // 分类模式：按分类分组
+        const grouped = {};
+        filtered.forEach(item => {
+            const cat = item.category || '其他';
+            if (!grouped[cat]) grouped[cat] = [];
+            grouped[cat].push(item);
+        });
+
+        container.innerHTML = `
+            ${yxbHtml}
+            ${Object.keys(grouped).sort().map(cat => {
+            const catItems = grouped[cat];
+            const isExpanded = expandedCategories[cat] !== false;
+            return `
+                <div class="category-section">
+                    <div class="category-header" onclick="toggleCategory('${cat}')">
+                        <h3>${cat}</h3>
+                        <span>
+                            <span class="count">${catItems.length}件</span>
+                            <span class="toggle"><i class="fas fa-chevron-${isExpanded ? 'down' : 'right'}"></i></span>
+                        </span>
+                    </div>
+                    <div class="category-content ${isExpanded ? 'show' : ''}" id="cat-${cat}">
+                        <div class="items-grid">
+                            ${catItems.map(i => {
+                                const price = i.price ? Number(i.price).toFixed(1) : '--';
+                                return `
+                                <div class="price-card" title="${escapeHtml(i.name)}">
+                                    <img src="/static/icons/${getIconByName(i.name)}" onerror="this.style.display='none'">
+                                    <div class="name">${escapeHtml(getDisplayName(i.name))}</div>
+                                    <div class="sell-price" style="color:#4fc3f7;">${price}万</div>
+                                </div>
+                            `;}).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;}).join('')}
+        `;
+        return;
+    }
+
+    // 我的物价 - 平铺模式：直接渲染所有物品
+    if (filters.flatMode) {
+        container.innerHTML = `
+            <div class="category-section flat-mode">
+                <div class="category-content show">
+                    <div class="items-grid">
+                        ${filtered.map(i => {
+                            const buyPrice = i.buyPrice || (i.price && !i.sellPrice ? i.price : null);
+                            const sellPrice = i.sellPrice;
+                            const mkt = getMarketInfo(i.name);
+                            const mhPrice = mkt.mh ? Number(mkt.mh).toFixed(1) : '--';
+                            const zjPrice = mkt.zj ? Number(mkt.zj).toFixed(1) : '--';
+                            const trendInfo = mkt.trend?.['梦幻西游'];
+                            const trendHtml = trendInfo ? formatTrend(trendInfo.change) : '';
+                            return `
+                            <div class="price-card" onclick="openDetailModal(${i.id})" title="${escapeHtml(i.name)}">
+                                <div class="card-actions">
+                                    <button class="card-btn" onclick="event.stopPropagation();openDetailModal(${i.id})"><i class="fas fa-pen"></i></button>
+                                    <button class="card-btn del" onclick="event.stopPropagation();deleteItem(${i.id})"><i class="fas fa-times"></i></button>
+                                </div>
+                                <img src="/static/icons/${i.icon || ''}" onerror="this.style.display='none'">
+                                <div class="name">${escapeHtml(getDisplayName(i.name))}</div>
+                                <div class="buy-price">收:${buyPrice ? Number(buyPrice).toFixed(1) : '--'}</div>
+                                <div class="sell-price">卖:${sellPrice ? Number(sellPrice).toFixed(1) : '--'}</div>
+                                <div class="price-expand" onclick="event.stopPropagation()">
+                                    <div class="expand-card">
+                                        <div class="expand-title">我的</div>
+                                        <div class="expand-price buy">${buyPrice ? Number(buyPrice).toFixed(1) : '--'}万</div>
+                                        <div class="expand-price sell">${sellPrice ? Number(sellPrice).toFixed(1) : '--'}万</div>
+                                        <div class="expand-trend">${trendHtml}</div>
+                                    </div>
+                                    <div class="expand-card">
+                                        <div class="expand-title">梦幻</div>
+                                        <div class="expand-price market">${mhPrice}万</div>
+                                    </div>
+                                    <div class="expand-card">
+                                        <div class="expand-title">紫禁</div>
+                                        <div class="expand-price market">${zjPrice}万</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;}).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // 分类模式：按分类分组
+    const grouped = {};
+    filtered.forEach(item => {
+        const cat = item.category || '其他';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(item);
+    });
+
+    // 人物灵饰分类特殊排序函数
+    function sortLingshiItems(items) {
+        const order = ['戒指书', '耳饰书', '手镯书', '配饰书', '晶石'];
+        return items.sort((a, b) => {
+            // 提取物品类型（戒指书、耳饰书等）
+            const aType = order.find(t => a.name.includes(t)) || '';
+            const bType = order.find(t => b.name.includes(t)) || '';
+            const aIdx = order.indexOf(aType);
+            const bIdx = order.indexOf(bType);
+            // 先按类型排序
+            if (aIdx !== bIdx) return aIdx - bIdx;
+            // 同类型按等级排序（从名称提取等级，如"灵饰书_戒指_60级" -> 60）
+            const aLevel = parseInt((a.name.match(/\d+级/) || ['0'])[0].replace('级', '')) || 0;
+            const bLevel = parseInt((b.name.match(/\d+级/) || ['0'])[0].replace('级', '')) || 0;
+            return aLevel - bLevel;
+        });
+    }
+
+    // 渲染每个分类块
+    container.innerHTML = Object.keys(grouped).sort().map(cat => {
+        let catItems = grouped[cat];
+        // 人物灵饰分类特殊排序
+        if (cat === '人物灵饰') {
+            catItems = sortLingshiItems(catItems);
+        }
+        const isExpanded = expandedCategories[cat] !== false;  // 默认展开
+
+        return `
+            <div class="category-section">
+                <div class="category-header" onclick="toggleCategory('${cat}')">
+                    <h3>${cat}</h3>
+                    <span>
+                        <span class="count">${catItems.length}件</span>
+                        <span class="toggle"><i class="fas fa-chevron-${isExpanded ? 'down' : 'right'}"></i></span>
+                    </span>
+                </div>
+                <div class="category-content ${isExpanded ? 'show' : ''}" id="cat-${cat}">
+                    <div class="items-grid">
+                        ${catItems.map(i => {
+                                const buyPrice = i.buyPrice || (i.price && !i.sellPrice ? i.price : null);
+                                const sellPrice = i.sellPrice;
+                                const mkt = getMarketInfo(i.name);
+                                const mhPrice = mkt.mh ? Number(mkt.mh).toFixed(1) : '--';
+                                const zjPrice = mkt.zj ? Number(mkt.zj).toFixed(1) : '--';
+                                const trendInfo = mkt.trend?.['梦幻西游'];
+                                const trendHtml = trendInfo ? formatTrend(trendInfo.change) : '';
+                                return `
+                            <div class="price-card" onclick="openDetailModal(${i.id})" title="${escapeHtml(i.name)}">
+                                <div class="card-actions">
+                                    <button class="card-btn" onclick="event.stopPropagation();openDetailModal(${i.id})"><i class="fas fa-pen"></i></button>
+                                    <button class="card-btn del" onclick="event.stopPropagation();deleteItem(${i.id})"><i class="fas fa-times"></i></button>
+                                </div>
+                                <img src="/static/icons/${i.icon || ''}" onerror="this.style.display='none'">
+                                <div class="name">${escapeHtml(getDisplayName(i.name))}</div>
+                                <div class="buy-price">收:${buyPrice ? Number(buyPrice).toFixed(1) : '--'}</div>
+                                <div class="sell-price">卖:${sellPrice ? Number(sellPrice).toFixed(1) : '--'}</div>
+                                <div class="price-expand" onclick="event.stopPropagation()">
+                                    <div class="expand-card">
+                                        <div class="expand-title">我的</div>
+                                        <div class="expand-price buy">${buyPrice ? Number(buyPrice).toFixed(1) : '--'}万</div>
+                                        <div class="expand-price sell">${sellPrice ? Number(sellPrice).toFixed(1) : '--'}万</div>
+                                        <div class="expand-trend">${trendHtml}</div>
+                                    </div>
+                                    <div class="expand-card">
+                                        <div class="expand-title">梦幻</div>
+                                        <div class="expand-price market">${mhPrice}万</div>
+                                    </div>
+                                    <div class="expand-card">
+                                        <div class="expand-title">紫禁</div>
+                                        <div class="expand-price market">${zjPrice}万</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;}).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function toggleCategory(cat) {
+    const content = document.getElementById('cat-' + cat);
+    const header = content.previousElementSibling;
+    const icon = header.querySelector('.toggle i');
+
+    if (content.classList.contains('show')) {
+        content.classList.remove('show');
+        icon.className = 'fas fa-chevron-right';
+        expandedCategories[cat] = false;
+    } else {
+        content.classList.add('show');
+        icon.className = 'fas fa-chevron-down';
+        expandedCategories[cat] = true;
+    }
+}
+
+function expandAll() {
+    document.querySelectorAll('.category-content').forEach(el => {
+        el.classList.add('show');
+        const icon = el.previousElementSibling.querySelector('.toggle i');
+        icon.className = 'fas fa-chevron-down';
+        expandedCategories[el.id.replace('cat-', '')] = true;
+    });
+}
+
+function collapseAll() {
+    document.querySelectorAll('.category-content').forEach(el => {
+        el.classList.remove('show');
+        const icon = el.previousElementSibling.querySelector('.toggle i');
+        icon.className = 'fas fa-chevron-right';
+        expandedCategories[el.id.replace('cat-', '')] = false;
+    });
+}
+
+// ===== 操作 =====
+async function addItem(name, price, category, icon, type) {
+    await apiAddItem({ name, price: parseFloat(price), category, icon, type });
+    await fetchData();
+}
+
+async function deleteItem(id) {
+    if (!confirm('删除此物品？')) return;
+    await apiDeleteItem(id);
+    await fetchData();
+    renderItems();
+    showToast('已删除');
+}
+
+async function updateItem(id, buyPrice, sellPrice, category) {
+    await apiUpdateItem(id, buyPrice ? parseFloat(buyPrice) : null, sellPrice ? parseFloat(sellPrice) : null, category);
+    await fetchData();
+    showToast('已保存');
+}
+
+// ===== 弹窗 =====
+// 子选项弹窗
+function openVariantModal(g) {
+    const modal = document.getElementById('variantModal');
+    const title = document.getElementById('variantTitle');
+    const grid = document.getElementById('variantGrid');
+
+    title.textContent = g.name + ' - 选择类型';
+    grid.innerHTML = '';
+
+    // 添加所有子选项
+    g.variants.forEach(v => {
+        const item = document.createElement('div');
+        item.className = 'variant-item';
+        item.title = v.name;  // tooltip显示完整名称
+        item.innerHTML = `
+            <img src="/static/icons/${v.path}" alt="">
+            <div class="name">${escapeHtml(v.name)}</div>
+        `;
+        item.onclick = () => {
+            modal.classList.remove('show');
+            // 用完整名称打开登记弹窗
+            openQuickModal(g.name + '_' + v.name, g.category, v.path);
+        };
+        grid.appendChild(item);
+    });
+
+    modal.classList.add('show');
+}
+
+function openQuickModal(name, category, iconPath) {
+    document.getElementById('quickIcon').src = '/static/icons/' + iconPath;
+    document.getElementById('quickName').textContent = name;
+    document.getElementById('quickIconFile').value = iconPath;
+    document.getElementById('quickPrice').value = '';
+
+    document.getElementById('quickCategory').innerHTML = categories.map(c =>
+        `<option value="${c}" ${c === category ? 'selected' : ''}>${c}</option>`
+    ).join('');
+
+    document.getElementById('quickModal').classList.add('show');
+    setTimeout(() => document.getElementById('quickPrice').focus(), 100);
+}
+
+function closeQuickModal() { document.getElementById('quickModal').classList.remove('show'); }
+
+async function saveQuickModal() {
+    const name = document.getElementById('quickName').textContent;
+    const price = document.getElementById('quickPrice').value;
+    const category = document.getElementById('quickCategory').value;
+    const icon = document.getElementById('quickIconFile').value;
+    const type = document.getElementById('quickType').value;
+
+    if (!price || isNaN(price)) { alert('请输入有效价格'); return; }
+
+    await addItem(name, price, category, icon, type);
+    closeQuickModal();
+    renderItems();  // 保存后立即渲染
+    showToast(name + ' 已登记');
+}
+
+function openDetailModal(id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+
+    document.getElementById('detailIcon').src = '/static/icons/' + (item.icon || '');
+    document.getElementById('detailName').textContent = item.name;
+    document.getElementById('detailId').value = id;
+    // 兼容旧数据：price字段作为buyPrice
+    document.getElementById('detailBuyPrice').value = item.buyPrice || (item.price && !item.sellPrice ? item.price : '');
+    document.getElementById('detailSellPrice').value = item.sellPrice || '';
+    document.getElementById('detailCategory').innerHTML = categories.map(c =>
+        `<option value="${c}" ${c === item.category ? 'selected' : ''}>${c}</option>`
+    ).join('');
+    document.getElementById('detailTime').value = item.time || '';
+    document.getElementById('detailModal').classList.add('show');
+}
+
+function closeDetailModal() { document.getElementById('detailModal').classList.remove('show'); }
+
+async function saveDetailModal() {
+    const id = parseInt(document.getElementById('detailId').value);
+    const buyPrice = document.getElementById('detailBuyPrice').value;
+    const sellPrice = document.getElementById('detailSellPrice').value;
+    const category = document.getElementById('detailCategory').value;
+
+    if (!buyPrice && !sellPrice) { alert('请输入至少一个价格'); return; }
+
+    try {
+        await updateItem(id, buyPrice, sellPrice, category);
+        closeDetailModal();
+        renderItems();  // 保存后立即渲染
+        showToast('已保存');
+    } catch (e) {
+        console.error('保存失败:', e);
+        alert('保存失败: ' + e.message);
+    }
+}
+
+async function deleteFromDetail() {
+    const id = parseInt(document.getElementById('detailId').value);
+    await apiDeleteItem(id);
+    closeDetailModal();
+    await fetchData();
+    showToast('已删除');
+}
+
+async function manualAdd() {
+    const name = document.getElementById('manualName').value.trim();
+    const price = document.getElementById('manualPrice').value;
+    const category = document.getElementById('manualCategory').value;
+
+    if (!name) { alert('请输入物品名'); return; }
+    if (!price || isNaN(price)) { alert('请输入有效价格'); return; }
+
+    const icon = icons.find(g => g.name === name)?.path || '';
+    await addItem(name, price, category, icon);
+    document.getElementById('manualName').value = '';
+    document.getElementById('manualPrice').value = '';
+    showToast(name + ' 已添加');
+}
+
+function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2000);
+}
+
+// ===== 模式切换 =====
+let isDarkMode = true;
+function toggleMode() {
+    isDarkMode = !isDarkMode;
+    document.body.classList.toggle('light-mode', !isDarkMode);
+    document.getElementById('modeToggle').textContent = isDarkMode ? '🌙' : '☀️';
+    localStorage.setItem('jizhang_mode', isDarkMode ? 'dark' : 'light');
+}
+function initMode() {
+    const saved = localStorage.getItem('jizhang_mode');
+    if (saved === 'light') {
+        isDarkMode = false;
+        document.body.classList.add('light-mode');
+        document.getElementById('modeToggle').textContent = '☀️';
+    }
+}
+
+// ===== 平铺模式切换 =====
+function toggleFlatMode() {
+    filters.flatMode = !filters.flatMode;
+    const btn = document.getElementById('toggleViewBtn');
+    btn.textContent = filters.flatMode ? '分类模式' : '平铺模式';
+    renderItems();
+}
+
+// ===== 清空数据 =====
+function updateClearButtonVisibility() {
+    const btn = document.getElementById('clearBtn');
+    btn.style.display = currentServer === 'my' ? '' : 'none';
+}
+
+function openClearModal() {
+    // 获取所有分类及其数量
+    const catCount = {};
+    items.forEach(i => {
+        const cat = i.category || '其他';
+        catCount[cat] = (catCount[cat] || 0) + 1;
+    });
+
+    const listHtml = Object.keys(catCount).sort().map(cat => `
+        <label style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid var(--border-color);">
+            <input type="checkbox" class="clear-cat-check" value="${cat}" checked style="margin-right:8px;">
+            <span>${cat} (${catCount[cat]}件)</span>
+        </label>
+    `).join('');
+
+    document.getElementById('clearCategoryList').innerHTML = listHtml;
+    document.getElementById('clearModal').classList.add('show');
+}
+
+function closeClearModal() {
+    document.getElementById('clearModal').classList.remove('show');
+}
+
+async function clearSelectedCategories() {
+    const checked = document.querySelectorAll('.clear-cat-check:checked');
+    const cats = Array.from(checked).map(c => c.value);
+    if (!cats.length) {
+        showToast('请选择要清空的分类');
+        return;
+    }
+    if (!confirm(`确定清空以下分类的数据？\n${cats.join('、')}`)) return;
+
+    for (const cat of cats) {
+        await fetch(`/api/items?category=${encodeURIComponent(cat)}`, { method: 'DELETE' });
+    }
+    closeClearModal();
+    await fetchData();
+    renderItems();
+    showToast('已清空选中分类');
+}
+
+async function clearAllItems() {
+    if (!confirm('确定清空所有数据？此操作不可恢复！')) return;
+    await fetch('/api/items', { method: 'DELETE' });
+    closeClearModal();
+    await fetchData();
+    renderItems();
+    showToast('已清空全部数据');
+}
+
+// ===== 初始化 =====
+async function init() {
+    try {
+        console.log('开始初始化...');
+        initMode();  // 初始化模式
+        await fetchData();
+        console.log('数据加载完成，items:', items.length);
+        await fetchIcons();
+        console.log('图标加载完成，icons:', icons.length, 'categories:', categories);
+        await fetchMarketData();  // 加载市场价
+        await fetchTrends();      // 加载涨跌趋势
+        renderItems();  // 所有数据加载完成后渲染
+
+        document.getElementById('searchInput').oninput = e => { filters.keyword = e.target.value; renderItems(); };
+        document.getElementById('sortSelect').onchange = e => { filters.sort = e.target.value; renderItems(); };
+        document.getElementById('expandAllBtn').onclick = expandAll;
+        document.getElementById('collapseAllBtn').onclick = collapseAll;
+        document.getElementById('modeToggle').onclick = toggleMode;  // 模式切换
+        document.getElementById('toggleViewBtn').onclick = toggleFlatMode;  // 平铺/分类切换
+
+        document.getElementById('manualAddBtn').onclick = manualAdd;
+        document.getElementById('refreshBtn').onclick = async () => { await fetchIcons(); showToast('图标已刷新'); };
+        document.getElementById('syncBtn').onclick = syncMarket;  // 同步按钮
+        document.getElementById('clearBtn').onclick = openClearModal;  // 清空按钮
+        document.getElementById('quickCancel').onclick = closeQuickModal;
+        document.getElementById('quickSave').onclick = saveQuickModal;
+        document.getElementById('detailCancel').onclick = closeDetailModal;
+        document.getElementById('detailSave').onclick = saveDetailModal;
+        document.getElementById('detailDelete').onclick = deleteFromDetail;
+        document.getElementById('clearCancel').onclick = closeClearModal;
+        document.getElementById('clearSelectedBtn').onclick = clearSelectedCategories;
+        document.getElementById('clearAllBtn').onclick = clearAllItems;
+
+        document.getElementById('quickModal').onclick = e => { if (e.target.id === 'quickModal') closeQuickModal(); };
+        document.getElementById('detailModal').onclick = e => { if (e.target.id === 'detailModal') closeDetailModal(); };
+        document.getElementById('clearModal').onclick = e => { if (e.target.id === 'clearModal') closeClearModal(); };
+
+        document.getElementById('serverSelect').onchange = function() {
+            currentServer = this.value;
+            updateClearButtonVisibility();
+            renderItems();
+        };
+
+        console.log('初始化完成');
+        updateClearButtonVisibility();
+    } catch (e) {
+        console.error('初始化失败:', e);
+        alert('初始化失败: ' + e.message);
+    }
+}
+
+init();
+</script>
+</body>
+</html>

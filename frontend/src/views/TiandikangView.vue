@@ -1,39 +1,80 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 // ============================================================
-// 天地砍王 · 地煞星 速度配速（首版：109 地煞 + 鸟翔阵）
+// 天地砍王 · 地煞星 速度配速（多等级 + 鸟翔阵）
 //
-// 数据说明（硬编码，后续扩展等级/阵法时迁移到独立 data 文件）：
+// 数据说明：
 //   - 阵位加成：鸟翔阵 ①+20% / ②③+10% / ④⑤+15%（全速型阵法）
-//   - 辅助目标：快过神封（~900）；物理目标：快过长生（~540）
-//   - steady 稳健 = 考虑乱敏（±5%）后的推荐面板速度
-//   - limit  极限 = 理论最低面板速度（赌乱敏下限，不推荐日常使用）
+//   - panel: 面板速度（结算速度 ÷ (1 + 阵位加成)），结算后稳定超过怪物
+//   - equal: 刚好等于怪物的速度（怪物基础速度 ÷ (1 + 阵位加成)）
 // ============================================================
+
+// 辅助角色 - 结算速度要求（稳定超过神封）
+const SETTLE_SPEED_SUPPORT: Record<number, number> = {
+  69: 620,
+  89: 780,
+  109: 900,
+  129: 1020,
+  159: 1300,
+  175: 1440,
+}
+
+// 辅助角色 - 神封基础速度（结算速度 ÷ 1.211）
+// 神封流云+10%被凝滞抵消，乱敏双方各5%：1.05×1.05÷0.95≈1.211
+const MONSTER_SPEED_SUPPORT: Record<number, number> = {
+  69: Math.round(620 / 1.211),   // 512
+  89: Math.round(780 / 1.211),   // 644
+  109: Math.round(900 / 1.211),  // 743
+  129: Math.round(1020 / 1.211), // 842
+  159: Math.round(1300 / 1.211), // 1074
+  175: Math.round(1440 / 1.211), // 1190
+}
+
+// 物理角色 - 结算速度要求（稳定超过长生）
+const SETTLE_SPEED_PHYSICAL: Record<number, number> = {
+  109: 635,
+  129: 715,
+  175: 935,
+}
+
+// 物理角色 - 长生基础速度（结算速度 ÷ 1.105）
+// 长生无流云，只有乱敏双方各5%：1.05÷0.95≈1.105
+const MONSTER_SPEED_PHYSICAL: Record<number, number> = {
+  109: Math.round(635 / 1.105),  // 575
+  129: Math.round(715 / 1.105),  // 647
+  175: Math.round(935 / 1.105),  // 846
+}
+
+const LEVELS_SUPPORT = [69, 89, 109, 129, 159, 175]
+const LEVELS_PHYSICAL = [109, 129, 175]
 
 interface SpeedData {
-  steady: number
-  limit: number
+  panel: number  // 面板速度（结算后稳定超过怪物）
+  equal: number  // 刚好等于怪物的速度
   hint: string
 }
 
 type Role = 'support' | 'physical'
 
-const DATA: Record<Role, Record<number, SpeedData>> = {
-  support: {
-    1: { steady: 880, limit: 750, hint: '抢一速' },
-    2: { steady: 960, limit: 818, hint: '需流云' },
-    3: { steady: 960, limit: 818, hint: '需流云' },
-    4: { steady: 920, limit: 783, hint: '抢一速' },
-    5: { steady: 920, limit: 783, hint: '抢一速' },
-  },
-  physical: {
-    1: { steady: 530, limit: 450, hint: '结算636' },
-    2: { steady: 560, limit: 491, hint: '结算616' },
-    3: { steady: 560, limit: 491, hint: '结算616' },
-    4: { steady: 540, limit: 470, hint: '结算621' },
-    5: { steady: 540, limit: 470, hint: '结算621' },
-  },
+// 根据等级、角色和阵位计算速度数据
+function calcSpeedData(role: Role, level: number, pos: number): SpeedData {
+  const settles = role === 'support' ? SETTLE_SPEED_SUPPORT : SETTLE_SPEED_PHYSICAL
+  const monsters = role === 'support' ? MONSTER_SPEED_SUPPORT : MONSTER_SPEED_PHYSICAL
+  const settle = settles[level] || 0
+  const monster = monsters[level] || 0
+
+  const bonusMap: Record<number, number> = { 1: 0.20, 2: 0.10, 3: 0.10, 4: 0.15, 5: 0.15 }
+  const bonus = bonusMap[pos]
+
+  // 面板速度 = 结算速度 ÷ (1 + 阵位加成)，结算后稳定超过怪物
+  const panel = Math.round(settle / (1 + bonus))
+  // 刚好等于怪物的速度 = 怪物基础速度 ÷ (1 + 阵位加成)
+  const equal = Math.round(monster / (1 + bonus))
+
+  const hint = role === 'support' ? '快过神封' : '快过长生'
+
+  return { panel, equal, hint }
 }
 
 // 阵位布局：row = front(1人) / mid(2人) / back(2人)
@@ -54,7 +95,7 @@ const POSITIONS: PositionDef[] = [
 ]
 
 const ROLES: { key: Role; icon: string; label: string }[] = [
-  { key: 'support', icon: '💚', label: '辅助 · 抢神封' },
+  { key: 'support', icon: '💚', label: '封系/辅助 · 抢一速' },
   { key: 'physical', icon: '⚔️', label: '物理 · 快过长生' },
 ]
 
@@ -65,29 +106,69 @@ const AVATARS: Record<Role, Record<number, string>> = {
 }
 
 const TARGETS: Record<Role, string> = {
-  support: '🎯 辅助目标：快过神封（~900）',
-  physical: '🎯 物理目标：快过长生（~540）',
+  support: '🎯 封系/辅助目标：抢一速（对面流云凝滞都不会影响）',
+  physical: '🎯 物理目标：快过长生（稳定快过长生）',
 }
 
-// 顶层 Tab：地煞星（可用）/ 天罡星（占位）
-const tab = ref<'disha' | 'tiangang'>('disha')
-const role = ref<Role>('support')
+// 顶层 Tab：地煞星 / 天罡星（从 localStorage 恢复）
+const STORAGE_KEY_TAB = 'tiandikang:tab'
+const tab = ref<'disha' | 'tiangang'>(
+  (localStorage.getItem(STORAGE_KEY_TAB) as 'disha' | 'tiangang') || 'disha'
+)
+watch(tab, (v) => localStorage.setItem(STORAGE_KEY_TAB, v))
 
-// 109 地煞星气血数据
+const role = ref<Role>('support')
+const level = ref<number>(109)  // 默认109级
+
+// 109 地煞星气血数据（按类型分组）
 interface MonsterData {
   name: string
+  type?: string  // 类别标签（神封/长生）
   hp: string
   resistance: string
   note?: string
+  gif?: string  // 本地 GIF 动图（public/monsters_gif/）
+  highlight?: boolean  // 重点怪（主怪/神封/长生），气血抗性高亮
+  big?: boolean  // 大尺寸显示（幽灵/炎魔神）
+  small?: boolean  // 小尺寸显示（灵鹤）
+  shift?: boolean  // 左移显示（炎魔神武器长）
 }
 
-const MONSTER_DATA_109: MonsterData[] = [
-  { name: '主怪', hp: '2.2W', resistance: '双不抗' },
-  { name: '小夜、幽灵、鸭子、灵符', hp: '2.2W', resistance: '双不抗' },
-  { name: '大力、混沌兽', hp: '2W', resistance: '抗物理怕法术' },
-  { name: '律法、炎魔神', hp: '1.8W', resistance: '双抗' },
-  { name: '神封', hp: '3.5W', resistance: '-' },
-  { name: '长生', hp: '4W', resistance: '-' },
+interface MonsterGroup {
+  label: string
+  icon: string
+  monsters: MonsterData[]
+  row?: number  // 1=第一排，2=第二排
+}
+
+const MONSTER_GROUPS_109: MonsterGroup[] = [
+  { label: '狂攻', icon: '⚔️', monsters: [
+    { name: '小夜', hp: '2.2W', resistance: '双不抗', gif: '/monsters_gif/2096.gif' },
+    { name: '幽灵', hp: '2.2W', resistance: '双不抗', gif: '/monsters_gif/2078.gif', big: true },
+    { name: '大力', hp: '2W', resistance: '抗物理怕法术', gif: '/monsters_gif/2093.gif' },
+    { name: '律法', hp: '1.8W', resistance: '双抗', gif: '/monsters_gif/2086.gif' },
+  ]},
+  { label: '主怪', icon: '👑', monsters: [
+    { name: '主怪', hp: '2.2W', resistance: '双不抗' },
+  ]},
+  { label: '诡法', icon: '🔮', monsters: [
+    { name: '灵鹤', hp: '2.2W', resistance: '双不抗', gif: '/monsters_gif/2095.gif', small: true },
+    { name: '灵符', hp: '2.2W', resistance: '双不抗', gif: '/monsters_gif/2085.gif' },
+    { name: '混沌兽', hp: '2W', resistance: '抗物理怕法术', gif: '/monsters_gif/2130.gif' },
+    { name: '炎魔神', hp: '1.8W', resistance: '双抗', gif: '/monsters_gif/2097.gif', big: true, shift: true },
+  ]},
+  { label: '神封', icon: '🔒', monsters: [
+    { name: '鼠先锋', hp: '3.5W', resistance: '无抗性', highlight: true, gif: '/monsters_gif/2104.gif' },
+    { name: '吸血鬼', hp: '3.5W', resistance: '无抗性', highlight: true, gif: '/monsters_gif/2077.gif' },
+    { name: '雾中仙', hp: '3.5W', resistance: '无抗性', highlight: true, gif: '/monsters_gif/2094.gif' },
+    { name: '风伯', hp: '3.5W', resistance: '无抗性', highlight: true, gif: '/monsters_gif/2068.gif' },
+    { name: '兔子怪', hp: '3.5W', resistance: '无抗性', highlight: true, gif: '/monsters_gif/2001.gif' },
+  ], row: 2 },
+  { label: '长生', icon: '💚', monsters: [
+    { name: '雨师', hp: '4W', resistance: '无抗性', highlight: true, gif: '/monsters_gif/2283.gif' },
+    { name: '瑞兽', hp: '4W', resistance: '无抗性', highlight: true, gif: '/monsters_gif/2041.gif' },
+    { name: '龟丞相', hp: '4W', resistance: '无抗性', highlight: true, gif: '/monsters_gif/2064.gif' },
+  ], row: 2 },
 ]
 
 const SPECIAL_NOTES = [
@@ -596,7 +677,7 @@ const rows = computed(() => ({
 }))
 
 function speedOf(pos: number): SpeedData {
-  return DATA[role.value][pos]
+  return calcSpeedData(role.value, level.value, pos)
 }
 
 function avatarOf(pos: number): string {
@@ -609,7 +690,7 @@ function avatarOf(pos: number): string {
     <!-- 页头 -->
     <header class="tdk-header">
       <h1>⚔️ 天地砍王</h1>
-      <span class="badge">{{ tab === 'disha' ? '⭐ 109 地煞 · 鸟翔阵 · 速度配速' : '⭐ 天罡星 · 8组按周轮换' }}</span>
+      <span class="badge">{{ tab === 'disha' ? '⭐ 地煞星 · 多等级 · 鸟翔阵 · 速度配速' : '⭐ 天罡星 · 8组按周轮换' }}</span>
     </header>
 
     <!-- 顶层 Tab：地煞星 / 天罡星 -->
@@ -632,6 +713,33 @@ function avatarOf(pos: number): string {
         </button>
       </div>
 
+      <!-- 等级选择器 -->
+      <div class="level-selector">
+        <span class="level-label">等级：</span>
+        <button
+          v-for="lv in (role === 'support' ? LEVELS_SUPPORT : LEVELS_PHYSICAL)"
+          :key="lv"
+          :class="{ active: level === lv }"
+          @click="level = lv"
+        >
+          {{ lv }}级
+        </button>
+      </div>
+
+      <!-- 速度要求说明 -->
+      <div v-if="role === 'support'" class="speed-note">
+        💡 结算速度要求：<b>{{ SETTLE_SPEED_SUPPORT[level] }}</b>
+        <span class="speed-note-divider">|</span>
+        神封基础速度：<b class="shenfeng">{{ MONSTER_SPEED_SUPPORT[level] }}</b>
+        <span class="speed-note-tip">（达到结算速度，对面流云凝滞都不会影响）</span>
+      </div>
+      <div v-else class="speed-note">
+        💡 结算速度要求：<b>{{ SETTLE_SPEED_PHYSICAL[level] }}</b>
+        <span class="speed-note-divider">|</span>
+        长生基础速度：<b class="changsheng">{{ MONSTER_SPEED_PHYSICAL[level] }}</b>
+        <span class="speed-note-tip">（稳定快过长生，长生不受流云影响，只算乱敏）</span>
+      </div>
+
       <!-- 阵法图 -->
       <div class="battlefield">
         <div class="ground">
@@ -642,8 +750,8 @@ function avatarOf(pos: number): string {
                 <div class="avatar">{{ avatarOf(p.pos) }}</div>
                 <div class="pos-label">{{ p.label }}</div>
                 <div class="speed-data">
-                  <span class="steady">🛡{{ speedOf(p.pos).steady }}</span>
-                  <span class="limit">⚡{{ speedOf(p.pos).limit }}</span>
+                  <span class="panel">📋{{ speedOf(p.pos).panel }}</span>
+                  <span class="equal">⚡{{ speedOf(p.pos).equal }}</span>
                   <span class="hint">{{ speedOf(p.pos).hint }}</span>
                 </div>
               </div>
@@ -654,8 +762,8 @@ function avatarOf(pos: number): string {
                 <div class="avatar">{{ avatarOf(p.pos) }}</div>
                 <div class="pos-label">{{ p.label }}</div>
                 <div class="speed-data">
-                  <span class="steady">🛡{{ speedOf(p.pos).steady }}</span>
-                  <span class="limit">⚡{{ speedOf(p.pos).limit }}</span>
+                  <span class="panel">📋{{ speedOf(p.pos).panel }}</span>
+                  <span class="equal">⚡{{ speedOf(p.pos).equal }}</span>
                   <span class="hint">{{ speedOf(p.pos).hint }}</span>
                 </div>
               </div>
@@ -666,8 +774,8 @@ function avatarOf(pos: number): string {
                 <div class="avatar">{{ avatarOf(p.pos) }}</div>
                 <div class="pos-label">{{ p.label }}</div>
                 <div class="speed-data">
-                  <span class="steady">🛡{{ speedOf(p.pos).steady }}</span>
-                  <span class="limit">⚡{{ speedOf(p.pos).limit }}</span>
+                  <span class="panel">📋{{ speedOf(p.pos).panel }}</span>
+                  <span class="equal">⚡{{ speedOf(p.pos).equal }}</span>
                   <span class="hint">{{ speedOf(p.pos).hint }}</span>
                 </div>
               </div>
@@ -677,25 +785,55 @@ function avatarOf(pos: number): string {
         </div>
       </div>
 
-      <!-- 气血信息表格 -->
+      <!-- 气血信息卡片 -->
       <div class="hp-section">
         <h3 class="hp-title">📊 109 地煞星气血信息</h3>
-        <table class="hp-table">
-          <thead>
-            <tr>
-              <th>怪物</th>
-              <th>气血</th>
-              <th>抗性</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="m in MONSTER_DATA_109" :key="m.name">
-              <td class="monster-name">{{ m.name }}</td>
-              <td class="hp-value">{{ m.hp }}</td>
-              <td class="resistance">{{ m.resistance }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="hp-groups">
+          <!-- 第一排：狂攻、主怪、诡法 -->
+          <div class="hp-row">
+            <div v-for="g in MONSTER_GROUPS_109.filter(g => !g.row || g.row === 1)" :key="g.label" class="monster-group">
+              <div class="monster-group-label">{{ g.icon }} {{ g.label }}</div>
+              <div class="monster-grid">
+                <div v-for="m in g.monsters" :key="m.name" class="monster-card">
+                  <div class="monster-img-wrapper">
+                    <img v-if="m.gif" class="monster-img" :class="{ big: m.big, small: m.small, shift: m.shift }" :src="m.gif" :alt="m.name" loading="lazy" />
+                    <div v-else class="monster-img monster-placeholder">❓</div>
+                  </div>
+                  <div class="monster-info">
+                    <div class="monster-name">
+                      {{ m.name }}
+                      <span v-if="m.type" class="monster-type-badge">{{ m.type }}</span>
+                    </div>
+                    <div class="monster-hp">❤️ {{ m.hp }}</div>
+                    <div class="monster-resistance">🛡️ {{ m.resistance }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 第二排：神封、长生 -->
+          <div class="hp-row">
+            <div v-for="g in MONSTER_GROUPS_109.filter(g => g.row === 2)" :key="g.label" class="monster-group">
+              <div class="monster-group-label">{{ g.icon }} {{ g.label }}</div>
+              <div class="monster-grid">
+                <div v-for="m in g.monsters" :key="m.name" class="monster-card">
+                  <div class="monster-img-wrapper">
+                    <img v-if="m.gif" class="monster-img" :class="{ big: m.big, small: m.small, shift: m.shift }" :src="m.gif" :alt="m.name" loading="lazy" />
+                    <div v-else class="monster-img monster-placeholder">❓</div>
+                  </div>
+                  <div class="monster-info">
+                    <div class="monster-name">
+                      {{ m.name }}
+                      <span v-if="m.type" class="monster-type-badge">{{ m.type }}</span>
+                    </div>
+                    <div class="monster-hp">❤️ {{ m.hp }}</div>
+                    <div class="monster-resistance">🛡️ {{ m.resistance }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="hp-notes">
           <div v-for="(note, i) in SPECIAL_NOTES" :key="i" class="note-item">
             💡 {{ note }}
@@ -706,11 +844,12 @@ function avatarOf(pos: number): string {
       <!-- 图例 & 目标说明 -->
       <div class="tdk-footer">
         <div class="legend">
-          <span><span class="dot steady-dot"></span> 🛡 稳健（考虑乱敏）</span>
-          <span><span class="dot limit-dot"></span> ⚡ 极限（理论最低）</span>
+          <span><span class="dot panel-dot"></span> 📋 面板速度（稳定超过怪物）</span>
+          <span><span class="dot equal-dot"></span> ⚡ 刚好等于怪物</span>
         </div>
         <div class="target">{{ TARGETS[role] }}</div>
-        <div class="ref">长生~540 · 神封~900</div>
+        <div v-if="role === 'support'" class="ref">神封基础速度 {{ MONSTER_SPEED_SUPPORT[level] }}</div>
+        <div v-else class="ref">长生基础速度 {{ MONSTER_SPEED_PHYSICAL[level] }}</div>
       </div>
     </template>
 
@@ -895,6 +1034,79 @@ function avatarOf(pos: number): string {
   margin-right: 6px;
 }
 
+/* ===== 等级选择器 ===== */
+.level-selector {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  margin-top: 12px;
+}
+.level-label {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-right: 4px;
+}
+.level-selector button {
+  padding: 8px 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--bg-card);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.1s linear;
+}
+.level-selector button:hover {
+  color: var(--color-text);
+  border-color: rgba(34, 211, 238, 0.3);
+}
+.level-selector button.active {
+  background: rgba(34, 211, 238, 0.15);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.2);
+}
+
+/* ===== 速度说明 ===== */
+.speed-note {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--color-text);
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 6px;
+  padding: 12px 20px;
+  margin-top: 14px;
+}
+.speed-note b {
+  color: var(--color-success);
+  font-size: 18px;
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.6);
+}
+.speed-note b.shenfeng {
+  color: #f59e0b;
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
+.speed-note b.changsheng {
+  color: #3b82f6;
+  text-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+}
+.speed-note-divider {
+  color: var(--color-text-muted);
+  margin: 0 12px;
+}
+.speed-note-tip {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin-left: 8px;
+}
+
 /* ===== 阵法战场 ===== */
 .battlefield {
   position: relative;
@@ -1007,13 +1219,13 @@ function avatarOf(pos: number): string {
   padding: 8px 10px;
   font-variant-numeric: tabular-nums;
 }
-.position .speed-data .steady {
+.position .speed-data .panel {
+  color: #3b82f6;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
+}
+.position .speed-data .equal {
   color: #22c55e;
   text-shadow: 0 0 10px rgba(34, 197, 94, 0.7);
-}
-.position .speed-data .limit {
-  color: #f59e0b;
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
 }
 .position .speed-data .hint {
   font-size: 14px;
@@ -1054,41 +1266,132 @@ function avatarOf(pos: number): string {
   margin-bottom: 16px;
   letter-spacing: 1px;
 }
-.hp-table {
+/* ===== 怪物分组（两排整体居中）===== */
+.hp-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.hp-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 16px 40px;
+}
+.monster-group {
+  /* 组内自动排列，行容器负责居中 */
+}
+.monster-group-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+  padding-left: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+/* ===== 气血卡片网格 ===== */
+.monster-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+/* 图片外层容器：统一圆圈大小，图片在其内缩放不改变布局 */
+.monster-img-wrapper {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle, #1e293b 60%, #0f172a 100%);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.monster-img {
   width: 100%;
-  border-collapse: collapse;
-  font-family: var(--font-mono);
-  font-size: 17px;
+  height: 100%;
+  object-fit: contain;
 }
-.hp-table th,
-.hp-table td {
-  padding: 12px 18px;
-  text-align: left;
-  border-bottom: 1px solid rgba(34, 211, 238, 0.15);
+/* 大尺寸怪物（幽灵/炎魔神）：图片放大但圆圈不变 */
+.monster-img.big {
+  transform: scale(1.4);
 }
-.hp-table th {
+/* 灵鹤：图片缩小 */
+.monster-img.small {
+  transform: scale(0.72);
+}
+/* 炎魔神等长武器怪物：向左偏移以完整显示武器 */
+.monster-img.shift {
+  transform: scale(1.4) translateX(-8px);
+}
+.monster-placeholder {
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+.monster-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px;
+  width: 132px;
+  background: rgba(251, 191, 36, 0.06);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+.monster-card:hover {
+  background: rgba(34, 211, 238, 0.08);
+}
+/* 所有卡片气血抗性醒目 */
+.monster-card .monster-hp {
+  color: #fbbf24;
+  font-size: 16px;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+.monster-card .monster-resistance {
+  color: #f87171;
+  font-weight: 700;
+}
+.monster-info {
+  text-align: center;
+  width: 100%;
+}
+.monster-info .monster-name {
   font-size: 16px;
   font-weight: 700;
-  color: #94a3b8;
-  background: rgba(34, 211, 238, 0.08);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-.hp-table tbody tr:hover {
-  background: rgba(34, 211, 238, 0.05);
-}
-.hp-table .monster-name {
   color: #e2e8f0;
+  margin-bottom: 4px;
+}
+.monster-type-badge {
+  font-size: 11px;
   font-weight: 600;
+  color: #22d3ee;
+  background: rgba(34, 211, 238, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
-.hp-table .hp-value {
-  color: var(--color-accent);
+.monster-info .monster-hp {
+  font-size: 21px;
   font-weight: 700;
-  font-size: 22px;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+  color: #22d3ee;
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.6);
+  margin-bottom: 3px;
 }
-.hp-table .resistance {
-  color: #94a3b8;
+.monster-info .monster-resistance {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f472b6;
+  text-shadow: 0 0 8px rgba(244, 114, 182, 0.4);
 }
 .hp-notes {
   margin-top: 16px;
@@ -1096,6 +1399,7 @@ function avatarOf(pos: number): string {
   flex-direction: column;
   gap: 8px;
 }
+
 .note-item {
   font-family: var(--font-mono);
   font-size: 16px;
@@ -1138,11 +1442,11 @@ function avatarOf(pos: number): string {
   border-radius: 3px;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
 }
-.dot.steady-dot {
-  background: var(--color-success);
+.dot.panel-dot {
+  background: #3b82f6;
 }
-.dot.limit-dot {
-  background: var(--color-accent);
+.dot.equal-dot {
+  background: var(--color-success);
 }
 .tdk-footer .target {
   color: var(--color-primary);
@@ -1505,12 +1809,13 @@ function avatarOf(pos: number): string {
   .hp-section {
     padding: 16px 18px;
   }
-  .hp-table th,
-  .hp-table td {
-    padding: 8px 12px;
+  .monster-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
-  .hp-table {
-    font-size: 14px;
+  .monster-avatar {
+    width: 80px;
+    height: 80px;
   }
   .hp-title {
     font-size: 16px;
@@ -1548,10 +1853,19 @@ function avatarOf(pos: number): string {
     flex-direction: column;
     align-items: flex-start;
   }
-  .hp-table th,
-  .hp-table td {
-    padding: 6px 10px;
-    font-size: 13px;
+  .monster-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .monster-avatar {
+    width: 60px;
+    height: 60px;
+  }
+  .monster-info .monster-name {
+    font-size: 14px;
+  }
+  .monster-info .monster-hp {
+    font-size: 16px;
   }
   .note-item {
     font-size: 13px;

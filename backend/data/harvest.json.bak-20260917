@@ -1,0 +1,56 @@
+{
+  "samples": [
+    {
+      "id": "2bab86873e96",
+      "item_name": "静岳",
+      "category": "静岳",
+      "server": "梦幻西游",
+      "price": 90.0,
+      "price_type": "sell",
+      "stall_owner": "高收163回春",
+      "stall_id": "28429436",
+      "icon": "低级内丹/低级召唤兽内丹.png",
+      "collected_at": 1789659725,
+      "parent": "低级内丹"
+    },
+    {
+      "id": "d3db2fe9a1a0",
+      "item_name": "静岳",
+      "category": "静岳",
+      "server": "梦幻西游",
+      "price": 90.0,
+      "price_type": "sell",
+      "stall_owner": "高收163回春",
+      "stall_id": "28429436",
+      "icon": "低级内丹/低级召唤兽内丹.png",
+      "collected_at": 1789659725,
+      "parent": "低级内丹"
+    },
+    {
+      "id": "f197da66239d",
+      "item_name": "静岳",
+      "category": "静岳",
+      "server": "梦幻西游",
+      "price": 90.0,
+      "price_type": "sell",
+      "stall_owner": "高收163回春",
+      "stall_id": "28429436",
+      "icon": "低级内丹/低级召唤兽内丹.png",
+      "collected_at": 1789659725,
+      "parent": "低级内丹"
+    },
+    {
+      "id": "b2d001307a2a",
+      "item_name": "静岳",
+      "category": "静岳",
+      "server": "梦幻西游",
+      "price": 90.0,
+      "price_type": "sell",
+      "stall_owner": "高收163回春",
+      "stall_id": "28429436",
+      "icon": "低级内丹/低级召唤兽内丹.png",
+      "collected_at": 1789659725,
+      "parent": "低级内丹"
+    }
+  ]
+}

@@ -162,6 +162,27 @@
             border-right: 2px solid #4caf50;
             overflow: hidden;
         }
+        .result-box .wrong-btn {
+            margin-top: 12px;
+            width: 100%;
+            padding: 6px 0;
+            font-size: 13px;
+            color: #ffb74d;
+            background: transparent;
+            border: 1px solid #ffb74d;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .result-box .wrong-btn:hover {
+            background: rgba(255, 183, 77, 0.15);
+        }
+        .result-box .wrong-btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            border-color: #555;
+            color: #555;
+        }
         .result-box .answer-label {
             font-size: 14px;
             color: #8f98a0;
@@ -243,9 +264,40 @@
         .btn-c { color: #6bcb77; border-color: #6bcb77; } .btn-c:hover { background: #6bcb7722; }
         .btn-d { color: #4d96ff; border-color: #4d96ff; } .btn-d:hover { background: #4d96ff22; }
         .btn-skip { color: #888; border-color: #555; font-size: 13px; } .btn-skip:hover { background: #555333; }
+        .manual-mode { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: 12px; color: #d8d8d8; }
+        .manual-mode .mode-opt { cursor: pointer; }
+        .manual-mode input { vertical-align: middle; margin-right: 4px; }
+        .manual-hint { font-size: 11px; color: #8f98a0; margin-top: 6px; text-align:center; }
 
         /* 历史 */
         .history-section { flex: 1; overflow-y: auto; }
+        .history-item { position: relative; background: #1a2030; border: 1px solid #2a3550; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; }
+        .history-item .time { font-size: 11px; color: #6f7b8c; }
+        .history-item .q { font-size: 13px; color: #e6e6e6; margin: 2px 0; word-break: break-all; }
+        .history-item .a { font-size: 13px; color: #ffd93d; font-weight: bold; }
+        .history-fix-btn { position: absolute; top: 8px; right: 8px; font-size: 11px; padding: 2px 8px; background: #2a3550; color: #8ab4ff; border: 1px solid #3a4a6a; border-radius: 4px; cursor: pointer; }
+        .history-fix-btn:hover { background: #3a4a6a; }
+        .history-empty { color: #6f7b8c; font-size: 12px; text-align: center; padding: 20px 0; }
+
+        /* 题库管理弹窗 */
+        .cm-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; }
+        .cm-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 560px; max-width: 92vw; max-height: 80vh; background: #141a26; border: 1px solid #2a3550; border-radius: 10px; z-index: 1001; display: flex; flex-direction: column; }
+        .cm-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #2a3550; font-size: 15px; color: #e6e6e6; }
+        .cm-close { background: none; border: none; color: #8f98a0; font-size: 18px; cursor: pointer; }
+        .cm-toolbar { display: flex; gap: 10px; align-items: center; padding: 10px 16px; }
+        .cm-search { flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid #2a3550; background: #0e131c; color: #e6e6e6; font-size: 13px; }
+        .cm-count { font-size: 12px; color: #8f98a0; white-space: nowrap; }
+        .cm-list { flex: 1; overflow-y: auto; padding: 0 16px 12px; }
+        .cm-item { background: #1a2030; border: 1px solid #2a3550; border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; }
+        .cm-q { font-size: 13px; color: #e6e6e6; margin-bottom: 4px; word-break: break-all; }
+        .cm-a { font-size: 13px; color: #d8d8d8; margin-bottom: 8px; }
+        .cm-a b { color: #ffd93d; }
+        .cm-mode { font-size: 11px; color: #8ab4ff; margin-left: 6px; padding: 1px 6px; border: 1px solid #3a4a6a; border-radius: 4px; }
+        .cm-actions { display: flex; gap: 8px; }
+        .cm-actions button { font-size: 12px; padding: 4px 12px; border-radius: 5px; border: 1px solid #3a4a6a; background: #2a3550; color: #e6e6e6; cursor: pointer; }
+        .cm-actions button:hover { background: #3a4a6a; }
+        .cm-footer { padding: 10px 16px; border-top: 1px solid #2a3550; }
+        .cm-empty { color: #6f7b8c; font-size: 13px; text-align: center; padding: 30px 0; }
         .history-item {
             background: #1a1f2e;
             padding: 10px;
@@ -307,6 +359,9 @@
                         <button class="btn btn-secondary" onclick="exportManualCorrections()" id="exportCorrectionsBtn" style="font-size:12px;padding:6px 10px;display:none;">
                             📝 导出修正
                         </button>
+                        <button class="btn btn-secondary" onclick="openCorrectionManager()" style="font-size:12px;padding:6px 10px;">
+                            🗂 题库管理
+                        </button>
                     </div>
                     <span style="color:#8f98a0;font-size:11px;">哈希库: <span id="hashDBCount">0</span> 条 | 增量: <span id="hashDBNewCount" style="color:#FFD700;">0</span></span>
                 </div>
@@ -325,7 +380,10 @@
 
             <!-- 历史记录 -->
             <div class="history-section" id="historySection">
-                <div style="color:#8f98a0;font-size:12px;margin-bottom:8px;">📜 识别历史</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="color:#8f98a0;font-size:12px;">📜 识别历史</span>
+                    <button class="btn btn-secondary" onclick="clearHistory()" style="font-size:11px;padding:3px 8px;">清空</button>
+                </div>
                 <div id="historyList"></div>
             </div>
         </div>
@@ -338,6 +396,7 @@
                     <div class="answer-col">
                         <div class="answer-label">答案</div>
                         <div class="answer" id="resultAnswer">-</div>
+                        <button type="button" onclick="markAnswerWrong()" class="wrong-btn" id="wrongBtn" title="标记本题识别错误，保存截图供后续纠错">⚠ 标记错误</button>
                     </div>
                     <div class="question-col">
                         <div class="question-label">题目</div>
@@ -352,7 +411,11 @@
                 </div>
                 <!-- 手动设置正确答案 -->
                 <div id="manualOverride" class="manual-override">
-                    <div class="manual-title">⚠️ 选项匹配失败，手动指定正确答案：</div>
+                    <div class="manual-title">⚠️ 请选择正确答案，并指定错误类型：</div>
+                    <div class="manual-mode">
+                        <label class="mode-opt"><input type="radio" name="corrMode" value="text" checked> 文字错误（答案本身错，将修正题库答案）</label>
+                        <label class="mode-opt"><input type="radio" name="corrMode" value="box"> 框选错误（答案对，只是红框位置错）</label>
+                    </div>
                     <div class="manual-btns">
                         <button onclick="setManualCorrect('A')" class="manual-btn btn-a">A</button>
                         <button onclick="setManualCorrect('B')" class="manual-btn btn-b">B</button>
@@ -360,6 +423,7 @@
                         <button onclick="setManualCorrect('D')" class="manual-btn btn-d">D</button>
                         <button onclick="skipManualCorrect()" class="manual-btn btn-skip">跳过</button>
                     </div>
+                    <div id="manualOverrideHint" class="manual-hint"></div>
                 </div>
             </div>
 
@@ -404,11 +468,34 @@
         let questionChars = [];  // 预计算的字符集
         let history = [];
 
+        // ========== 用户纠错覆盖层 ==========
+        // 来自后端 user_corrections.json，作为最高优先级覆盖（内置库 -> 覆盖层 -> localStorage）
+        let userCorrections = [];            // 全量列表（供题库管理展示）
+        let userCorrectionsByStem = {};      // stemHash -> rec
+        let userCorrectionsByNorm = {};      // normQuestion -> rec（文字通道覆盖）
+
+        // 归一化题干：去固定前缀/计数/经验杂讯、去全部空白（与合并脚本一致），用于文字通道匹配 key
+        function normQuestionText(raw) {
+            let t = raw || '';
+            t = t.replace(/\n/g, ' ').replace(/\r/g, ' ');
+            const m = t.match(/题目[:：]\s*(.*)/);
+            if (m) t = m[1];
+            t = t.replace(/^礼部考题[，,]\s*/, '');
+            t = t.replace(/已答\d+题[，,]?\s*答对\d+题[。]?/g, '');
+            t = t.replace(/答对\d+题/g, '');
+            t = t.replace(/你?得到了[:：]?\s*\d+\s*点经验[。]?/g, '');
+            t = t.replace(/得到了\s*\d+\s*点经验/g, '');
+            t = t.replace(/\s+/g, '').trim();
+            return t;
+        }
+
         // ========== 手动修正哈希 ==========
         // 存储结构: { "stemPhash|stemDhash": { label: "C", hashes: {...} } }
         let manualCorrections = {};
         // 当前待修正的状态
         let pendingManualState = null;
+        // 最近一次成功识别的检测上下文（供"标记错误"时构造 pendingManualState）
+        let lastDetectState = null;
 
         function loadManualCorrections() {
             try {
@@ -748,13 +835,25 @@
 
                 // 哈希匹配成功，用选项哈希找正确位置（和对方一致，不OCR）
                 if (hashMatched) {
+                    // 0. 用户纠错覆盖层（最高优先级）：先覆盖答案
+                    const _liveStemKey = makeStemHash(stemHashes);
+                    const _liveUc = userCorrectionsByStem[_liveStemKey];
+                    if (_liveUc && _liveUc.answer) {
+                        hashMatched.answer = _liveUc.answer;
+                        console.log('[Keju] 哈希路径命中用户纠错覆盖层:', _liveUc.answer);
+                    }
                     // 方案A：答案文字已知，立即显示（不等选项OCR），消除"控制台有答案前端慢半拍"
                     updateResultText(qText, [{ q: qText, a: hashMatched.answer, categoryName: hashMatched.categoryName }], hashMatched.answer, hashMatched.categoryName);
                     // 立即画截图（无红框），让用户先看到题面；红框待选项定位后补全
                     if (qText !== lastQText) resultFrozen = false;  // 新题允许画
                     drawResultCanvas(canvas, grouped, null, true);
+                    // 0b. 用户纠错覆盖层：位置覆盖
+                    if (_liveUc && _liveUc.correctOptionHashes && optionHashes) {
+                        const _lbl = matchOptionByHash(optionHashes, _liveUc.correctOptionHashes);
+                        if (_lbl) correctOptionLabel = _lbl;
+                    }
                     // 1. 先查 hash-db.json 自带的 correctOptionHashes
-                    if (hashMatched.correctOptionHashes && optionHashes) {
+                    if (!correctOptionLabel && hashMatched.correctOptionHashes && optionHashes) {
                         correctOptionLabel = matchOptionByHash(optionHashes, hashMatched.correctOptionHashes);
                     }
                     // 2. 再查手动修正
@@ -796,6 +895,9 @@
                         lastQResult = { qText, correctOptionLabel };
                         lastQTimestamp = performance.now();
                         lastQHash = hash;
+                        // 记录最近一次成功识别的上下文，供"标记错误"复用
+                        lastDetectState = { canvas, grouped, stemHashes, optionHashes, qText, hashMatched, matchedAnswer: hashMatched?.answer };
+                        recordHistory();
                     }
                     // 结果冷却3秒，跳过答题过渡期间的垃圾扫描
                     resultCooldownUntil = performance.now() + 3000;
@@ -863,6 +965,16 @@
                 console.log(`[Keju] OCR 结果: qText="${qText}" len=${qText?.length||0}`);
                 if (qText && qText.length > 2) {
                     const matched = searchQuestions(qText);
+                    // 用户纠错覆盖层（文字通道）：命中则覆盖答案（题库无此题也能生效）
+                    const _ucNorm = userCorrectionsByNorm[normQuestionText(qText)];
+                    if (_ucNorm && _ucNorm.answer) {
+                        if (matched.length > 0) {
+                            matched[0] = { ...matched[0], a: _ucNorm.answer, _userCorrected: true };
+                        } else {
+                            matched.push({ q: qText, a: _ucNorm.answer, categoryName: '', _userCorrected: true });
+                        }
+                        console.log('[Keju] 文字通道命中用户纠错覆盖层:', _ucNorm.answer);
+                    }
                     // 方案A：题目文字已识别，立即显示（截图同步画，红框待选项OCR后补全）
                     if (qText !== lastQText) resultFrozen = false;
                     updateResultText(qText, matched, null, null);
@@ -957,6 +1069,9 @@
                     // 选项定位完成，补画红框（文字已先行显示）
                     drawResultCanvas(canvas, grouped, correctOptionLabel, true);
                     updateStatus('success', '✅ 识别成功');
+                    // 记录最近一次成功识别的上下文，供"标记错误"复用
+                    lastDetectState = { canvas, grouped, stemHashes, optionHashes, qText, hashMatched: null, matchedAnswer: matched?.length ? matched[0].a : null };
+                    recordHistory();
                     // 结果冷却3秒，跳过答题过渡期间的垃圾扫描
                     resultCooldownUntil = performance.now() + 3000;
                 } else {
@@ -1335,44 +1450,100 @@
         }
 
         // ========== 选项 OCR + 答案匹配 ==========
-        // 批量 OCR：一次请求处理4个选项，减少 HTTP 往返
-        async function ocrAndMatch(canvas, grouped, answerText) {
-            const cleanAnswer = answerText.replace(/[（(].*?[）)]/g, '').replace(/\s+/g, '').trim();
-            if (!cleanAnswer) return null;
-
-            const answerChars = new Set(cleanAnswer.replace(/[^一-龥]/g, ''));
-
-            // 裁剪辅助：用指定 padding 裁剪选项
-            const cropWithPad = (opt, pad) => cropRegion(canvas, {
+        // ========== 选项 OCR + 答案匹配（A' 拼图单次OCR） ==========
+        // 把4个选项裁图横向拼成1条，单次OCR，按x坐标映射回A/B/C/D
+        function cropWithPad(opt, canvas, pad) {
+            return cropRegion(canvas, {
                 x1: Math.max(0, opt.x1 - pad),
                 y1: Math.max(0, opt.y1 - pad),
                 x2: Math.min(canvas.width, opt.x2 + pad),
                 y2: Math.min(canvas.height, opt.y2 + pad)
             });
+        }
 
-            // 第一轮：pad=20 批量 OCR（1次请求处理4张）
-            const pad1 = 20;
-            const crops1 = grouped.options.map(opt => cropWithPad(opt, pad1));
-            const texts1 = await runBatchOCR(crops1);
-            const results = grouped.options.map((opt, i) => ({ label: opt.label, text: texts1[i] || '', cropW: crops1[i].width, cropH: crops1[i].height }));
+        // 把选项按 label 顺序横向拼成一条长图，返回 strip canvas 与每个选项的 x 范围
+        function buildOptionStrip(options, canvas, pad) {
+            const crops = options.map(opt => cropWithPad(opt, canvas, pad));
+            const gap = 30;  // 选项间留白，防止 PP-OCR 跨选项合并
+            const h = Math.max(...crops.map(c => c.height));
+            const totalW = crops.reduce((s, c) => s + c.width, 0) + gap * (crops.length - 1);
+            const strip = document.createElement('canvas');
+            strip.width = totalW;
+            strip.height = h;
+            const ctx = strip.getContext('2d');
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, totalW, h);
+            let x = 0;
+            const ranges = [];
+            crops.forEach((c, i) => {
+                ctx.drawImage(c, x, 0);
+                ranges.push({ label: options[i].label, x0: x, x1: x + c.width });
+                x += c.width + gap;
+            });
+            return { strip, ranges };
+        }
 
-            // 检查空结果，对空的选项用更大 pad 重试（也批量）
-            const retryOpts = results.filter(r => !r.text.trim()).map(r => grouped.options.find(o => o.label === r.label)).filter(Boolean);
-            if (retryOpts.length > 0) {
-                const retryCrops = retryOpts.map(opt => cropWithPad(opt, 40));
-                const retryTexts = await runBatchOCR(retryCrops);
-                retryOpts.forEach((opt, i) => {
-                    const r = results.find(r2 => r2.label === opt.label);
-                    if (r) { r.text = retryTexts[i] || ''; r.cropW = retryCrops[i].width; r.cropH = retryCrops[i].height; }
-                    console.log(`[Keju] 选项${opt.label} pad=20 OCR为空，pad=40 重试: "${(retryTexts[i]||'').slice(0,20)}"`);
-                });
+        function rangeLabelForCx(ranges, cx) {
+            if (!cx) return null;
+            for (const r of ranges) {
+                if (cx >= r.x0 && cx <= r.x1) return r.label;
             }
+            return null;
+        }
 
-            const optionOcrTexts = {};
-            for (const { label, text } of results) {
-                optionOcrTexts[label] = text;
+        function assignDetsToOptions(dets, ranges, options) {
+            const map = {};
+            options.forEach(o => map[o.label] = '');
+            for (const det of dets) {
+                const label = rangeLabelForCx(ranges, det.cx);
+                if (label) map[label] += (map[label] ? ' ' : '') + (det.text || '');
             }
-            console.log('[Keju] 选项OCR分配 (批量):', JSON.stringify(optionOcrTexts));
+            return map;
+        }
+
+        async function runStripOCR(stripCanvas) {
+            const blob = await new Promise(resolve => stripCanvas.toBlob(b => resolve(b), 'image/png'));
+            const formData = new FormData();
+            formData.append('img', blob, 'strip.png');
+            const resp = await fetch('/api/ocr/options-strip', { method: 'POST', body: formData });
+            if (!resp.ok) throw new Error(`strip OCR HTTP ${resp.status}`);
+            const data = await resp.json();
+            return data.dets || [];
+        }
+
+        // 拼图单次OCR：返回 {A:'..',B:'..',C:'..',D:'..'}
+        async function ocrOptionsToTexts(canvas, grouped) {
+            const pad = 20;
+            try {
+                const { strip, ranges } = buildOptionStrip(grouped.options, canvas, pad);
+                const dets = await runStripOCR(strip);
+                const map = assignDetsToOptions(dets, ranges, grouped.options);
+                // 空选项用更大 pad 重试（同样拼图单次）
+                const empties = grouped.options.filter(o => !map[o.label]?.trim());
+                if (empties.length > 0) {
+                    const { strip: s2, ranges: r2 } = buildOptionStrip(grouped.options, canvas, 40);
+                    const dets2 = await runStripOCR(s2);
+                    const map2 = assignDetsToOptions(dets2, r2, grouped.options);
+                    for (const o of empties) if (map2[o.label]?.trim()) map[o.label] = map2[o.label];
+                }
+                return map;
+            } catch (e) {
+                console.warn('[Keju] 拼图OCR失败, 回退batch:', e);
+                const crops = grouped.options.map(opt => cropWithPad(opt, canvas, pad));
+                const texts = await runBatchOCR(crops);
+                const map = {};
+                grouped.options.forEach((opt, i) => map[opt.label] = texts[i] || '');
+                return map;
+            }
+        }
+
+        async function ocrAndMatch(canvas, grouped, answerText) {
+            const cleanAnswer = answerText.replace(/[（(].*?[）)]/g, '').replace(/\s+/g, '').trim();
+            if (!cleanAnswer) return null;
+
+            const answerChars = new Set(cleanAnswer.replace(/[^一-龥]/g, ''));
+            const optionOcrTexts = await ocrOptionsToTexts(canvas, grouped);
+            console.log('[Keju] 选项OCR分配 (拼图):', JSON.stringify(optionOcrTexts));
 
             // Jaccard 模糊匹配：找和答案汉字重叠最多的选项字母
             let bestLabel = null, bestScore = 0;
@@ -1391,7 +1562,6 @@
                 }
             }
 
-            // 无阈值，始终返回最佳匹配（红框总比没有好）
             if (bestLabel) {
                 console.log(`[Keju] 答案匹配: ${cleanAnswer} → ${bestLabel} (Jaccard=${bestScore.toFixed(2)})`);
                 return bestLabel;
@@ -1605,6 +1775,44 @@
                 console.error('[Keju] 本地哈希库加载失败:', e);
             }
 
+            // 3. 加载用户纠错覆盖层 user_corrections.json（最高优先级）
+            try {
+                const resp = await fetch('/mhxy/static/user_corrections.json');
+                if (resp.ok) {
+                    const corr = await resp.json();
+                    userCorrections = Array.isArray(corr) ? corr : [];
+                    userCorrectionsByStem = {};
+                    userCorrectionsByNorm = {};
+                    let applied = 0;
+                    for (const rec of userCorrections) {
+                        if (rec.stemHash) {
+                            userCorrectionsByStem[rec.stemHash] = rec;
+                            // 若内置库已有该 stem，直接覆盖 answer/position；否则新建一条供 hash 路径命中
+                            const entry = hashDB.get(rec.stemHash);
+                            if (entry) {
+                                if (rec.answer) entry.answer = rec.answer;
+                                if (rec.correctOptionHashes) entry.correctOptionHashes = rec.correctOptionHashes;
+                            } else if (rec.answer) {
+                                hashDB.set(rec.stemHash, {
+                                    stemHash: rec.stemHash,
+                                    questionText: rec.questionText || '',
+                                    answer: rec.answer,
+                                    correctOptionHashes: rec.correctOptionHashes || {},
+                                    categoryName: ''
+                                });
+                            }
+                            applied++;
+                        }
+                        if (rec.normQuestion) {
+                            userCorrectionsByNorm[rec.normQuestion] = rec;
+                        }
+                    }
+                    console.log('[Keju] 用户纠错覆盖层已加载:', userCorrections.length, '条，已应用 hash 覆盖', applied);
+                }
+            } catch (e) {
+                console.log('[Keju] 无用户纠错覆盖层');
+            }
+
             hashDBEntries = Array.from(hashDB.values());
             updateHashDBCounts();
         }
@@ -1701,6 +1909,8 @@
 
         loadHashDB();
         loadManualCorrections();
+        loadHistory();
+        renderHistory();
 
         function simpleHash(canvas, region) {
             const crop = cropRegion(canvas, region);
@@ -1783,10 +1993,6 @@
                     document.getElementById('resultMeta').textContent = categoryName ? `分类: ${categoryName}` : '-';
                 }
                 panel.classList.add('active');
-                // 添加历史
-                if (matched && matched.length > 0) {
-                    addToHistory(qText, matched[0]);
-                }
             } catch(e) {
                 console.error('[Keju] updateResultText异常:', e);
             }
@@ -1842,30 +2048,170 @@
             drawResultCanvas(canvas, grouped, correctOptionLabel, false);
         }
 
-        function addToHistory(qText, matched) {
-            history.unshift({ time: new Date().toLocaleTimeString(), q: qText, a: matched.a });
-            if (history.length > 20) history.pop();
+        // ========== 识别历史（持久化 + 可纠错）==========
+        const HISTORY_KEY = 'keju_history_v1';
+        const HISTORY_MAX = 60;
+        const HISTORY_THUMB_W = 560;   // 缩略图最大宽度（避免 localStorage 配额爆掉）
 
-            const el = document.getElementById('historyList');
-            el.innerHTML = history.map(h => `
-                <div class="history-item">
-                    <div class="time">${h.time}</div>
-                    <div class="q">${h.q.slice(0, 50)}${h.q.length > 50 ? '...' : ''}</div>
-                    <div class="a">${h.a}</div>
-                </div>
-            `).join('');
+        function loadHistory() {
+            try {
+                const raw = localStorage.getItem(HISTORY_KEY);
+                if (raw) history = JSON.parse(raw);
+            } catch (e) { history = []; }
         }
 
+        function renderHistory() {
+            const el = document.getElementById('historyList');
+            if (!el) return;
+            if (!history.length) {
+                el.innerHTML = '<div class="history-empty">暂无识别记录</div>';
+                return;
+            }
+            el.innerHTML = history.map((h, i) => {
+                const q = h.q || '';
+                return `
+                <div class="history-item">
+                    <div class="time">${h.time || ''}</div>
+                    <div class="q">${q.slice(0, 40)}${q.length > 40 ? '...' : ''}</div>
+                    <div class="a">${h.a || ''}</div>
+                    <button class="history-fix-btn" onclick="correctHistory(${i})">纠错</button>
+                </div>`;
+            }).join('');
+        }
+
+        function pushHistory(q, a, snap) {
+            history.unshift({ time: new Date().toLocaleTimeString(), q, a, snap });
+            if (history.length > HISTORY_MAX) history.length = HISTORY_MAX;
+            // 配额保护：超限时逐步丢弃最旧记录再试
+            for (let attempt = 0; attempt < 12; attempt++) {
+                try {
+                    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+                    break;
+                } catch (e) {
+                    if (history.length <= 1) break;
+                    history.length = Math.max(1, Math.floor(history.length * 0.7));
+                }
+            }
+            renderHistory();
+        }
+
+        // 在识别完成时调用：从 lastDetectState + 显示 canvas 抓取快照（缩略图 + 归一化坐标）
+        function recordHistory() {
+            try {
+                const cv = document.getElementById('resultCanvas');
+                if (!cv || !cv.width) return;
+                const lds = lastDetectState;
+                if (!lds || !lds.grouped) return;
+                const q = document.getElementById('resultQuestion').textContent || (lds.qText || '');
+                const a = document.getElementById('resultAnswer').textContent || '';
+
+                // 生成缩略图
+                const scale = Math.min(1, HISTORY_THUMB_W / cv.width);
+                const tw = Math.max(1, Math.round(cv.width * scale));
+                const th = Math.max(1, Math.round(cv.height * scale));
+                const thumb = document.createElement('canvas');
+                thumb.width = tw; thumb.height = th;
+                thumb.getContext('2d').drawImage(cv, 0, 0, tw, th);
+                let dataUrl;
+                try { dataUrl = thumb.toDataURL('image/jpeg', 0.7); } catch (e) { return; }
+
+                // 选项坐标归一化（相对原图），重建时按缩略图尺寸还原
+                const ow = cv.width, oh = cv.height;
+                const opts = (lds.grouped.options || []).map(o => ({
+                    label: o.label,
+                    nx1: o.x1 / ow, ny1: o.y1 / oh, nx2: o.x2 / ow, ny2: o.y2 / oh,
+                    hashes: (lds.optionHashes || []).find(h => h.label === o.label)?.hashes || null
+                }));
+                const snap = {
+                    canvasDataUrl: dataUrl,
+                    thumbW: tw, thumbH: th,
+                    qText: lds.qText || q,
+                    stemHashes: lds.stemHashes || null,
+                    optionHashes: lds.optionHashes || null,
+                    matchedAnswer: lds.matchedAnswer || null,
+                    options: opts
+                };
+                pushHistory(q, a, snap);
+            } catch (e) {
+                console.warn('[Keju] recordHistory 失败(忽略):', e);
+            }
+        }
+
+        // 历史纠错：重建 pendingManualState 并弹出纠错面板
+        window.correctHistory = function(index) {
+            const h = history[index];
+            if (!h || !h.snap) { updateStatus('warn', '⚠ 该记录无快照，无法纠错'); return; }
+            const snap = h.snap;
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+                canvas.getContext('2d').drawImage(img, 0, 0);
+                // 归一化坐标 → 缩略图坐标
+                const ow = canvas.width, oh = canvas.height;
+                const options = (snap.options || []).map(o => ({
+                    label: o.label,
+                    x1: Math.round((o.nx1 ?? o.x1) * ow),
+                    y1: Math.round((o.ny1 ?? o.y1) * oh),
+                    x2: Math.round((o.nx2 ?? o.x2) * ow),
+                    y2: Math.round((o.ny2 ?? o.y2) * oh)
+                }));
+                const grouped = { options };
+                pendingManualState = {
+                    canvas, grouped,
+                    stemHashes: snap.stemHashes,
+                    optionHashes: snap.optionHashes,
+                    hashMatched: null,
+                    matchedAnswer: snap.matchedAnswer,
+                    qText: snap.qText,
+                    sourceFile: null
+                };
+                resultFrozen = false;
+                drawResultCanvas(canvas, grouped, null, true);
+                updateStatus('info', '📝 正在纠错历史记录，请选择正确答案与错误类型');
+            };
+            img.src = snap.canvasDataUrl;
+        };
+
+        window.clearHistory = function() {
+            history = [];
+            try { localStorage.removeItem(HISTORY_KEY); } catch (e) {}
+            renderHistory();
+        };
+
         // ========== 手动修正正确答案 ==========
-        window.setManualCorrect = function(label) {
+        window.setManualCorrect = async function(label) {
             if (!pendingManualState) return;
-            const { stemHashes, optionHashes, hashMatched, matchedAnswer, qText } = pendingManualState;
+            const { canvas, grouped, stemHashes, optionHashes, hashMatched, matchedAnswer, qText, sourceFile } = pendingManualState;
             const stemKey = makeStemHash(stemHashes);
             const correctOpt = optionHashes.find(o => o.label === label);
             if (!correctOpt) { console.warn('[Keju] 手动修正: 找不到选项', label); return; }
 
-            // 更新 manualCorrections
-            const answerText = (hashMatched?.answer || matchedAnswer || '').slice(0, 60);
+            // 读取错误类型
+            const mode = (document.querySelector('input[name="corrMode"]:checked') || {}).value || 'text';
+
+            // 取得所点选项的正确文字：优先用快照里的 optionTexts（历史纠错），否则实时 OCR
+            let clickedText = '';
+            if (pendingManualState.optionTexts && pendingManualState.optionTexts[label]) {
+                clickedText = pendingManualState.optionTexts[label];
+            } else {
+                try {
+                    const texts = await ocrOptionsToTexts(canvas, grouped);
+                    clickedText = (texts[label] || '').trim();
+                } catch (e) { console.warn('[Keju] 选项OCR失败:', e); }
+            }
+
+            // 决定存入的答案文字
+            let answerText;
+            if (mode === 'box') {
+                // 框选错误：答案文字本身正确，仅修正红框位置 → 沿用原答案文字
+                answerText = (hashMatched?.answer || matchedAnswer || '').slice(0, 60);
+            } else {
+                // 文字错误：答案文字本身错 → 以所点选项 OCR 文字作为正确答案
+                answerText = (clickedText || hashMatched?.answer || matchedAnswer || '').slice(0, 60);
+            }
+
+            // 1) localStorage 位置覆盖（保留原有行为）
             manualCorrections[stemKey] = {
                 label: label,
                 hashes: correctOpt.hashes,
@@ -1875,19 +2221,53 @@
             };
             saveManualCorrections();
 
-            // 同步更新 in-memory hashDB
-            const memEntry = hashDB.get(stemKey);
-            if (memEntry) {
-                memEntry.correctOptionHashes = correctOpt.hashes;
+            // 2) 写入后端 user_corrections.json 覆盖层（跨刷新/跨设备持久）
+            const rec = {
+                stemHash: stemKey,
+                questionText: qText || '',
+                normQuestion: normQuestionText(qText || ''),
+                answer: answerText,
+                correctOptionHashes: correctOpt.hashes,
+                mode: mode
+            };
+            try {
+                await fetch('/api/keju/hash-db/upsert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(rec)
+                });
+                // 更新 in-memory 覆盖层索引，立即生效
+                userCorrections = userCorrections.filter(r => r.stemHash !== stemKey && r.normQuestion !== rec.normQuestion);
+                userCorrections.push(rec);
+                userCorrectionsByStem[stemKey] = rec;
+                if (rec.normQuestion) userCorrectionsByNorm[rec.normQuestion] = rec;
+                // 同步 in-memory hashDB
+                const memEntry = hashDB.get(stemKey);
+                if (memEntry) {
+                    memEntry.answer = answerText;
+                    memEntry.correctOptionHashes = correctOpt.hashes;
+                }
+                console.log(`[Keju] 纠错已写入覆盖层: mode=${mode} label=${label} answer=${answerText}`);
+            } catch (e) {
+                console.error('[Keju] 写入覆盖层失败(仅本机 localStorage 生效):', e);
             }
 
-            console.log(`[Keju] 手动修正已保存: stemKey=${stemKey} label=${label} 总计=${Object.keys(manualCorrections).length}条`);
+            // 3) 若来自错题库截图，标记该截图已纠正
+            if (sourceFile) {
+                try {
+                    await fetch('/api/keju/wrong-capture/mark-corrected', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ file: sourceFile, correctAnswer: answerText })
+                    });
+                } catch (e) { console.warn('[Keju] 标记错题库已纠正失败:', e); }
+            }
+
             document.getElementById('manualOverride').classList.remove('active');
-            // 更新结果显示
             document.getElementById('resultAnswer').textContent = answerText || '未知';
             // 红框重画
             const cv = document.getElementById('resultCanvas');
-            const opt = pendingManualState.grouped.options.find(o => o.label === label);
+            const opt = (grouped.options || []).find(o => o.label === label);
             if (cv && opt) {
                 const ctx = cv.getContext('2d');
                 ctx.save();
@@ -1897,13 +2277,86 @@
                 ctx.restore();
             }
             pendingManualState = null;
-            updateStatus('success', '✅ 手动修正已保存');
+            updateStatus('success', mode === 'box' ? '✅ 框选错误已修正（位置）' : '✅ 文字错误已修正（已更新题库）');
         };
 
         window.skipManualCorrect = function() {
             pendingManualState = null;
             document.getElementById('manualOverride').classList.remove('active');
             console.log('[Keju] 跳过手动修正');
+        };
+
+        // ========== 标记答案错误：保存截图 + 弹出重选面板 ==========
+        window.markAnswerWrong = async function() {
+            if (!lastDetectState) {
+                updateStatus('warn', '⚠ 暂无可标记的结果');
+                console.warn('[Keju] markAnswerWrong: lastDetectState 为空');
+                return;
+            }
+            const btn = document.getElementById('wrongBtn');
+            const cv = document.getElementById('resultCanvas');
+            if (!cv || !cv.width) {
+                updateStatus('warn', '⚠ 截图不可用');
+                return;
+            }
+
+            // 1) 收集当前展示的元信息
+            const qText = document.getElementById('resultQuestion').textContent || lastDetectState.qText || '';
+            const recognizedAnswer = document.getElementById('resultAnswer').textContent || '';
+            const metaText = document.getElementById('resultMeta').textContent || '';
+            const catMatch = metaText.match(/分类:\s*(.+?)\s*$/);
+            const categoryName = catMatch ? catMatch[1] : metaText.replace(/^匹配:.*?\|?\s*/, '').trim();
+
+            // 2) 把当前 canvas 截图转成 PNG blob
+            const blob = await new Promise(resolve => cv.toBlob(b => resolve(b), 'image/png'));
+            if (!blob) {
+                updateStatus('warn', '⚠ 截图生成失败');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '保存中…';
+            let savedFile = '';
+            try {
+                const form = new FormData();
+                form.append('img', blob, 'wrong.png');
+                form.append('data', JSON.stringify({
+                    qText: qText,
+                    recognizedAnswer: recognizedAnswer,
+                    categoryName: categoryName
+                }));
+                const resp = await fetch('/api/keju/mark-wrong', { method: 'POST', body: form });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok || !data.success) {
+                    throw new Error(data.error || ('HTTP ' + resp.status));
+                }
+                savedFile = data.file || '';
+                console.log('[Keju] 标记错误截图已保存:', data.file);
+                updateStatus('success', '✅ 已保存错误截图，请重选答案');
+            } catch (e) {
+                console.error('[Keju] 标记错误保存失败:', e);
+                updateStatus('warn', '⚠ 截图保存失败: ' + e.message);
+                btn.disabled = false;
+                btn.textContent = '⚠ 标记错误';
+                return;
+            }
+
+            // 3) 弹出已有手动重选面板（A/B/C/D），复用 lastDetectState 作为待修正状态
+            pendingManualState = {
+                canvas: lastDetectState.canvas,
+                grouped: lastDetectState.grouped,
+                stemHashes: lastDetectState.stemHashes,
+                optionHashes: lastDetectState.optionHashes,
+                hashMatched: lastDetectState.hashMatched || null,
+                matchedAnswer: lastDetectState.matchedAnswer || null,
+                qText: lastDetectState.qText,
+                sourceFile: savedFile
+            };
+            resultFrozen = false;
+            // 用 null 标签重画 → 触发手动修正面板显示（drawResultCanvas 内部逻辑）
+            drawResultCanvas(lastDetectState.canvas, lastDetectState.grouped, null, true);
+            btn.disabled = false;
+            btn.textContent = '⚠ 标记错误';
         };
 
         // 导出手动修正数据（可合并到 hash-db.json）
@@ -2008,13 +2461,25 @@
 
                     // 哈希匹配成功，用选项哈希找正确位置（和对方一致，不OCR）
                     if (hashMatched) {
+                        const stemKey = makeStemHash(stemHashes);
+                        // 0. 用户纠错覆盖层（最高优先级）：先覆盖答案，再覆盖位置
+                        const uc = userCorrectionsByStem[stemKey];
+                        if (uc) {
+                            if (uc.answer) hashMatched.answer = uc.answer;
+                            if (uc.correctOptionHashes && optionHashes) {
+                                const lbl = matchOptionByHash(optionHashes, uc.correctOptionHashes);
+                                if (lbl) {
+                                    correctOptionLabel = lbl;
+                                    console.log(`[Keju] 用户覆盖层命中(位置): label=${lbl}`);
+                                }
+                            }
+                        }
                         // 1. 先查 hash-db.json 的 correctOptionHashes
-                        if (hashMatched.correctOptionHashes && optionHashes) {
+                        if (!correctOptionLabel && hashMatched.correctOptionHashes && optionHashes) {
                             correctOptionLabel = matchOptionByHash(optionHashes, hashMatched.correctOptionHashes);
                         }
                         // 2. 再查手动修正
                         if (!correctOptionLabel) {
-                            const stemKey = makeStemHash(stemHashes);
                             const correction = manualCorrections[stemKey];
                             if (correction && optionHashes) {
                                 correctOptionLabel = matchOptionByHash(optionHashes, correction.hashes);
@@ -2032,6 +2497,8 @@
                         }
                         console.log(`[Keju] 总耗时(哈希): ${(performance.now()-t0).toFixed(0)}ms`);
                         showResult(canvas, grouped, qText, [{ q: qText, a: hashMatched.answer, categoryName: hashMatched.categoryName }], correctOptionLabel);
+                        lastDetectState = { canvas, grouped, stemHashes, optionHashes, qText, hashMatched, matchedAnswer: hashMatched?.answer };
+                        recordHistory();
                         updateStatus('success', '✅ 哈希匹配');
                         return;
                     }
@@ -2129,6 +2596,8 @@
 
                         console.log(`[Keju] 总耗时: ${(performance.now()-t0).toFixed(0)}ms`);
                         showResult(canvas, grouped, qText, matched, correctOptionLabel);
+                        lastDetectState = { canvas, grouped, stemHashes, optionHashes, qText, hashMatched: null, matchedAnswer: matched?.length ? matched[0].a : null };
+                        recordHistory();
                         updateStatus('success', '✅ 识别成功');
                     }
                 } else {
@@ -2168,6 +2637,90 @@
             img.src = URL.createObjectURL(file);
         }
 
+        // ========== 题库管理（用户纠错覆盖层）==========
+        window.openCorrectionManager = async function() {
+            document.getElementById('corrManagerMask').style.display = 'block';
+            document.getElementById('corrManager').style.display = 'block';
+            try {
+                const resp = await fetch('/mhxy/static/user_corrections.json?t=' + Date.now());
+                if (resp.ok) {
+                    const arr = await resp.json();
+                    userCorrections = Array.isArray(arr) ? arr : [];
+                }
+            } catch (e) { /* 忽略，用内存中的 */ }
+            renderCorrManager();
+        };
+        window.closeCorrectionManager = function() {
+            document.getElementById('corrManagerMask').style.display = 'none';
+            document.getElementById('corrManager').style.display = 'none';
+        };
+        function renderCorrManager() {
+            const list = document.getElementById('cmList');
+            const kw = (document.getElementById('cmSearch').value || '').trim();
+            const items = (userCorrections || []).filter(r => {
+                if (!kw) return true;
+                return (r.questionText || '').includes(kw) || (r.normQuestion || '').includes(kw) || (r.answer || '').includes(kw);
+            });
+            document.getElementById('cmCount').textContent = `共 ${items.length} 条`;
+            if (!items.length) { list.innerHTML = '<div class="cm-empty">暂无纠错数据（识别时纠错后会自动出现在这里）</div>'; return; }
+            list.innerHTML = items.map(r => {
+                const idx = userCorrections.indexOf(r);
+                return `<div class="cm-item">
+                    <div class="cm-q">${escapeHtml(r.questionText || r.normQuestion || '(无题干)')}</div>
+                    <div class="cm-a">答案: <b>${escapeHtml(r.answer || '')}</b><span class="cm-mode">${r.mode === 'box' ? '框选错误' : '文字错误'}</span></div>
+                    <div class="cm-actions">
+                        <button onclick="cmEdit(${idx})">改答案</button>
+                        <button onclick="cmDelete(${idx})">删除</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        window.cmEdit = async function(idx) {
+            const r = userCorrections[idx];
+            if (!r) return;
+            const nv = prompt('修改正确答案：', r.answer || '');
+            if (nv === null) return;
+            const answer = nv.trim();
+            if (!answer) return;
+            try {
+                const resp = await fetch('/api/keju/hash-db/upsert', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        stemHash: r.stemHash, questionText: r.questionText, normQuestion: r.normQuestion,
+                        answer, correctOptionHashes: r.correctOptionHashes, mode: r.mode || 'text'
+                    })
+                });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                Object.assign(r, { answer });
+                userCorrectionsByStem[r.stemHash] = Object.assign({}, r);
+                if (r.normQuestion) userCorrectionsByNorm[r.normQuestion] = Object.assign({}, r);
+                const memEntry = hashDB.get(r.stemHash);
+                if (memEntry) memEntry.answer = answer;
+                renderCorrManager();
+                updateStatus('success', '✅ 答案已更新');
+            } catch (e) { console.error(e); updateStatus('warn', '⚠ 更新失败: ' + e.message); }
+        };
+        window.cmDelete = async function(idx) {
+            const r = userCorrections[idx];
+            if (!r) return;
+            if (!confirm('确认删除该纠错条目？删除后此题将恢复内置库答案。')) return;
+            try {
+                const resp = await fetch('/api/keju/hash-db/delete', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stemHash: r.stemHash, normQuestion: r.normQuestion })
+                });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                userCorrections.splice(idx, 1);
+                delete userCorrectionsByStem[r.stemHash];
+                if (r.normQuestion) delete userCorrectionsByNorm[r.normQuestion];
+                renderCorrManager();
+                updateStatus('success', '✅ 已删除');
+            } catch (e) { console.error(e); updateStatus('warn', '⚠ 删除失败: ' + e.message); }
+        };
+        function escapeHtml(s) {
+            return (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
         // ========== 启动 ==========
         init();
     </script>
@@ -2175,5 +2728,22 @@
     <div id="helpMount" data-module="keju"></div>
     <script src="/mhxy/static/help-data.js"></script>
     <script src="/mhxy/static/help-common.js"></script>
+
+    <!-- 题库管理弹窗 -->
+    <div id="corrManagerMask" class="cm-mask" style="display:none;" onclick="if(event.target===this)closeCorrectionManager()"></div>
+    <div id="corrManager" class="cm-modal" style="display:none;">
+        <div class="cm-header">
+            <span>🗂 题库管理（用户纠错覆盖层）</span>
+            <button class="cm-close" onclick="closeCorrectionManager()">✕</button>
+        </div>
+        <div class="cm-toolbar">
+            <input id="cmSearch" class="cm-search" placeholder="按题干搜索…" oninput="renderCorrManager()">
+            <span class="cm-count" id="cmCount"></span>
+        </div>
+        <div class="cm-list" id="cmList"></div>
+        <div class="cm-footer">
+            <span style="color:#8f98a0;font-size:11px;">覆盖层独立于内置库，不会被合并脚本重置。删除仅影响本地纠错。</span>
+        </div>
+    </div>
 </body>
 </html>

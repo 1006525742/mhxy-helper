@@ -1,0 +1,11 @@
+[
+  {
+    "stemHash": "verify:stem:1",
+    "questionText": "御前科举大赛第12关：这一关考的是古代常识。题目：元曲四大家不包括",
+    "normQuestion": "元曲四大家不包括",
+    "answer": "金圣叹",
+    "correctOptionHashes": null,
+    "mode": "text",
+    "time": "2026-09-14T11:41:00"
+  }
+]

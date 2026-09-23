@@ -2,11 +2,24 @@
 import { computed, ref } from 'vue'
 import type { SpeedChaosDef } from '@/calculators/engine/types'
 import { computeSpeedChaos, computeChaosCheck, type ChaosUnitType } from '@/calculators/services/calcEngine'
+import { loadPersist, watchPersist } from '@/calculators/services/calcPersist'
 
 const props = defineProps<{ def: SpeedChaosDef }>()
 
-const panel = ref(601)
-const tianArray = ref(true)
+// 输入项本机存档（须弥面板 / 天阵 / 乱敏判定四个字段），刷新不丢
+const LS_KEY = 'mhxy_speedchaos_v1'
+interface ScPersist {
+  panel: number
+  tianArray: boolean
+  lowPanel: number
+  lowType: ChaosUnitType
+  highPanel: number
+  highType: ChaosUnitType
+}
+const sv = loadPersist<ScPersist>(LS_KEY)
+
+const panel = ref(sv?.panel ?? 601)
+const tianArray = ref(sv?.tianArray ?? true)
 
 const res = computed(() => computeSpeedChaos(props.def, panel.value, tianArray.value))
 
@@ -18,13 +31,27 @@ const xumiRange = computed(() => {
 })
 
 // 乱敏判定：低速单元 / 高速单元
-const lowPanel = ref(802)
-const lowType = ref<ChaosUnitType>('人物')
-const highPanel = ref(887)
-const highType = ref<ChaosUnitType>('人物')
+const lowPanel = ref(sv?.lowPanel ?? 802)
+const lowType = ref<ChaosUnitType>(sv?.lowType ?? '人物')
+const highPanel = ref(sv?.highPanel ?? 887)
+const highType = ref<ChaosUnitType>(sv?.highType ?? '人物')
 
 const chaos = computed(() =>
   computeChaosCheck(lowPanel.value, lowType.value, highPanel.value, highType.value, tianArray.value),
+)
+
+// 所有输入项声明完毕后再注册自动保存
+watchPersist(
+  LS_KEY,
+  [panel, tianArray, lowPanel, lowType, highPanel, highType],
+  () => ({
+    panel: panel.value,
+    tianArray: tianArray.value,
+    lowPanel: lowPanel.value,
+    lowType: lowType.value,
+    highPanel: highPanel.value,
+    highType: highType.value,
+  }),
 )
 
 // 速度建议参考（估价表仅收录的单行数据，仅供对照）

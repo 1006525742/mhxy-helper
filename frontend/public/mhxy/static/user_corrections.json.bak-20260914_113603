@@ -1,0 +1,11 @@
+[
+  {
+    "stemHash": "test:stem:001",
+    "questionText": "测试题：这是一道测试题",
+    "normQuestion": "这是一道测试题",
+    "answer": "更新后的答案",
+    "correctOptionHashes": null,
+    "mode": "text",
+    "time": "2026-09-14T11:36:03"
+  }
+]

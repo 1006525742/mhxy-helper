@@ -18,7 +18,7 @@
 │     ↓ 尺寸: (bbox.w+10) × (bbox.h×4, 限制100-280px)              │
 │                                                                 │
 │  4. POST 到后端 API                                              │
-│     https://api.mhwk.cloud/api/ghost/capture                    │
+│     https://yjmhxy.top/api/ghost/capture                    │
 │     ↓ base64 PNG 图片                                            │
 └───────────────────────┬─────────────────────────────────────────┘
                         ↓

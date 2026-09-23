@@ -8,9 +8,12 @@ const props = withDefaults(defineProps<{
   displayPreview?: boolean
   /** 竖条上显示的模块名，如「挖图监控」「分图监控」，用于区分不同模块 */
   label?: string
+  /** 是否显示「🖼 浮窗预览」按钮与浮窗。传 false 可隐藏（模块自带预览时用） */
+  showFloat?: boolean
 }>(), {
   displayPreview: true,
-  label: '分图监控'
+  label: '分图监控',
+  showFloat: true
 })
 
 const emit = defineEmits<{
@@ -26,7 +29,7 @@ const showPreviewFloat = ref(false)
 
 /** 竖条文案：未监控=开始监控，监控中=分图监控·监控中 */
 const railLabel = computed(() =>
-  isSharing.value ? '分图监控·监控中' : '开始监控'
+  isSharing.value ? `${props.label}·监控中` : `开始${props.label.replace(/监控$/, '')}`
 )
 
 const previewImage = ref('')
@@ -34,7 +37,13 @@ const previewImage = ref('')
 const imgRef = ref<HTMLImageElement | null>(null)
 const overlayRef = ref<HTMLCanvasElement | null>(null)
 
-let previewLoopId: number | null = null
+// 预览刷新率（fps）。
+// ⚠️ 原来是 requestAnimationFrame（随屏幕刷新率跑到 60~120fps）每帧都执行
+//    canvas.toDataURL()：全屏 JPEG 编码 + 生成几百 KB 的 base64 字符串 + <img> 重新解码渲染。
+//    等于每秒 ~18MB 字符串 + 60~120 次全屏编解码，CPU/GPU 与内存被打满 → 渲染进程 OOM 崩溃
+//    （表现就是「点开监控后浏览器闪退」）。人眼看预览根本不需要这么高帧率，5fps 足够。
+const PREVIEW_FPS = 5
+let previewTimer: ReturnType<typeof setTimeout> | null = null
 
 interface OverlayDetection {
   className: string
@@ -65,8 +74,8 @@ async function startShare() {
   if (success) {
     isSharing.value = true
     emit('started')
-    // 仅在需要展示预览时才跑预览循环，节省性能
-    if (props.displayPreview) startPreviewLoop()
+    // 浮窗默认收起 → 循环不起来，开启监控本身零额外开销
+    syncPreviewLoop()
   } else {
     emit('error', '屏幕共享失败')
   }
@@ -88,27 +97,35 @@ function stopShare() {
  * 开始预览循环（仅 displayPreview=true 时）
  */
 function startPreviewLoop() {
-  const loop = () => {
+  stopPreviewLoop()
+  if (!props.displayPreview) return
+  const tick = () => {
     if (!screenCapture.isActive()) return
-
     const frame = screenCapture.getPreviewFrame()
-    if (frame) {
-      previewImage.value = frame
-    }
-
-    previewLoopId = requestAnimationFrame(loop)
+    if (frame) previewImage.value = frame
+    previewTimer = setTimeout(tick, Math.round(1000 / PREVIEW_FPS))
   }
-  loop()
+  tick()
 }
 
 /**
  * 停止预览循环
  */
 function stopPreviewLoop() {
-  if (previewLoopId) {
-    cancelAnimationFrame(previewLoopId)
-    previewLoopId = null
+  if (previewTimer) {
+    clearTimeout(previewTimer)
+    previewTimer = null
   }
+}
+
+/**
+ * 按需启停预览循环：只有**浮窗真正展开可见**时才跑。
+ * 之前只要开启监控就无脑跑（哪怕浮窗一直收着、用户根本没在看），白烧 CPU —— 闪退主因之一。
+ */
+function syncPreviewLoop() {
+  const visible = isSharing.value && showPreviewFloat.value && props.showFloat && props.displayPreview
+  if (visible) startPreviewLoop()
+  else stopPreviewLoop()
 }
 
 /**
@@ -133,6 +150,20 @@ function getVideoSize() {
 }
 
 /**
+ * 暴露内部 video 元素，供前端本地推理（YOLO）直接取原始帧
+ */
+function getVideoElement(): HTMLVideoElement | null {
+  return screenCapture.getVideoElement()
+}
+
+/**
+ * 获取最新预览帧（供外部组件轮询，用于模块自带的预览区）
+ */
+function getPreviewFrame(): string | null {
+  return screenCapture.getPreviewFrame()
+}
+
+/**
  * 确保屏幕共享 video 仍在播放（页面被遮挡/切后台后浏览器可能暂停，重新 play 恢复帧解码）
  */
 function ensurePlaying() {
@@ -147,6 +178,7 @@ function onRailClick() {
 /** 切换预览浮窗显隐 */
 function togglePreviewFloat() {
   showPreviewFloat.value = !showPreviewFloat.value
+  syncPreviewLoop()          // 展开才开始取帧，收起立刻停（不再后台空跑）
 }
 
 /**
@@ -232,6 +264,8 @@ defineExpose({
   captureRegion,
   captureFull,
   getVideoSize,
+  getVideoElement,
+  getPreviewFrame,
   drawOverlay,
   startShare,
   stopShare,
@@ -260,12 +294,12 @@ onUnmounted(() => {
 
     <!-- 监控中：竖排控制按钮（附在竖条右侧） -->
     <div v-if="isSharing" class="rail-actions">
-      <button class="mini-btn" @click.stop="togglePreviewFloat" :title="showPreviewFloat ? '隐藏画面' : '显示画面'">🖼</button>
+      <button v-if="showFloat" class="mini-btn" @click.stop="togglePreviewFloat" :title="showPreviewFloat ? '隐藏画面' : '显示画面'">🖼</button>
       <button class="mini-btn" @click.stop="stopShare" title="停止监控">✕</button>
     </div>
 
     <!-- 预览浮窗（左下角，不挡右侧地图） -->
-    <div v-if="isSharing && showPreviewFloat" class="preview-float">
+    <div v-if="isSharing && showPreviewFloat && showFloat" class="preview-float">
       <div class="pf-head">
         <span>📺 监控画面</span>
         <button class="mini-btn" @click="togglePreviewFloat" title="关闭">✕</button>

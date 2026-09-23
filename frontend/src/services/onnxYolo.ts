@@ -4,12 +4,30 @@
  */
 import * as ort from 'onnxruntime-web'
 
+// 自托管 ONNX wasm 推理引擎
+// wasm 走本地 public/ort-wasm（生产构建直接当静态文件；dev 下由 vite.config.ts
+// 的 ort-wasm 中间件在 Vite transform 之前直送，绕开「public 文件不可当模块 import」限制）。
+// 强制单线程：onnxruntime-web 默认多线程需要服务端返回 COOP/COEP 跨域隔离头，
+// 而 VPS nginx 没有这些头，浏览器会拒绝多线程 wasm。单线程版免跨域隔离，本地/VPS 均可正常加载。
+ort.env.wasm.wasmPaths = '/ort-wasm/'
+ort.env.wasm.numThreads = 1
+
 // 配置
 const CONFIG = {
   inputSize: 640,
   confidenceThreshold: 0.5,
   nmsThreshold: 0.5
 }
+
+// 运行时输入尺寸（不同模型可能不同，如 dati=480）
+let curInputSize = CONFIG.inputSize
+// 运行时置信度阈值（dati 用 0.4，宝图等默认 0.5）
+let curConfThreshold = CONFIG.confidenceThreshold
+// 是否使用 letterbox 预处理（保持宽高比 + 灰 114 填充）。
+// YOLO 训练普遍采用 letterbox，推理必须一致，否则框会偏。
+// mhxyai 的 useYoloDetector 也是这套（fillStyle rgb(114,114,114) + 记录 scale/padX/padY）。
+// 默认关闭以兼容既有模块（宝图等历史行为），dati 显式开启。
+let curLetterbox = false
 
 export interface Detection {
   x1: number
@@ -24,6 +42,10 @@ export interface Detection {
 export interface YOLOConfig {
   modelPath: string
   classNames?: string[]
+  inputSize?: number
+  confidenceThreshold?: number
+  /** 保持宽高比的 letterbox 预处理（YOLO 标准做法）。dati 必须开启，否则检测框会偏。 */
+  letterbox?: boolean
 }
 
 let session: ort.InferenceSession | null = null
@@ -38,7 +60,14 @@ export async function initYOLO(config: YOLOConfig): Promise<boolean> {
     if (config.classNames) {
       classNames = config.classNames
     }
-    console.log('YOLO 模型加载成功:', session.inputNames, session.outputNames)
+    if (config.inputSize) {
+      curInputSize = config.inputSize
+    }
+    if (typeof config.confidenceThreshold === 'number') {
+      curConfThreshold = config.confidenceThreshold
+    }
+    curLetterbox = config.letterbox === true
+    console.log('YOLO 模型加载成功:', session.inputNames, session.outputNames, 'inputSize=', curInputSize, 'letterbox=', curLetterbox)
     return true
   } catch (e) {
     console.error('YOLO 模型加载失败:', e)
@@ -56,17 +85,32 @@ export async function runYOLO(imageData: ImageData): Promise<Detection[]> {
   }
 
   const { width, height, data } = imageData
-  const inputSize = CONFIG.inputSize
+  const inputSize = curInputSize
 
-  // 创建输入 tensor (1, 3, 640, 640)
+  // 创建输入 tensor (1, 3, inputSize, inputSize)
   const input = new Float32Array(3 * inputSize * inputSize)
-  const scaleX = width / inputSize
-  const scaleY = height / inputSize
 
-  for (let y = 0; y < inputSize; y++) {
-    for (let x = 0; x < inputSize; x++) {
-      const srcX = Math.floor(x * scaleX)
-      const srcY = Math.floor(y * scaleY)
+  // letterbox 参数：保持宽高比缩放后居中，四周填灰 114（YOLO 训练/推理标准）
+  // 反算原图坐标： origX = (modelX - padX) / scale
+  const scale = curLetterbox
+    ? Math.min(inputSize / width, inputSize / height)
+    : 1
+  const newW = curLetterbox ? Math.round(width * scale) : inputSize
+  const newH = curLetterbox ? Math.round(height * scale) : inputSize
+  const padX = (inputSize - newW) / 2
+  const padY = (inputSize - newH) / 2
+  const padVal = 114 / 255
+
+  if (curLetterbox) input.fill(padVal)
+
+  for (let y = 0; y < newH; y++) {
+    for (let x = 0; x < newW; x++) {
+      // 目标像素 (dstX, dstY) 在 inputSize 网格上的位置
+      const dstX = x + padX
+      const dstY = y + padY
+      // 源像素：letterbox 时按比例映射，否则按拉伸映射
+      const srcX = curLetterbox ? Math.min(width - 1, Math.floor(x / scale)) : Math.floor(x * width / inputSize)
+      const srcY = curLetterbox ? Math.min(height - 1, Math.floor(y / scale)) : Math.floor(y * height / inputSize)
       const srcIdx = (srcY * width + srcX) * 4
 
       // RGB 归一化到 0-1
@@ -74,10 +118,14 @@ export async function runYOLO(imageData: ImageData): Promise<Detection[]> {
       const g = data[srcIdx + 1] / 255
       const b = data[srcIdx + 2] / 255
 
-      // CHW 格式
-      input[0 * inputSize * inputSize + y * inputSize + x] = r
-      input[1 * inputSize * inputSize + y * inputSize + x] = g
-      input[2 * inputSize * inputSize + y * inputSize + x] = b
+      // CHW 格式（写入取整后的网格位置）
+      const gx = Math.round(dstX)
+      const gy = Math.round(dstY)
+      if (gx >= inputSize || gy >= inputSize) continue
+      const di = gy * inputSize + gx
+      input[0 * inputSize * inputSize + di] = r
+      input[1 * inputSize * inputSize + di] = g
+      input[2 * inputSize * inputSize + di] = b
     }
   }
 
@@ -133,12 +181,18 @@ export async function runYOLO(imageData: ImageData): Promise<Detection[]> {
       }
     }
 
-    if (maxClassConf > CONFIG.confidenceThreshold) {
+    if (maxClassConf > curConfThreshold) {
+      // 模型网格坐标 -> 原图坐标
+      // letterbox: (m - pad) / scale；非 letterbox(拉伸): m * size / inputSize
+      const toX = (m: number) => (curLetterbox ? (m - padX) / scale : m * width / inputSize)
+      const toY = (m: number) => (curLetterbox ? (m - padY) / scale : m * height / inputSize)
+      const clampX = (v: number) => Math.max(0, Math.min(width, v))
+      const clampY = (v: number) => Math.max(0, Math.min(height, v))
       boxes.push({
-        x1: (cx - w / 2) * width / inputSize,
-        y1: (cy - h / 2) * height / inputSize,
-        x2: (cx + w / 2) * width / inputSize,
-        y2: (cy + h / 2) * height / inputSize,
+        x1: clampX(toX(cx - w / 2)),
+        y1: clampY(toY(cy - h / 2)),
+        x2: clampX(toX(cx + w / 2)),
+        y2: clampY(toY(cy + h / 2)),
         conf: maxClassConf,
         classId,
         className: classNames[classId]

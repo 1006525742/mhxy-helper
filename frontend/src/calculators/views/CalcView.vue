@@ -5,6 +5,7 @@ import { getCalc } from '@/calculators/data/calcs'
 import { usePriceStore } from '@/stores/priceStore'
 import { compute, inputMaxLevel, type CalcInput, type CalcResult } from '@/calculators/services/calcEngine'
 import { resolveCalc, hasOverride } from '@/calculators/services/calcOverride'
+import { loadPersist, watchPersist } from '@/calculators/services/calcPersist'
 import type { LevelModel, SynthesisDef, LevelCostDef, AnimalSetDef, FixedDamageDef, FixedDamageWeaponDef, SpeedChaosDef, VitalityDef } from '@/calculators/engine/types'
 import PriceBar from '@/calculators/components/PriceBar.vue'
 import LevelInput from '@/calculators/components/LevelInput.vue'
@@ -32,6 +33,37 @@ const matPrice = ref(0)
 const fruitPrice = ref(80)
 // 多技能分别计算（师门技能）：每 slot 独立区间
 const skillLevels = ref<Record<string, { from: number; to: number }>>({})
+
+// ===== 本页输入本地存档（按计算器 id 分别存，刷新不丢）=====
+// 与 priceStore(mhxy_price_v1)、calcOverride、VitalityView 同为 localStorage 方案，无账号、无后端。
+const LS_PREFIX = 'mhxy_calc_input_'
+const lsKey = (id: string) => LS_PREFIX + id
+
+interface CalcInputSave {
+  matPrice?: number // 合成类：1级材料单价（万）
+  fruitPrice?: number // 召唤兽修炼：修炼果单价（万）
+  model?: LevelModel // 养成类（非多技能）：起始/目标等级 + 数量
+  skillLevels?: Record<string, { from: number; to: number }> // 多技能养成：各槽位区间
+}
+
+// 任一输入变化 → 写入本机存档
+watchPersist(
+  () => (calc.value ? lsKey(calc.value.id) : ''),
+  [() => calc.value?.id, matPrice, fruitPrice, model, skillLevels],
+  () => {
+    const c = calc.value
+    const payload: CalcInputSave = {}
+    if (!c) return payload
+    if (c.type === 'synthesis') {
+      payload.matPrice = matPrice.value
+    } else if (c.type === 'levelcost') {
+      payload.fruitPrice = fruitPrice.value
+      if ((c as LevelCostDef).multiEntry) payload.skillLevels = skillLevels.value
+      else payload.model = model.value
+    }
+    return payload
+  },
+)
 
 const isMultiEntry = computed(
   () => calc.value?.type === 'levelcost' && !!(calc.value as LevelCostDef).multiEntry,
@@ -71,6 +103,20 @@ watch(
       const top = inputMaxLevel(c)
       for (const s of (c as LevelCostDef).slots) init[s.key] = { from: mn, to: s.maxLevel ?? top }
       skillLevels.value = init
+    }
+
+    // 默认值设完后，再用本机存档覆盖（必须是最后一步，否则会被上面的默认值冲掉）
+    const sv = loadPersist<CalcInputSave>(lsKey(c.id))
+    if (sv) {
+      if (c.type === 'synthesis' && typeof sv.matPrice === 'number') matPrice.value = sv.matPrice
+      if (c.type === 'levelcost') {
+        if (typeof sv.fruitPrice === 'number') fruitPrice.value = sv.fruitPrice
+        if ((c as LevelCostDef).multiEntry) {
+          if (sv.skillLevels) skillLevels.value = { ...skillLevels.value, ...sv.skillLevels }
+        } else if (sv.model) {
+          model.value = { ...model.value, ...sv.model }
+        }
+      }
     }
   },
   { immediate: true },
@@ -156,9 +202,13 @@ const hasHelp = computed(() => calc.value?.type === 'synthesis' && !!(window as 
     <!-- 合成类：1级材料价格 -->
     <div class="cv-extra card" v-if="calc.type === 'synthesis'">
       <label class="cv-extra-field">
-        <span>1级{{ calc.unit }}价格（万梦幻币）</span>
-        <input type="number" v-model.number="matPrice" min="0" step="1" />
+        <span>{{ calc.unit }}价格（万梦幻币）</span>
+        <input type="number" v-model.number="matPrice" min="0" step="0.1" />
+        <small class="cv-unit-hint">支持小数，如 4.5</small>
       </label>
+      <div class="cv-save-row">
+        <span class="cv-save-tip">已自动保存到本机，下次打开自动填入</span>
+      </div>
     </div>
 
     <!-- 养成类（非多技能）：逐槽汇总表 -->
@@ -222,7 +272,23 @@ const hasHelp = computed(() => calc.value?.type === 'synthesis' && !!(window as 
   border: 1px solid var(--border-color);
   border-radius: 4px;
   color: var(--color-text);
-  font-size: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.cv-save-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cv-save-tip {
+  font-size: 11.5px;
+  color: var(--color-success);
+}
+.cv-unit-hint {
+  font-size: 11px;
+  color: var(--color-text-muted);
 }
 .cv-notfound {
   color: var(--color-warning);

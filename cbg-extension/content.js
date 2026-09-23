@@ -1456,6 +1456,12 @@
       if (baseArgs.level_max) params.set('level_max', baseArgs.level_max)
       if (baseArgs.server_type) params.set('server_type', baseArgs.server_type)
       if (baseArgs.serverid) params.set('serverid', baseArgs.serverid)
+      // 价格范围（分，与 buildArgs 一致）：让官网侧先过滤一层，减少无效翻页
+      if (baseArgs.price_min) params.set('price_min', baseArgs.price_min)
+      if (baseArgs.price_max) params.set('price_max', baseArgs.price_max)
+      // 门派（逗号分隔的 iSchool ID，与 buildArgs 一致）：官网侧先过滤一层
+      if (baseArgs.school) params.set('school', baseArgs.school)
+      if (baseArgs.school_change_list) params.set('school_change_list', baseArgs.school_change_list)
 
       const baseUrl = 'https://xyq.cbg.163.com/cgi-bin/recommend.py?' + params.toString()
       const fetchAll = !!msg.fetchAll
@@ -1475,6 +1481,27 @@
       }, 110000)
 
       function roleSleep(ms) { return new Promise(function (r) { setTimeout(r, ms) }) }
+
+      // 本地兜底过滤：保证采集结果与「去搜索」按相同条件严格一致。
+      // recommd_by_role 未必可靠支持 price/school 等参数（旧版就丢过），故在扩展端二次校验，
+      // 避免采进超出条件（价格/门派）的角色。it.price 为元；baseArgs.price_* 为分；
+      // baseArgs.school / school_change_list 为逗号分隔的 iSchool ID；it.attrs['门派'] 为门派名。
+      function rolePassFilters(it) {
+        if (!it || !it.eid) return false
+        if (it.price != null) {
+          const fen = it.price * 100
+          if (baseArgs.price_min && fen < Number(baseArgs.price_min)) return false
+          if (baseArgs.price_max && fen > Number(baseArgs.price_max)) return false
+        }
+        const schoolNames = []
+        if (baseArgs.school) baseArgs.school.split(',').forEach(function (id) { if (SCHOOL_MAP[id]) schoolNames.push(SCHOOL_MAP[id]) })
+        if (baseArgs.school_change_list) baseArgs.school_change_list.split(',').forEach(function (id) { if (SCHOOL_MAP[id]) schoolNames.push(SCHOOL_MAP[id]) })
+        if (schoolNames.length) {
+          const s = it.attrs && it.attrs['门派']
+          if (!s || schoolNames.indexOf(s) < 0) return false
+        }
+        return true
+      }
 
       function withRolePage(page) {
         const u = new URL(baseUrl)
@@ -1506,7 +1533,7 @@
             if (!roleList.length && json.status !== undefined && json.status !== 1) {
               throw new Error(json.msg || json.status_code || '请求失败')
             }
-            const items = roleList.map(parseRoleItem).filter(function (it) { return it && it.eid })
+            const items = roleList.map(parseRoleItem).filter(rolePassFilters)
             return { items: items, pager: json.pager || null }
           })
       }
@@ -1526,8 +1553,8 @@
         const warmArgs = {}
         if (baseArgs.level_min) warmArgs.level_min = Number(baseArgs.level_min)
         if (baseArgs.level_max) warmArgs.level_max = Number(baseArgs.level_max)
-        if (baseArgs.price_min) warmArgs.price_min = Math.round(Number(baseArgs.price_min) * 100) // 单位转分，与网站 buildArgs 一致
-        if (baseArgs.price_max) warmArgs.price_max = Math.round(Number(baseArgs.price_max) * 100)
+        if (baseArgs.price_min) warmArgs.price_min = Number(baseArgs.price_min) // 已是分（buildArgs 已元×100），勿再乘
+        if (baseArgs.price_max) warmArgs.price_max = Number(baseArgs.price_max)
         if (baseArgs.school) warmArgs.school = baseArgs.school
         if (baseArgs.server_type) warmArgs.server_type = baseArgs.server_type
         const fd = new URLSearchParams()

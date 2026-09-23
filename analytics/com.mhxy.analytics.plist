@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple/DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mhxy.analytics</string>
+
+    <!-- 入口：系统 Python（零依赖，标准库 http.server + sqlite3） -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/zhy/mhxy-helper/analytics/analytics_server.py</string>
+    </array>
+
+    <!-- 工作目录 -->
+    <key>WorkingDirectory</key>
+    <string>/Users/zhy/mhxy-helper/analytics</string>
+
+    <!-- 登录自启 + 崩溃自动重启 -->
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- 日志 -->
+    <key>StandardOutPath</key>
+    <string>/Users/zhy/mhxy-helper/analytics/logs/analytics.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/zhy/mhxy-helper/analytics/logs/analytics.stdout.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+</dict>
+</plist>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>易经梦幻西游 · 访问统计（本地）</title>
+<style>
+  :root{
+    /* 色板抄自 jiabanma.com（深夜加班风）：墨绿黑底 + 米白字 + 金/青绿强调 */
+    --bg:#101310; --bg-card:#1a1e1a; --border:#343a33;
+    --primary:#f2cb84; --accent:#78c7bd; --text:#f4f0e7; --muted:#97a091;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:1200px;margin:0 auto;padding:24px 20px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+  h1{font-size:20px;margin:0}
+  h1 .dot{color:var(--primary)}
+  .sub{color:var(--muted);font-size:13px;margin-top:4px}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .controls button{background:var(--bg-card);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:13px}
+  .controls button.active{border-color:var(--primary);color:var(--primary);box-shadow:0 0 12px rgba(34,211,238,.2)}
+  .controls button:hover{border-color:var(--primary)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  .card .k{color:var(--muted);font-size:12px}
+  .card .v{font-size:26px;font-weight:700;margin-top:6px;color:var(--primary)}
+  .card .v.gold{color:var(--accent)}
+  .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:18px}
+  .panel h2{font-size:15px;margin:0 0 14px;color:var(--text)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+  th{color:var(--muted);font-weight:600}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  /* 模块排行：前 3 列按内容定宽（标题紧凑不散），占比列吃满剩余 → 整表撑满卡片不留白 */
+  table.modtable{table-layout:fixed;width:100%}
+  table.modtable th:nth-child(1),table.modtable td:nth-child(1){width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  table.modtable th:nth-child(2),table.modtable td:nth-child(2){width:110px}
+  table.modtable th:nth-child(3),table.modtable td:nth-child(3){width:80px}
+  /* 第 4 列（占比进度条）不设宽 → 自动占满剩余空间 */
+  @media(max-width:760px){
+    table.modtable th:nth-child(1),table.modtable td:nth-child(1){width:110px}
+    table.modtable th:nth-child(2),table.modtable td:nth-child(2){width:80px}
+    table.modtable th:nth-child(3),table.modtable td:nth-child(3){width:60px}
+  }
+  .bar{height:8px;background:linear-gradient(90deg,#78c7bd,#5da89f);border-radius:4px}
+  .bar.gold{background:linear-gradient(90deg,#f2cb84,#e0a35e)}
+  .barwrap{background:#0c1320;border-radius:4px;min-width:120px}
+  /* 排行表：固定布局，名称列吃剩余且不换行 → 城市名横向排列，不再逐字竖排 */
+  table.ctable,table.ptable{table-layout:fixed}
+  table.ctable th:nth-child(1),table.ctable td:nth-child(1){width:30px;white-space:nowrap}
+  table.ctable th:nth-child(2),table.ctable td:nth-child(2){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  table.ctable th:nth-child(3),table.ctable td:nth-child(3){width:54px;white-space:nowrap}
+  table.ctable th:nth-child(4),table.ctable td:nth-child(4){width:46px;white-space:nowrap}
+  table.ctable th:nth-child(5),table.ctable td:nth-child(5){width:84px}
+  table.ctable .barwrap{min-width:0}
+  table.ptable th:nth-child(1),table.ptable td:nth-child(1){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  table.ptable th:nth-child(2),table.ptable td:nth-child(2){width:64px;white-space:nowrap}
+  table.ptable th:nth-child(3),table.ptable td:nth-child(3){width:54px;white-space:nowrap}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.charts{grid-template-columns:1fr}}
+  .geogrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  @media(max-width:900px){.geogrid{grid-template-columns:1fr}}
+  .mapgrid{display:grid;grid-template-columns:1fr 320px;gap:16px}
+  @media(max-width:980px){.mapgrid{grid-template-columns:1fr}}
+  .note{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.6}
+  .chart-title{font-size:13px;color:var(--muted);margin-bottom:8px}
+  svg{width:100%;height:auto;display:block}
+  .bar-rect{fill:#78c7bd}
+  .bar-rect.alt{fill:#f2cb84}
+  .axis{fill:var(--muted);font-size:10px}
+  .foot{color:var(--muted);font-size:12px;margin-top:20px;text-align:center}
+  .err{color:#ff6b6b}
+  #cnmap{width:100%;height:auto;display:block;border-radius:8px;background:#0c120f}
+  .rk{display:inline-block;width:20px;color:var(--muted)}
+  .rk.top{color:var(--accent);font-weight:700}
+  .legend{display:flex;gap:14px;align-items:center;color:var(--muted);font-size:12px;margin-top:10px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--primary);opacity:.6;margin-right:4px}
+  .maphint{display:none}
+  /* ---- 深色底图 + 呼吸光点（仿 jiabanma「今晚，哪里还亮着」）---- */
+  .mapwrap{position:relative}
+  #dotLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:8px}
+  .mdot{position:absolute;left:0;top:0;width:0;height:0;pointer-events:auto;cursor:pointer;
+        display:flex;align-items:center;justify-content:center;will-change:transform}
+  .mdot i{
+    display:block;border-radius:50%;flex:0 0 auto;
+    background:radial-gradient(circle,#fff 0%,var(--c) 38%,rgba(0,0,0,0) 72%);
+    box-shadow:0 0 10px 2px var(--c),0 0 26px 6px var(--c);
+    opacity:.9;animation:breathe 2.6s ease-in-out infinite;
+  }
+  @keyframes breathe{
+    0%,100%{transform:scale(1);opacity:.75}
+    50%{transform:scale(1.45);opacity:1}
+  }
+  .mdot:hover i{animation:none;transform:scale(1.6);opacity:1}
+  .mlabel{
+    position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:11px;color:#f4f0e7;white-space:nowrap;pointer-events:none;
+    background:rgba(9,13,10,.88);border:0;border-radius:3px;padding:2px 6px;
+    box-shadow:0 4px 12px rgba(0,0,0,.3);
+  }
+  .mlabel.dim{display:none}
+  /* 扩散波纹：城市"亮起来"的第二层动效 */
+  .mring{
+    position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;
+  }
+  .mring i{
+    display:block;position:absolute;left:0;top:0;
+    width:var(--s);height:var(--s);border-radius:50%;
+    border:1.5px solid var(--c);opacity:0;
+    transform:translate(-50%,-50%) scale(.5);
+    animation:ringgrow 3.2s ease-out infinite;
+  }
+  @keyframes ringgrow{
+    0%{transform:translate(-50%,-50%) scale(.5);opacity:.8}
+    70%{opacity:.25}
+    100%{transform:translate(-50%,-50%) scale(3.4);opacity:0}
+  }
+  .mtip{
+    position:absolute;left:50%;bottom:calc(100% + 12px);transform:translateX(-50%);
+    background:rgba(10,14,24,.96);border:1px solid var(--primary);border-radius:6px;
+    padding:6px 10px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity .15s;pointer-events:none;
+  }
+  .mtip b{color:var(--accent)}
+  .mdot:hover .mtip{opacity:1}
+  .dotlegend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:8px}
+  .dotlegend span{display:inline-flex;align-items:center;gap:5px}
+  .dotlegend em{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .map-approval{color:var(--muted);font-size:12px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1><span class="dot">●</span> 访问统计 <span style="color:var(--muted);font-size:13px">（仅本机 · 不进网站）</span></h1>
+      <div class="sub" id="subtitle">数据来源：本机 127.0.0.1:8014 · analytics.db</div>
+    </div>
+    <div class="controls">
+      <button data-days="7">7天</button>
+      <button data-days="14" class="active">14天</button>
+      <button data-days="30">30天</button>
+      <button data-days="90">90天</button>
+      <button id="refresh">刷新</button>
+    </div>
+  </header>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="panel">
+    <h2>模块点击量排行（区间内）</h2>
+    <table class="modtable">
+      <thead><tr><th>模块</th><th class="num">区间总点击</th><th class="num">今日</th><th class="num">占比</th></tr></thead>
+      <tbody id="rankBody"></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>每日趋势</h2>
+    <div class="charts">
+      <div><div class="chart-title">每日点击量</div><div id="chartClicks"></div></div>
+      <div><div class="chart-title">每日独立用户(DAU)</div><div id="chartDau"></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>访客地图（今日点击）</h2>
+    <div class="mapgrid">
+      <div>
+        <div class="mapwrap">
+          <img id="cnmap" src="/assets/china_map_dark.jpg?v=jbm2" alt="中国地图">
+          <div id="dotLayer"></div>
+        </div>
+        <div class="dotlegend">
+          <span style="color:#d57910"><em style="background:#d57910;box-shadow:0 0 8px 2px #d57910"></em>1-2 次</span>
+          <span style="color:#ef932a"><em style="background:#ef932a;box-shadow:0 0 8px 2px #ef932a"></em>3-9 次</span>
+          <span style="color:#f2a454"><em style="background:#f2a454;box-shadow:0 0 8px 2px #f2a454"></em>10-29</span>
+          <span style="color:#f5bc7a"><em style="background:#f5bc7a;box-shadow:0 0 8px 2px #f5bc7a"></em>30+</span>
+          <span>· 仅显示今日有访问的城市 · 光点大小/标签均为今日点击，悬停看明细</span>
+        </div>
+        <div class="map-approval">地图审图号：GS(2023)2767号 · 自然资源部标准地图服务（界线版 1:740万）</div>
+      </div>
+      <div>
+        <div class="chart-title">城市排行 Top15</div>
+        <table class="ctable">
+          <thead><tr><th>#</th><th>城市</th><th class="num">点击</th><th class="num">用户</th><th>占比</th></tr></thead>
+          <tbody id="cityBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="note">
+      本机与局域网访客无公网 IP，不上图；坐标为城市中心点，非个人定位。数据库<b>不保存任何原始 IP</b>。<br>
+      底图：自然资源部<b>标准地图服务</b>下载的中国地图（界线版 1:740万），经深夜灯光风配色处理（与加班吗同款）；审图号见地图下方标注。
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>访客来源</h2>
+    <div class="geogrid">
+      <div>
+        <div class="chart-title">省份 Top15</div>
+        <table class="ptable"><thead><tr><th>省份</th><th class="num">点击</th><th class="num">用户</th></tr></thead>
+        <tbody id="geoRegion"></tbody></table>
+      </div>
+      <div>
+        <div class="chart-title">运营商 Top15</div>
+        <table class="ptable"><thead><tr><th>运营商</th><th class="num">点击</th><th class="num">用户</th></tr></thead>
+        <tbody id="geoIsp"></tbody></table>
+      </div>
+    </div>
+    <div class="note">
+      归属地由公网 IP 解析，精度到<b>城市级</b>（非 GPS 定位，存在误判；手机流量 IP 常按号码归属地计算）。
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>功德榜（敲木鱼）</h2>
+    <div class="geogrid">
+      <div>
+        <div class="chart-title">城市功德排行 Top10</div>
+        <table class="ctable">
+          <thead><tr><th>#</th><th>城市</th><th class="num">功德</th><th class="num">人数</th><th>占比</th></tr></thead>
+          <tbody id="meritCity"></tbody>
+        </table>
+      </div>
+      <div>
+        <div class="chart-title">说明</div>
+        <div class="note" style="margin-top:0">
+          功德来自网站「敲木鱼」模块：每敲一次 +1，连点会<b>批量上报</b>（一次事件携带 N 次功德），统计按实际次数累加。<br>
+          个人功德存在浏览器本地（localStorage），跨设备不同步；此处只统计已上报的功德总量与城市分布。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+/* 统计接口基址：本页由 8014 提供时用相对路径；若在预览环境中打开则回落到本机 8014 */
+var API_BASE = (location.hostname === '127.0.0.1' && location.port === '8014') ? '' : 'http://127.0.0.1:8014';
+
+let curDays = 14;
+let lastCities = [];
+
+function fmt(n){ return (n==null?0:n).toLocaleString('en-US'); }
+function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ---- 经纬度 → 底图像素（二次多项式，39 个控制点标定，均值误差约 11px/2000px）----
+   底图：自然资源部标准地图（界线版 1:740万，GS(2023)2767号），处理后 2000x1419 */
+const MAP_W = 2000, MAP_H = 1419;
+const MAP_CX = [-3560.372578772, 41.319419250098015, 42.67677557331513, -0.413165247155819, 0.013064529484394988, 0.04504360594865121];
+const MAP_CY = [187.74934628244168, 33.30499655645534, -34.116465760327046, -0.03747234561273467, -0.14597741421708468, 0.017062331775397677];
+function ll2pct(lon, lat){
+  const x = MAP_CX[0] + MAP_CX[1]*lon + MAP_CX[2]*lat + MAP_CX[3]*lon*lat + MAP_CX[4]*lon*lon + MAP_CX[5]*lat*lat;
+  const y = MAP_CY[0] + MAP_CY[1]*lon + MAP_CY[2]*lat + MAP_CY[3]*lon*lat + MAP_CY[4]*lon*lon + MAP_CY[5]*lat*lat;
+  return [Math.max(-5, Math.min(105, x / MAP_W * 100)), Math.max(-5, Math.min(105, y / MAP_H * 100))];
+}
+
+/* 光点分级：抄 jiabanma 的 hsl(32,86%,L%) 暖橙金（城市灯光感），越热越亮越大 */
+const DOT_TIERS = [
+  {min:30, size:20, color:'#f5bc7a'},   /* hsl(32,86%,72%) */
+  {min:10, size:15, color:'#f2a454'},   /* hsl(32,86%,64%) */
+  {min:3,  size:12, color:'#ef932a'},   /* hsl(32,86%,55%) */
+  {min:1,  size:9,  color:'#d57910'},   /* hsl(32,86%,45%) */
+];
+function tierOf(n){
+  for(const t of DOT_TIERS){ if(n >= t.min) return t; }
+  return DOT_TIERS[DOT_TIERS.length-1];
+}
+
+/* ---- 呼吸光点（静态底图上的 DOM 层，百分比定位自适应缩放）----
+   所有有访客的城市：光点 + 扩散波纹 + 城市名常驻标签；
+   标签渲染后做碰撞检测，重叠的自动隐藏（点击量大的优先保留） */
+function buildDots(pts){
+  const layer = document.getElementById('dotLayer');
+  if(!layer) return;
+  layer.innerHTML = '';
+  pts.forEach((c,i)=>{
+    /* 地图只展示【当日】点击：分级/标签/悬停全部走 today，不显示区间累计 */
+    const tv = c.today || 0;
+    const t = tierOf(tv);
+    const p = ll2pct(c.lon, c.lat);
+    const el = document.createElement('div');
+    el.className = 'mdot';
+    el.style.left = p[0].toFixed(3) + '%';
+    el.style.top  = p[1].toFixed(3) + '%';
+    const delay = (i % 5) * 0.64;
+    el.innerHTML =
+      '<span class="mring" style="--c:'+t.color+';animation-delay:'+delay+'s"><i style="--c:'+t.color+';--s:'+t.size+'px;animation-delay:'+delay+'s"></i></span>'
+      + '<i style="--c:'+t.color+';width:'+t.size+'px;height:'+t.size+'px;animation-delay:'+delay+'s"></i>'
+      + '<span class="mlabel">'+esc(c.name)+' '+fmt(tv)+'</span>'
+      + '<div class="mtip">'+esc(c.name)+' · 今日点击 <b>'+fmt(tv)+'</b></div>';
+    layer.appendChild(el);
+  });
+  /* 光点冲突避让 + 标签防重叠（用真实像素尺寸计算，避免大点盖住小点） */
+  requestAnimationFrame(()=>{
+    const LW = layer.clientWidth, LH = layer.clientHeight;
+    const dots = [...layer.querySelectorAll('.mdot')];
+    const info = dots.map(d=>{
+      const cx = parseFloat(d.style.left), cy = parseFloat(d.style.top);
+      const dotEl = d.querySelector('i');
+      const s = parseFloat(dotEl ? getComputedStyle(dotEl).width : 12) || 12;
+      return {d, cx, cy, r: s/2};
+    });
+    /* 大点优先固定，小点沿远离方向被推开 */
+    info.sort((a,b)=> b.r - a.r);
+    const placed = [];
+    for(const it of info){
+      let cx = it.cx, cy = it.cy;
+      for(let iter=0; iter<30; iter++){
+        let conflict = null, minDist = Infinity;
+        for(const p of placed){
+          const dx = (cx - p.cx) * LW/100, dy = (cy - p.cy) * LH/100;
+          const dist = Math.hypot(dx, dy), need = it.r + p.r + 20;
+          if(dist < need && dist < minDist){ minDist = dist; conflict = {p, need, dist}; }
+        }
+        if(!conflict) break;
+        const dx = (cx - conflict.p.cx) * LW/100, dy = (cy - conflict.p.cy) * LH/100;
+        const len = Math.hypot(dx, dy) || 0.0001;
+        const push = Math.min(7, (conflict.need - conflict.dist) + 2);
+        cx += dx/len * push / (LW/100);
+        cy += dy/len * push / (LH/100);
+        cx = Math.max(0, Math.min(100, cx));
+        cy = Math.max(0, Math.min(100, cy));
+      }
+      it.d.style.left = cx.toFixed(3) + '%';
+      it.d.style.top  = cy.toFixed(3) + '%';
+      it.cx = cx; it.cy = cy; placed.push(it);
+    }
+    /* 标签防重叠：贪心，重叠的隐藏（点击量大的优先保留） */
+    const kept = [];
+    dots.forEach(dot=>{
+      const lb = dot.querySelector('.mlabel');
+      if(!lb) return;
+      const r = lb.getBoundingClientRect();
+      const hit = kept.some(k => !(r.right < k.left - 4 || r.left > k.right + 4 || r.bottom < k.top - 2 || r.top > k.bottom + 2));
+      if(hit){ lb.classList.add('dim'); } else { kept.push(r); }
+    });
+  });
+}
+
+function drawCities(cities){
+  lastCities = cities || [];
+  /* 只打【当日有访问】的城市：今日为 0 的不上地图 */
+  const pts = lastCities.filter(c => c && c.lat && c.lon && (c.today || 0) > 0 &&
+    c.name !== '本机' && c.name !== '局域网' && c.name !== '未知');
+  buildDots(pts);
+}
+
+async function load(){
+  const foot = document.getElementById('foot');
+  try{
+    const res = await fetch(API_BASE + '/api/analytics/stats?days=' + curDays, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    render(data);
+    foot.textContent = '生成于 ' + (data.generatedAt||'') + ' · 区间 ' + data.days[0] + ' ~ ' + data.days[data.days.length-1];
+  }catch(e){
+    foot.innerHTML = '<span class="err">加载失败：'+esc(e.message)+'</span> · 确认统计服务已启动（http://127.0.0.1:8014）';
+  }
+}
+
+function render(d){
+  const t = d.totals||{};
+  const m = d.merit||{};
+  const cards = [
+    ['区间总点击', fmt(t.allClicks), false],
+    ['区间独立用户', fmt(t.allUsers), true],
+    ['今日点击', fmt(t.todayClicks), false],
+    ['今日独立用户', fmt(t.todayUsers), true],
+    ['累计功德', fmt(m.total), true],
+    ['今日功德', fmt(m.today), true],
+  ];
+  document.getElementById('cards').innerHTML = cards.map(c=>
+    '<div class="card"><div class="k">'+c[0]+'</div><div class="v'+(c[2]?' gold':'')+'">'+c[1]+'</div></div>'
+  ).join('');
+
+  const max = (d.ranking&&d.ranking.length)?d.ranking[0].total:1;
+  const tb = document.getElementById('rankBody');
+  if(!d.ranking || !d.ranking.length){
+    tb.innerHTML = '<tr><td colspan="4" style="color:var(--muted)">暂无数据，去网站里点几个模块就有了</td></tr>';
+  }else{
+    tb.innerHTML = d.ranking.map(r=>{
+      const pct = max ? (r.total/max*100) : 0;
+      return '<tr><td>'+esc(r.label)+'</td>'
+        +'<td class="num">'+fmt(r.total)+'</td>'
+        +'<td class="num">'+fmt(r.today)+'</td>'
+        +'<td><div class="barwrap"><div class="bar" style="width:'+pct.toFixed(1)+'%"></div></div></td></tr>';
+    }).join('');
+  }
+
+  drawBars('chartClicks', d.days, d.days.map(day=>sumDay(d,day)), false);
+  drawBars('chartDau', d.days, d.days.map(day=>(d.dau&&d.dau[day])||0), true);
+
+  const g = d.geo||{};
+  renderCityRank(g.cities);
+  drawCities(g.cities||[]);
+  renderGeo('geoRegion', g.regions);
+  renderGeo('geoIsp', g.isps);
+  renderMeritCity(m.cities);
+}
+
+function clean(list){
+  return (list||[]).filter(x => x && x.name && x.name!=='本机' && x.name!=='局域网' && x.name!=='未知');
+}
+
+function renderCityRank(list){
+  const el = document.getElementById('cityBody');
+  if(!el) return;
+  const rows = clean(list).slice(0,15);
+  if(!rows.length){ el.innerHTML = '<tr><td colspan="5" style="color:var(--muted)">暂无数据</td></tr>'; return; }
+  const max = rows[0].clicks || 1;
+  el.innerHTML = rows.map((x,i)=>{
+    const rk = '<span class="rk'+(i<3?' top':'')+'">'+(i+1)+'</span>';
+    return '<tr><td>'+rk+'</td><td>'+esc(x.name)+'</td>'
+      +'<td class="num">'+fmt(x.clicks)+'</td>'
+      +'<td class="num">'+fmt(x.users)+'</td>'
+      +'<td><div class="barwrap"><div class="bar" style="width:'+(x.clicks/max*100).toFixed(1)+'%"></div></div></td></tr>';
+  }).join('');
+}
+
+function renderMeritCity(list){
+  const el = document.getElementById('meritCity');
+  if(!el) return;
+  const rows = clean(list).slice(0,10);
+  if(!rows.length){ el.innerHTML = '<tr><td colspan="5" style="color:var(--muted)">暂无功德数据（去网站敲几下木鱼）</td></tr>'; return; }
+  const max = rows[0].merit || 1;
+  el.innerHTML = rows.map((x,i)=>{
+    const rk = '<span class="rk'+(i<3?' top':'')+'">'+(i+1)+'</span>';
+    return '<tr><td>'+rk+'</td><td>'+esc(x.name)+'</td>'
+      +'<td class="num">'+fmt(x.merit)+'</td>'
+      +'<td class="num">'+fmt(x.users)+'</td>'
+      +'<td><div class="barwrap"><div class="bar gold" style="width:'+(x.merit/max*100).toFixed(1)+'%"></div></div></td></tr>';
+  }).join('');
+}
+
+function renderGeo(id, list){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const rows = clean(list).slice(0,15);
+  if(!rows.length){
+    el.innerHTML = '<tr><td colspan="3" style="color:var(--muted)">暂无数据</td></tr>';
+    return;
+  }
+  el.innerHTML = rows.map(x=>
+    '<tr><td>'+esc(x.name)+'</td>'
+    +'<td class="num">'+fmt(x.clicks)+'</td>'
+    +'<td class="num">'+fmt(x.users)+'</td></tr>'
+  ).join('');
+}
+
+function sumDay(d, day){
+  let s=0;
+  for(const m in d.clicks){ s += (d.clicks[m][day]||0); }
+  return s;
+}
+
+function drawBars(elId, days, values, alt){
+  const W=520,H=160,pad=22, n=days.length;
+  const max = Math.max(1, ...values);
+  const bw = (W-pad*2)/Math.max(1,n);
+  let bars='';
+  values.forEach((v,i)=>{
+    const h = (v/max)*(H-pad*2);
+    const x = pad + i*bw + bw*0.15;
+    const y = H-pad-h;
+    bars += '<rect class="bar-rect'+(alt?' alt':'')+'" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+(bw*0.7).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="2"></rect>';
+    if(n<=31 && i%Math.ceil(n/12)===0){
+      bars += '<text class="axis" x="'+(x+bw*0.35).toFixed(1)+'" y="'+(H-pad+12)+'" text-anchor="middle">'+days[i].slice(5)+'</text>';
+    }
+  });
+  const svg = '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">'+bars
+    +'<line x1="'+pad+'" y1="'+(H-pad)+'" x2="'+(W-pad)+'" y2="'+(H-pad)+'" stroke="#1e2a3a"></line></svg>';
+  document.getElementById(elId).innerHTML = svg;
+}
+
+document.querySelectorAll('.controls button[data-days]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.controls button[data-days]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    curDays = parseInt(b.dataset.days,10);
+    load();
+  });
+});
+document.getElementById('refresh').addEventListener('click', load);
+load();
+setInterval(load, 120000);
+</script>
+</body>
+</html>

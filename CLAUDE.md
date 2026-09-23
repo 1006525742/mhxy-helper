@@ -170,8 +170,8 @@ WebSocket connections fail through Cloudflare Tunnel. Vite HMR errors can be ign
 
 ## Production Deployment
 
-Using Cloudflare Tunnel:
-- Frontend: `https://mhxy.mhwk.cloud`
-- Backend API: `https://api.mhwk.cloud`
+公网入口（京东云 frpc 通道）：
+- 前端：`https://yjmhxy.top`
+- 后端 API：`https://yjmhxy.top/api/*`
 
-Start tunnel: `cloudflared tunnel run mhxy-helper`
+> 旧 Cloudflare Tunnel 入口 `mhxy.mhwk.cloud` / `api.mhwk.cloud` 已于 2026-09-16 下线，不再使用；相关 `start-tunnel.sh` 已停用。

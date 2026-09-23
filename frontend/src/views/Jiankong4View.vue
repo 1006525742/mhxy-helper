@@ -9,7 +9,7 @@ import { ScreenCapture } from '@/services/screenCapture'
 import { Jk4Engine, type Jk4Config, type Jk4NormDet } from '@/services/jiankong4Logic'
 import { loadJk4Model, clearJk4ModelCache, getJk4ModelSource } from '@/services/jiankong4Yolo'
 import { playAlarm, initAudio, previewTone, SOUND_OPTIONS, type AlertSoundType } from '@/services/jiankongLogic'
-import { pushWecom, isValidWecomWebhook, pushPushPlus, isValidPushPlusToken, pushQqMail, isValidQqNumber, type PushResult } from '@/services/jiankong4Notify'
+import { pushWecom, isValidWecomWebhook, pushQqMail, isValidQqNumber, pushWechat, type PushResult } from '@/services/jiankong4Notify'
 import RegionPicker from '@/components/jiankong/RegionPicker.vue'
 import { useJk4Store } from '@/stores/jiankong4Store'
 
@@ -156,10 +156,10 @@ async function pushToSelected(title: string, body: string): Promise<string | nul
     const url = store.config.wecom.webhook.trim()
     if (!isValidWecomWebhook(url)) return '企业微信：webhook 地址不合法（需 qyapi.weixin.qq.com 且含 key=）'
     r = await pushWecom(url, `【${title}】\n${body}\n时间：${ts}`)
-  } else if (ch === 'pushplus') {
-    const token = store.config.pushplus.token.trim()
-    if (!isValidPushPlusToken(token)) return 'PushPlus：token 为空'
-    r = await pushPushPlus(token, title, `【${title}】<br/>${body}<br/>时间：${ts}`)
+  } else if (ch === 'wechat') {
+    const name = store.config.wechat.receiver.trim()
+    if (!name) return '微信：接收人备注名为空（请输入管理员分配给你的接收人名称）'
+    r = await pushWechat(name, title, `${body}\n时间：${ts}`, store.config.wechat.apiBase)
   } else {
     const qq = store.config.qqmail.qq.trim()
     if (!isValidQqNumber(qq)) return 'QQ 邮箱：QQ 号不合法（5~12 位纯数字）'
@@ -184,6 +184,7 @@ async function testPush() {
     pushTesting.value = false
   }
 }
+
 
 /* ---------- 试听预警音（手势内触发，兼预热音频上下文） ---------- */
 function previewSound() {
@@ -223,7 +224,7 @@ onUnmounted(() => {
   <div class="jiankong4-page">
     <header class="jk-header">
       <h1>🥊 自动战斗监控</h1>
-      <p class="jk-desc">实时检测游戏画面中的自动战斗框，消失时播放预警；推送支持企业微信 / PushPlus / QQ邮箱，单选其一、配置自动记忆</p>
+      <p class="jk-desc">实时检测游戏画面中的自动战斗框，消失时播放预警；推送支持企业微信 / QQ邮箱 / 微信，单选其一、配置自动记忆</p>
       <p class="jk-warn">⚠️ 不能最小化运行！挂机时自动战斗框消失（掉线/战斗结束/卡死）会立即提醒</p>
     </header>
 
@@ -243,7 +244,7 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- 右：控制面板 -->
+      <!-- 下：控制面板（监控设置，上下结构） -->
       <aside class="jk-right param-setting">
         <h3>🎛 监控设置</h3>
 
@@ -367,10 +368,10 @@ onUnmounted(() => {
               <input type="radio" value="wecom" v-model="store.config.pushChannel" /> 企业微信群机器人
             </label>
             <label class="radio-item">
-              <input type="radio" value="pushplus" v-model="store.config.pushChannel" /> PushPlus（个人微信）
+              <input type="radio" value="qqmail" v-model="store.config.pushChannel" /> QQ 邮箱
             </label>
             <label class="radio-item">
-              <input type="radio" value="qqmail" v-model="store.config.pushChannel" /> QQ 邮箱
+              <input type="radio" value="wechat" v-model="store.config.pushChannel" /> 微信
             </label>
           </div>
           <span class="ctrl-hint">
@@ -384,16 +385,18 @@ onUnmounted(() => {
           <span class="ctrl-hint">企业微信「群聊 → 添加群机器人」复制 Webhook 粘贴此处。免费、无条数限制，消息进「企业微信」App。</span>
         </div>
 
-        <div class="param-item param-col" v-if="store.config.enablePush && store.config.pushChannel === 'pushplus'">
-          <label>PushPlus Token</label>
-          <input type="text" v-model="store.config.pushplus.token" placeholder="pushplus.plus 个人中心复制的 token" />
-          <span class="ctrl-hint">注册 pushplus.plus → 实名认证 → 个人中心复制 token。消息进微信公众号，个人微信直接收（免费实名每天 200 条）。</span>
-        </div>
-
         <div class="param-item param-col" v-if="store.config.enablePush && store.config.pushChannel === 'qqmail'">
           <label>接收提醒的 QQ 号</label>
           <input type="text" v-model="store.config.qqmail.qq" placeholder="例如 123456789" maxlength="12" />
-          <span class="ctrl-hint">只需填 QQ 号，邮件发往「QQ号@qq.com」（与原站一致）。发件邮箱与授权码只配在后端，浏览器不接触邮箱密码。</span>
+          <span class="ctrl-hint">只需填 QQ 号，邮件发往「QQ号@qq.com」！</span>
+        </div>
+
+        <div class="param-item param-col" v-if="store.config.enablePush && store.config.pushChannel === 'wechat'">
+          <label>微信名称</label>
+          <input type="text" v-model="store.config.wechat.receiver" placeholder="请输入管理员分配给你的微信名称，如 迪总" />
+          <span class="ctrl-hint">
+            接收人由管理员统一登记：请先扫描首页页脚的「服务号二维码」关注服务号，再用微信扫描页脚「名片」（管理员微信二维码）添加管理员，并提供接收名称：你的微信名称。
+          </span>
         </div>
 
         <div class="param-item param-col" v-if="store.config.enablePush">
@@ -486,12 +489,13 @@ onUnmounted(() => {
 
 .jk-main {
   display: flex;
+  flex-direction: column;
   gap: 20px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 .jk-left {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
+  flex: none;
 }
 .game-video-container {
   border-radius: 12px;
@@ -530,18 +534,22 @@ onUnmounted(() => {
 }
 
 .jk-right {
-  width: 320px;
-  flex-shrink: 0;
+  width: 100%;
   background: var(--site-panel-bg);
   border: 1px solid rgba(180, 130, 50, 0.14);
   border-radius: 14px;
   padding: 18px;
   box-shadow: 0 8px 24px var(--site-panel-shadow);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 28px;
+  align-items: start;
 }
 .jk-right h3 {
   color: var(--site-primary);
   font-size: 16px;
   margin: 0 0 16px;
+  grid-column: 1 / -1;
 }
 
 /* 模型状态条 */
@@ -612,9 +620,21 @@ onUnmounted(() => {
 .param-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   margin-bottom: 14px;
   gap: 12px;
+}
+/* 区块标题/分割线/整块输入/提示/按钮等占满整行 */
+.jk-right > .model-status-wrap,
+.jk-right > .divider,
+.jk-right > .push-title,
+.jk-right > .param-col,
+.jk-right > .ctrl-hint,
+.jk-right > .btn-group,
+.jk-right > .status-box,
+.jk-right > .counts,
+.jk-right > .rate {
+  grid-column: 1 / -1;
 }
 .param-item label {
   font-size: 13px;
@@ -764,6 +784,42 @@ onUnmounted(() => {
   opacity: 0.6;
   cursor: default;
 }
+.wx-fetch {
+  width: 100%;
+  justify-content: center;
+  margin-top: 6px;
+}
+.wx-fetch.loading {
+  opacity: 0.6;
+  cursor: default;
+}
+.wx-followers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.wx-oid-btn {
+  border: 1px solid var(--site-border);
+  background: var(--site-surface);
+  color: var(--site-text-secondary);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  word-break: break-all;
+  transition: all 0.15s;
+}
+.wx-oid-btn:hover {
+  border-color: var(--site-primary);
+  color: var(--site-primary);
+}
+.wx-oid-btn.active {
+  background: var(--site-primary);
+  border-color: var(--site-primary);
+  color: #fff;
+}
 .tone-row {
   display: flex;
   flex-wrap: wrap;
@@ -828,6 +884,7 @@ onUnmounted(() => {
   }
   .jk-right {
     width: 100%;
+    grid-template-columns: 1fr;
   }
 }
 </style>

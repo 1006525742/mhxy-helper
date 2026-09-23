@@ -12,7 +12,7 @@
  *
  * 可选「通用监控」：复用 jiankong1 的像素差异（红框选区 diffRate>阈值 即报警）。
  * 报警音效复用 jiankongLogic.playAlarm（5 种音色 mp3 + 可选自定义语音叠加）。
- * 消息推送由视图层在报警时调用（企业微信群机器人 / PushPlus / QQ邮箱，配置已持久化）。
+ * 消息推送由视图层在报警时调用（企业微信群机器人 / QQ邮箱 / 微信，配置已持久化）。
  */
 import { ScreenCapture } from '@/services/screenCapture'
 import { detectJk4, type Jk4Detection } from '@/services/jiankong4Yolo'
@@ -53,13 +53,13 @@ export interface Jk4Config {
   /** 总开关 */
   enablePush: boolean
   /** 当前选中的推送渠道 */
-  pushChannel: 'wecom' | 'pushplus' | 'qqmail'
+  pushChannel: 'wecom' | 'qqmail' | 'wechat'
   /** 企业微信群机器人 webhook 地址 */
   wecom: { webhook: string }
-  /** PushPlus 微信公众号 token */
-  pushplus: { token: string }
   /** QQ 邮箱：接收 QQ 号 + 代发接口地址（默认本机 8011） */
   qqmail: { qq: string; mailApi: string }
+  /** 微信测试号：接收人备注名 + 代发接口地址（openid 映射与模板 ID 由后端固定维护） */
+  wechat: { receiver: string; apiBase: string }
   /** 主检测循环间隔（ms） */
   detectIntervalMs: number
   /** 连续多少帧异常（消失 / 数量不符）才判定为真实异常并报警 */
@@ -209,13 +209,13 @@ export class Jk4Engine {
     let reason = ''
     if (this.config.enableAlert && this.missCount > mf) {
       willAlert = true
-      reason = '未检测到任何自动战斗框'
+      reason = '自动战斗框消失报警：画面中已无自动战斗框，疑似掉线 / 战斗结束 / 卡死'
     } else if (this.config.enableCountAlert && this.countMiss > mf) {
       willAlert = true
-      reason = `自动战斗框数量不足：实际 ${abCount} / 目标 ${this.config.targetAutoBattleCount}`
+      reason = `自动战斗框数量报警：实际 ${abCount} 个 / 目标 ${this.config.targetAutoBattleCount} 个`
     } else if (this.config.enableFourPeopleAlert && this.fpMiss > mf) {
       willAlert = true
-      reason = `检测到四小人框（${fpCount} 个），疑似异常`
+      reason = `四小人出现报警：检测到四小人框 ${fpCount} 个，疑似异常`
     }
 
     if (willAlert && cooldownOk) {

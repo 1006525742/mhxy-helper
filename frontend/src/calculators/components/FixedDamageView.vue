@@ -3,19 +3,34 @@ import { computed, ref } from 'vue'
 import type { FixedDamageDef, FixedDamageItem } from '@/calculators/engine/types'
 import { computeFixedDamage } from '@/calculators/services/calcEngine'
 import { FIXED_DAMAGE_FORMULAS } from '@/calculators/data/fixedDamage'
+import { loadPersist, watchPersist } from '@/calculators/services/calcPersist'
 
 const formulas = FIXED_DAMAGE_FORMULAS
 
 const props = defineProps<{ def: FixedDamageDef }>()
 
-const sectId = ref(props.def.sects[0]?.id ?? '')
+// 输入项本机存档（门派 / 各项数值），刷新不丢
+const LS_KEY = 'mhxy_fixeddamage_v1'
+interface FdPersist {
+  sectId: string
+  inputs: Record<FixedDamageItem, number>
+}
+const sv = loadPersist<FdPersist>(LS_KEY)
+
+const sectId = ref(sv?.sectId ?? props.def.sects[0]?.id ?? '')
 const inputs = ref<Record<FixedDamageItem, number>>({
   damage: 0,
   agility: 0,
   magicCult: 0,
   swordStone: 0,
   meteor: 0,
+  ...(sv?.inputs ?? {}),
 })
+
+watchPersist(LS_KEY, [sectId, inputs], () => ({
+  sectId: sectId.value,
+  inputs: inputs.value,
+}))
 
 const FIELDS: { key: FixedDamageItem; label: string; hint: string; step: number }[] = [
   { key: 'damage', label: '伤害', hint: '武器伤害点数', step: 1 },

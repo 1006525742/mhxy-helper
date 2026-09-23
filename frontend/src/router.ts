@@ -97,6 +97,26 @@ const router = createRouter({
       path: '/chess',
       name: 'chess',
       component: () => import('@/views/ChessCoordView.vue')
+    },
+    {
+      path: '/scammer',
+      name: 'scammer',
+      component: () => import('@/views/ScammerView.vue')
+    },
+    {
+      path: '/dati',
+      name: 'dati',
+      component: () => import('@/views/DatiView.vue')
+    },
+    {
+      path: '/admin/wechat',
+      name: 'admin-wechat',
+      component: () => import('@/views/WechatReceiversView.vue')
+    },
+    {
+      path: '/paoshang',
+      name: 'paoshang',
+      component: () => import('@/views/PaoshangView.vue')
     }
   ]
 })

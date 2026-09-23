@@ -9,7 +9,7 @@
  * 可选 dets / showBoxes：用于叠加 YOLO 检测框（归一化全屏坐标 0~1），
  * 与预览图同屏比例，自动对齐。
  */
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 
 interface DetBox {
   className: string
@@ -116,6 +116,17 @@ const canvasRef = ref<HTMLCanvasElement | null>(null)
 const natW = ref(0)
 const natH = ref(0)
 
+/* 预览显示上限：绝不放大到超过源分辨率（否则会比游戏窗口还大）；
+   同时限制最大高度，避免高窗口把页面撑得过长。 */
+const MAX_PREVIEW_H = 480
+const previewMaxW = computed(() => {
+  const w = natW.value
+  const h = natH.value
+  if (!w || !h) return ''
+  const scaled = h > MAX_PREVIEW_H ? Math.round((w * MAX_PREVIEW_H) / h) : w
+  return Math.min(w, scaled) + 'px'
+})
+
 function colorOf(cls: string): string {
   if (cls === '自动战斗') return '#42b983'
   if (cls === '四小人') return '#ff9800'
@@ -182,6 +193,7 @@ defineExpose({
     class="picker"
     ref="containerRef"
     :class="{ empty: !previewSrc }"
+    :style="previewMaxW ? { maxWidth: previewMaxW } : undefined"
     @pointerdown="containerDown"
   >
     <img v-if="previewSrc" :src="previewSrc" class="picker-img" draggable="false" alt="屏幕共享预览" @load="onImgLoad" />
@@ -214,6 +226,7 @@ defineExpose({
 .picker {
   position: relative;
   width: 100%;
+  margin-inline: auto;
   background: #000;
   border: 1px solid var(--site-border, rgba(180, 150, 100, 0.4));
   border-radius: 10px;

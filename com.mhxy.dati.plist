@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple/DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mhxy.dati</string>
+
+    <!-- 答题助手后端：uvicorn backend_dati:app，端口 8008 -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>-m</string>
+        <string>uvicorn</string>
+        <string>backend_dati:app</string>
+        <string>--host</string>
+        <string>0.0.0.0</string>
+        <string>--port</string>
+        <string>8008</string>
+    </array>
+
+    <!-- 工作目录：必须指向 backend，否则题库相对路径解析失败 -->
+    <key>WorkingDirectory</key>
+    <string>/Users/zhy/mhxy-helper/backend</string>
+
+    <!-- 登录自启 + 崩溃自动重启 -->
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- 日志 -->
+    <key>StandardOutPath</key>
+    <string>/Users/zhy/mhxy-helper/backend/logs/dati.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/zhy/mhxy-helper/backend/logs/dati.stdout.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+</dict>
+</plist>

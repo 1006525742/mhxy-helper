@@ -42,6 +42,45 @@ function largeFileMiddleware() {
     // 只拦截 GET/HEAD，让 Vite 处理其他方法（如 HMR websocket）
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
 
+    // onnxruntime-web 运行时会对 self-hosted wasm 做动态 import()（如
+    // /ort-wasm/ort-wasm-simd-threaded.jsep.mjs）。Vite dev 默认拒绝把 public
+    // 目录文件当作 JS 模块 import（报 "file is in /public should not be imported
+    // from source code"）。这里在 Vite 内部 transform 中间件之前把 /ort-wasm/*
+    // 当原始静态文件直送（同 origin，无需跨域隔离头），既绕开拦截、又让 wasm
+    // 走本地/你自己的 VPS（国内快，不依赖 jsdelivr 等海外 CDN）。
+    if (url.startsWith('/ort-wasm/')) {
+      // Vite 对动态 import() 的模块会追加 ?import（或 ?t= 时间戳）查询串，
+      // 必须剥离后再去 public 目录定位真实文件，否则 statSync 把 ?import 当路径一部分 → 找不到 →
+      // 回退 Vite transform → 触发「file is in /public should not be imported」→ 500 → wasm 后端加载失败
+      const cleanUrl = url.split('?')[0].split('#')[0]
+      const filePath = resolve(PUBLIC_DIR, cleanUrl.replace(/^\//, ''))
+      try {
+        const st = statSync(filePath)
+        if (st.isFile()) {
+          const ext = cleanUrl.split('.').pop() || ''
+          const mime =
+            ext === 'mjs' ? 'application/javascript'
+            : ext === 'wasm' ? 'application/wasm'
+            : 'application/octet-stream'
+          res.setHeader('Content-Type', mime)
+          res.setHeader('Content-Length', st.size)
+          res.setHeader('Cache-Control', 'public, max-age=86400')
+          res.statusCode = 200
+          if (req.method === 'HEAD') { res.end(); return }
+          const stream = createReadStream(filePath, { highWaterMark: 256 * 1024 })
+          stream.pipe(res)
+          stream.on('error', (err) => {
+            console.error('[ort-wasm] 流传输错误:', filePath, err.message)
+            if (!res.headersSent) { res.statusCode = 500; res.end() }
+          })
+          return
+        }
+      } catch (err: any) {
+        console.error('[ort-wasm] 文件错误:', url, err.message)
+      }
+      return next()
+    }
+
     const isLarge = LARGE_FILE_PATTERNS.some(p => p.test(url))
     if (!isLarge) return next()
 
@@ -187,18 +226,15 @@ export default defineConfig({
             req.pipe(proxyReq)
           }
 
-          // 物价宝鉴整页入口（首页 iframe 内 /wuji/ 整页加载 8767 根，去掉 /wuji 前缀）
-          if (url === '/wuji' || url.startsWith('/wuji/')) {
-            return forward(8767, url.replace(/^\/wuji/, '') || '/')
-          }
-          // 物价图标（jizhang.html 用绝对路径 /static/icons/*）
-          if (url.startsWith('/static/icons')) {
-            return forward(8767, url)
+
+          // 访问统计埋点收集（本机 8014，仅接收上报；看板只在本机 127.0.0.1:8014）
+          if (url.startsWith('/api/analytics')) {
+            return forward(8014)
           }
 
           if (!url.startsWith('/api')) return next()
 
-          // 分发规则：挖图(8003) / 宝图分图(8002) / 科举(8001) / 精灵(8004) / 物价(8767) / 其余抓鬼(8000)
+          // 分发规则：挖图(8003) / 宝图分图(8002) / 科举(8001) / 精灵(8004) / 其余抓鬼(8000)
           let port = 8000
           if (url.startsWith('/api/watu')) {
             port = 8003
@@ -214,13 +250,6 @@ export default defineConfig({
             port = 8004
           } else if (url.startsWith('/api/othello')) {
             port = 8005
-          } else if (
-            url.startsWith('/api/data') || url.startsWith('/api/item') ||
-            url.startsWith('/api/server') || url.startsWith('/api/icons') ||
-            url.startsWith('/api/sync') || url.startsWith('/api/market') ||
-            url.startsWith('/api/trends')
-          ) {
-            port = 8767
           } else if (url.startsWith('/api/cbg')) {
             port = 8006
           } else if (url.startsWith('/api/gold')) {
@@ -229,6 +258,10 @@ export default defineConfig({
             port = 8012
           } else if (url.startsWith('/api/harvest')) {
             port = 8007
+          } else if (url.startsWith('/api/dati')) {
+            port = 8008
+          } else if (url.startsWith('/api/scammer')) {
+            port = 8013
           }
           forward(port)
         })
@@ -254,16 +287,8 @@ export default defineConfig({
     fs: {
       allow: [resolve(__dirname)],
     },
-    allowedHosts: ['mhxy.mhwk.cloud', 'yjmhxy.top', '117.72.108.169', 'localhost'],
+    allowedHosts: ['yjmhxy.top', '117.72.108.169', 'localhost'],
     // 注意：vite 原生 proxy 的多前缀 key 会被「兜底 /api」吞掉，且 router 选项不生效，
     // 因此 /api 分发改用下方 vite-api-proxy 插件（纯 Node http 转发，按路径分发到各后端）。
-    // 例外：/static/icons 必须用原生 proxy，因为 Vite 内置 public 静态中间件会抢先处理 /static，
-    // 原生 proxy 注册时机早于该内置中间件，可正确转发到物价后端 8767。
-    proxy: {
-      '/static/icons': {
-        target: 'http://127.0.0.1:8767',
-        changeOrigin: true,
-      },
-    },
   }
 })

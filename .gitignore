@@ -49,6 +49,27 @@ backend/preprocess_test.py
 backend/error_analysis.py
 backend/analyze_failed.py
 
+# 备份目录（历史 dist 备份，不进库）
+frontend/dist.bak*/
+
+# 调试截图/识别错误样本（本地排查用，不进库）
+backend/debug_shots/
+backend/keju_wrong_captures/
+
+# 数据库运行时文件（wal/shm 随库变化，避免频繁冲突）
+*.db-shm
+*.db-wal
+
+# 敏感配置（含 frp 令牌等）
+analytics/frpc_analytics.ini
+analytics/map_key.txt
+
+# 答题截图数据集（本地采集，不进库）
+data/dati/
+
+# Vite 临时时间戳文件
+frontend/vite.config.ts.timestamp-*
+
 # Vite config 编译产物（tsc/vue-tsc 会生成 .js/.d.ts，Vite 会优先加载 .js 而非 .ts，
 # 导致代理规则失效，务必忽略）
 frontend/vite.config.js

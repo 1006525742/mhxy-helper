@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
-from fastapi import FastAPI, File, Request, UploadFile
+from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 
@@ -190,6 +190,61 @@ async def ocr_batch(imgs: List[UploadFile] = File(...)):
     return {"success": True, "results": results, "time_ms": round(t_ms, 1)}
 
 
+def do_ocr_detailed(img_bgr: np.ndarray):
+    """单次 OCR，返回每个文字框的文本与 x 中心坐标 [{text, cx}]（供前端拼图映射回 A/B/C/D）"""
+    engine = get_ocr_engine()
+    with ocr_lock:
+        result = engine(img_bgr)
+    if result is None:
+        return []
+    try:
+        txts = getattr(result, 'txts', None)
+        txts = list(txts) if txts is not None else []
+        boxes = getattr(result, 'boxes', None)
+        boxes = np.asarray(boxes, dtype=float) if boxes is not None else np.empty((0, 4, 2), dtype=float)
+        out = []
+        for i, t in enumerate(txts):
+            if t is None:
+                continue
+            s = t if isinstance(t, str) else str(t)
+            s = s.strip()
+            if len(s) == 0:
+                continue
+            cx = 0.0
+            if i < len(boxes):
+                b = np.asarray(boxes[i], dtype=float)
+                if b.size >= 2:
+                    xs = b[:, 0] if b.ndim == 2 else np.array([b[0]], dtype=float)
+                    if xs.size > 0:
+                        cx = float(xs.min() + xs.max()) / 2.0
+            out.append({"text": s, "cx": round(cx, 1)})
+        return out
+    except Exception as e:
+        import traceback as _tb
+        logger.error(f"do_ocr_detailed异常: {e}\n{_tb.format_exc()}")
+        return []
+
+
+@app.post("/api/ocr/options-strip")
+async def ocr_options_strip(img: UploadFile = File(...)):
+    """拼图单次 OCR：接收横向拼合的选项长图，返回每个文字框文本 + x 中心坐标。
+
+    前端把 4 个选项裁图拼成 1 条，单次推理（替代 4 张串行），按 cx 映射回 A/B/C/D。
+    """
+    t_start = time.time()
+    try:
+        contents = await img.read()
+        image = Image.open(io.BytesIO(contents)).convert('RGB')
+        arr = np.array(image)[:, :, ::-1].copy()
+        dets = do_ocr_detailed(arr)
+        t_ms = (time.time() - t_start) * 1000
+        logger.info(f"OptionsStrip OCR: {len(dets)}框 ({t_ms:.1f}ms)")
+        return {"success": True, "dets": dets, "time_ms": round(t_ms, 1)}
+    except Exception as e:
+        logger.error(f"OptionsStrip OCR失败: {e}")
+        return {"success": False, "error": str(e), "dets": []}
+
+
 @app.post("/api/WatuOCR")
 async def watu_ocr(img: UploadFile = File(...)):
     """WatuOCR 兼容端点 (同 /api/ocr/general)"""
@@ -343,6 +398,208 @@ async def collect_hash_entry(request: Request):
     _rate_limits[client_ip] = times
 
     return {"success": True, "added": added, "total_collected": len(collected)}
+
+
+# ============ 识别错误截图收集 ============
+# 标记答案错误时，把当前截图落地到项目路径，供后续批量纠错
+_WRONG_CAPTURE_DIR = Path(__file__).resolve().parent / "keju_wrong_captures"
+_WRONG_CAPTURE_DIR.mkdir(exist_ok=True)
+_WRONG_INDEX_FILE = _WRONG_CAPTURE_DIR / "index.jsonl"
+_WRONG_LOCK = threading.Lock()
+
+
+@app.post("/api/keju/mark-wrong")
+async def mark_wrong(
+    img: UploadFile = File(...),
+    data: str = Form("{}"),
+):
+    """标记识别答案错误：保存当前截图到项目路径，供后续批量纠错。
+
+    请求:
+      - img:  当前答题截图 (PNG)
+      - data: JSON 字符串，含 qText / recognizedAnswer / categoryName 等元信息
+    返回: { success, file, path }
+    """
+    try:
+        meta = json.loads(data) if data else {}
+    except Exception:
+        meta = {}
+
+    ts = time.strftime("%Y%m%d_%H%M%S")
+    # 文件名: 时间戳 + 题目文本短哈希 + 毫秒，避免同题多次标记覆盖
+    q = (meta.get("qText") or "")[:40]
+    short = f"{abs(hash(q)) % 100000:05d}"
+    ms = int((time.time() % 1) * 1000)
+    fname = f"{ts}_{short}_{ms:03d}.png"
+    img_path = _WRONG_CAPTURE_DIR / fname
+
+    try:
+        contents = await img.read()
+        with open(img_path, "wb") as f:
+            f.write(contents)
+    except Exception as e:
+        logger.error(f"标记错误截图保存失败: {e}")
+        return {"success": False, "error": f"截图保存失败: {str(e)}"}
+
+    record = {
+        "time": ts,
+        "file": fname,
+        "qText": meta.get("qText", ""),
+        "recognizedAnswer": meta.get("recognizedAnswer", ""),
+        "categoryName": meta.get("categoryName", ""),
+        "corrected": False,
+        "correctAnswer": "",
+    }
+    try:
+        with _WRONG_LOCK:
+            with open(_WRONG_INDEX_FILE, "a", encoding="utf-8") as f:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception as e:
+        logger.error(f"标记错误索引写入失败: {e}")
+
+    logger.info(f"标记错误截图已保存: {fname} (题: {q[:30]})")
+    return {"success": True, "file": fname, "path": str(img_path)}
+
+
+# ============ 用户纠错覆盖层 (user_corrections.json) ============
+# 独立的覆盖层文件：前端加载时作为最高优先级覆盖（内置库 -> 用户覆盖层 -> localStorage）。
+# 不会被“合并脚本”流程重置，可单独增删改/导出。
+_USER_CORRECTIONS_PATH = Path(__file__).resolve().parent.parent / "frontend" / "public" / "mhxy" / "static" / "user_corrections.json"
+_USER_CORRECTIONS_LOCK = threading.Lock()
+
+
+def _load_user_corrections():
+    if not _USER_CORRECTIONS_PATH.exists():
+        return []
+    try:
+        with open(_USER_CORRECTIONS_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception as e:
+        logger.error(f"加载 user_corrections 失败: {e}")
+        return []
+
+
+def _save_user_corrections(data):
+    # 写前备份
+    try:
+        if _USER_CORRECTIONS_PATH.exists():
+            import shutil
+            ts = time.strftime("%Y%m%d_%H%M%S")
+            backup = _USER_CORRECTIONS_PATH.with_suffix(f".json.bak-{ts}")
+            shutil.copy2(_USER_CORRECTIONS_PATH, backup)
+    except Exception as e:
+        logger.warning(f"user_corrections 备份失败(可忽略): {e}")
+    _USER_CORRECTIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(_USER_CORRECTIONS_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+@app.post("/api/keju/hash-db/upsert")
+async def upsert_correction(request: Request):
+    """增/改一条用户纠错（独立覆盖层 user_corrections.json）。
+
+    请求体: {stemHash, questionText, normQuestion, answer, correctOptionHashes, mode}
+      - mode: 'text' 文字错误(更新答案) | 'box' 框选错误(仅更新位置)
+      - normQuestion: 归一化题干（前端计算），用于文字通道匹配
+    去重：同 stemHash 或同 normQuestion 视为同一条，更新而非新增。
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return {"success": False, "error": "请求体不是有效的 JSON"}
+
+    stem = (body.get("stemHash") or "").strip()
+    answer = (body.get("answer") or "").strip()
+    if not stem or not answer:
+        return {"success": False, "error": "stemHash 与 answer 均为必填"}
+
+    rec = {
+        "stemHash": stem,
+        "questionText": body.get("questionText", ""),
+        "normQuestion": (body.get("normQuestion") or "").strip(),
+        "answer": answer,
+        "correctOptionHashes": body.get("correctOptionHashes") or None,
+        "mode": body.get("mode", "text"),
+        "time": time.strftime("%Y-%m-%dT%H:%M:%S"),
+    }
+    with _USER_CORRECTIONS_LOCK:
+        data = _load_user_corrections()
+        found = False
+        for i, e in enumerate(data):
+            if (e.get("stemHash") == stem) or (rec["normQuestion"] and e.get("normQuestion") == rec["normQuestion"]):
+                data[i] = rec
+                found = True
+                break
+        if not found:
+            data.append(rec)
+        _save_user_corrections(data)
+    logger.info(f"用户纠错已写入覆盖层: stem={stem[:20]} answer={answer} mode={rec['mode']} (累计 {len(data)})")
+    return {"success": True, "total": len(data), "updated": found}
+
+
+@app.post("/api/keju/hash-db/delete")
+async def delete_correction(request: Request):
+    """从覆盖层删除一条用户纠错（按 stemHash 或 normQuestion）。"""
+    try:
+        body = await request.json()
+    except Exception:
+        return {"success": False, "error": "请求体不是有效的 JSON"}
+
+    stem = (body.get("stemHash") or "").strip()
+    norm = (body.get("normQuestion") or "").strip()
+    if not stem and not norm:
+        return {"success": False, "error": "需提供 stemHash 或 normQuestion"}
+
+    with _USER_CORRECTIONS_LOCK:
+        data = _load_user_corrections()
+        before = len(data)
+        data = [e for e in data if not (
+            (stem and e.get("stemHash") == stem) or (norm and e.get("normQuestion") == norm)
+        )]
+        removed = before - len(data)
+        if removed:
+            _save_user_corrections(data)
+    logger.info(f"用户纠错已删除: stem={stem[:20]} norm={norm[:20]} removed={removed}")
+    return {"success": True, "removed": removed}
+
+
+@app.post("/api/keju/wrong-capture/mark-corrected")
+async def mark_wrong_corrected(request: Request):
+    """标记某条错题库截图已纠正（写回 index.jsonl 的 corrected/correctAnswer 字段）。"""
+    try:
+        body = await request.json()
+    except Exception:
+        return {"success": False, "error": "请求体不是有效的 JSON"}
+
+    fname = body.get("file")
+    correct_answer = body.get("correctAnswer", "")
+    if not fname:
+        return {"success": False, "error": "file 必填"}
+
+    try:
+        with _WRONG_LOCK:
+            lines = []
+            if _WRONG_INDEX_FILE.exists():
+                with open(_WRONG_INDEX_FILE, encoding="utf-8") as f:
+                    lines = [l for l in f if l.strip()]
+            new_lines = []
+            for l in lines:
+                try:
+                    rec = json.loads(l)
+                except Exception:
+                    new_lines.append(l)
+                    continue
+                if rec.get("file") == fname:
+                    rec["corrected"] = True
+                    rec["correctAnswer"] = correct_answer
+                new_lines.append(json.dumps(rec, ensure_ascii=False) + "\n")
+            with open(_WRONG_INDEX_FILE, "w", encoding="utf-8") as f:
+                f.writelines(new_lines)
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"标记错题库已纠正失败: {e}")
+        return {"success": False, "error": str(e)}
 
 
 if __name__ == "__main__":

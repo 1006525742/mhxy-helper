@@ -1,0 +1,50 @@
+{
+  "reports": [
+    {
+      "id": "user-20260922180250-001",
+      "category": "scammer",
+      "name": "(未提供昵称)",
+      "gameId": "30886280",
+      "level": "",
+      "type": "未分类",
+      "time": "",
+      "timeISO": "2026-09-22",
+      "reporter": "泰迪熊已婚",
+      "detail": "叫什么玩意来着，4个字的，说中午带飞贼，到2点，40万，带了半个小时，下号了",
+      "sensitive": {
+        "wechat": "",
+        "wechatId": "",
+        "reporterWechat": "",
+        "phones": []
+      },
+      "source": "user",
+      "verified": false,
+      "risk": "normal",
+      "createdAt": "2026-09-22 18:02:50",
+      "ip": "223.104.54.41"
+    },
+    {
+      "id": "user-20260922180717-002",
+      "category": "scammer",
+      "name": "月光如故",
+      "gameId": "30886280",
+      "level": "109",
+      "type": "其他",
+      "time": "20260916中午12点40",
+      "timeISO": "2026-09-22",
+      "reporter": "与你岁岁年年",
+      "detail": "9月16号中午12点，皇宫找飞贼队长到下午2点，40W，结果带了半个小时，直接下线",
+      "sensitive": {
+        "wechat": "",
+        "wechatId": "",
+        "reporterWechat": "",
+        "phones": []
+      },
+      "source": "user",
+      "verified": false,
+      "risk": "high",
+      "createdAt": "2026-09-22 18:07:17",
+      "ip": "111.41.142.182"
+    }
+  ]
+}

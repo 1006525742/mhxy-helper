@@ -4,7 +4,7 @@
  *
  * 配置持久化：整个 config 自动存取 localStorage（key: jk4:config）。
  *
- * 推送渠道为「单选一个」：企业微信 / PushPlus / QQ邮箱 三选一，但各自凭据独立保存，
+ * 推送渠道为「单选一个」：企业微信 / QQ邮箱 / 微信 三选一，但各自凭据独立保存，
  * 切换渠道不会丢失其它渠道已填的配置。读取时与默认值合并，并自动迁移旧结构，老配置不会丢。
  */
 import { defineStore } from 'pinia'
@@ -39,13 +39,13 @@ function createDefaultConfig() {
     /** 总开关 */
     enablePush: false,
     /** 当前选中的推送渠道 */
-    pushChannel: 'wecom' as 'wecom' | 'pushplus' | 'qqmail',
+    pushChannel: 'wecom' as 'wecom' | 'qqmail' | 'wechat',
     /** 企业微信群机器人 webhook 地址 */
     wecom: { webhook: '' },
-    /** PushPlus（微信公众号，个人微信收） */
-    pushplus: { token: '' },
     /** QQ 邮箱（填 QQ 号发到 QQ号@qq.com） */
     qqmail: { qq: '', mailApi: 'http://127.0.0.1:8011/api/notify/qqmail' },
+    /** 微信测试号（公众号测试号）模板消息：填「接收人备注名」，openid→备注名的映射与模板 ID 由后端固定维护 */
+    wechat: { receiver: '', apiBase: 'http://127.0.0.1:8011/api/notify/wechat' },
 
     /** 主检测间隔（ms） */
     detectIntervalMs: 1000,
@@ -97,8 +97,8 @@ function loadConfig(): Jk4ConfigShape {
     const s = saved as Record<string, any>
     // 嵌套合并渠道对象，旧数据缺字段/空字段不丢默认值
     cfg.wecom = mergeChannel(def.wecom, s.wecom)
-    cfg.pushplus = mergeChannel(def.pushplus, s.pushplus)
     cfg.qqmail = mergeChannel(def.qqmail, s.qqmail)
+    cfg.wechat = mergeChannel(def.wechat, s.wechat)
 
     // 由旧「三独立开关」结构推导单选（旧数据每个渠道带 enabled）
     const wecomOn = !!(s.wecom && s.wecom.enabled)
@@ -106,20 +106,20 @@ function loadConfig(): Jk4ConfigShape {
     const qqOn = !!(s.qqmail && s.qqmail.enabled)
     if (wecomOn || ppOn || qqOn) {
       cfg.enablePush = true
-      cfg.pushChannel = wecomOn ? 'wecom' : ppOn ? 'pushplus' : 'qqmail'
+      // 旧 PushPlus 渠道已弃用，回退到企业微信
+      cfg.pushChannel = wecomOn ? 'wecom' : qqOn ? 'qqmail' : 'wecom'
     } else if ('wecomWebhook' in s || 'pushplusToken' in s || 'qqNumber' in s) {
       // 更老的平铺结构：enablePush + pushChannel + 平铺凭据
       cfg.enablePush = !!s.enablePush
-      cfg.pushChannel = (s.pushChannel as 'wecom' | 'pushplus' | 'qqmail') || def.pushChannel
+      cfg.pushChannel = (s.pushChannel as 'wecom' | 'qqmail' | 'wechat') || def.pushChannel
       if (s.wecomWebhook) cfg.wecom.webhook = s.wecomWebhook
-      if (s.pushplusToken) cfg.pushplus.token = s.pushplusToken
       if (s.qqNumber) cfg.qqmail.qq = s.qqNumber
       if (s.mailApi) cfg.qqmail.mailApi = s.mailApi
     }
     // 清理旧结构残留的 enabled 字段
     delete (cfg.wecom as any).enabled
-    delete (cfg.pushplus as any).enabled
     delete (cfg.qqmail as any).enabled
+    delete (cfg.wechat as any).enabled
     return cfg
   } catch {
     return def
@@ -146,13 +146,13 @@ export const useJk4Store = defineStore('jk4', () => {
     { deep: true }
   )
 
-  /** 恢复全部参数为默认值（保留三个渠道的凭据与开关，避免用户重填） */
+  /** 恢复全部参数为默认值（保留三渠道的凭据与开关，避免用户重填） */
   function resetConfig() {
     const def = createDefaultConfig()
     const keep = {
       wecom: { ...config.wecom },
-      pushplus: { ...config.pushplus },
-      qqmail: { ...config.qqmail }
+      qqmail: { ...config.qqmail },
+      wechat: { ...config.wechat }
     }
     Object.assign(config, def, keep)
   }

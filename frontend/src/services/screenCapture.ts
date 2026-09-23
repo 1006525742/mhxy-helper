@@ -34,15 +34,27 @@ export class ScreenCapture {
       // 原站的格子判定基于「采集后物品栏约 250×200px + 固定 cellSize 50/55」，
       // 若用原生高分辨率（如 2560×1440）采集，物品栏框会远大于 250px，
       // 固定格尺寸就会整体错位。这里统一降采集分辨率来保证几何一致。
-      this.stream = await navigator.mediaDevices.getDisplayMedia({
+      // 捕获源约束（关键）：引导/优先选「窗口」而不是「整个屏幕」。
+      // 选屏幕 = 把盖在游戏上的浏览器窗口一起拍进去（遮挡 → 识别乱七八糟）；
+      // 选窗口 = 走 OS 窗口合成，即使被浏览器完全盖住，拿到的仍是窗口自身内容。
+      // 下列 Chrome 扩展选项在 Safari/Firefox 会被忽略，不影响兼容性。
+      const opts: Record<string, unknown> = {
         video: {
           cursor: 'always',
           width: { ideal: 1280 },
           height: { ideal: 960 },
-          frameRate: { ideal: 15 }
+          frameRate: { ideal: 15 },
+          displaySurface: 'window'          // 提示选择器默认高亮「窗口」页签
         } as MediaTrackConstraints,
-        audio: false
-      })
+        audio: false,
+        preferCurrentTab: false,            // 别默认选中本页
+        selfBrowserSurface: 'exclude',      // 排除本浏览器自身（避免选到自己网页）
+        systemAudio: 'exclude',
+        surfaceSwitching: 'include'         // 仍允许在弹窗里切换到「屏幕」
+      }
+      this.stream = await navigator.mediaDevices.getDisplayMedia(
+        opts as unknown as DisplayMediaStreamOptions
+      )
 
       this.video = document.createElement('video')
       // 关键：muted 才能自动播放
@@ -149,8 +161,9 @@ export class ScreenCapture {
 
     if (width === 0 || height === 0) return null
 
-    this.canvas.width = width
-    this.canvas.height = height
+    // 同理：只在尺寸变化时重设，避免每次截图都重新分配画布
+    if (this.canvas.width !== width) this.canvas.width = width
+    if (this.canvas.height !== height) this.canvas.height = height
 
     const ctx = this.canvas.getContext('2d')
     if (!ctx) return null
@@ -208,8 +221,10 @@ export class ScreenCapture {
 
     if (width === 0 || height === 0) return null
 
-    this.canvas.width = width
-    this.canvas.height = height
+    // 只在尺寸真的变了才重设：给 canvas.width 赋「相同的值」也会清空画布并重新分配后备存储，
+    // 预览循环里每帧重设 = 每帧重新分配数 MB 内存，是崩溃诱因之一。
+    if (this.canvas.width !== width) this.canvas.width = width
+    if (this.canvas.height !== height) this.canvas.height = height
 
     const ctx = this.canvas.getContext('2d')
     if (!ctx) return null
@@ -219,9 +234,25 @@ export class ScreenCapture {
   }
 
   /**
+   * 暴露内部 video 元素。前端本地推理（YOLO 等）需要直接 drawImage 取原始帧，
+   * 走 captureFull() 的 dataURL→Image 链路会多一次 JPEG 编解码，白白丢精度又慢。
+   * 只读用途：不要改 srcObject / 不要调 play/pause。
+   */
+  getVideoElement(): HTMLVideoElement | null {
+    return this.video
+  }
+
+  /**
    * 是否正在共享
    */
   isActive(): boolean {
     return this.stream !== null && this.video !== null
+  }
+
+  /**
+   * 暴露原始媒体流，供页面其它 <video> 做可见预览
+   */
+  getStream(): MediaStream | null {
+    return this.stream
   }
 }

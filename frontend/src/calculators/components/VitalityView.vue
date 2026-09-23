@@ -195,31 +195,6 @@ watch(
   { immediate: true },
 )
 
-// 恢复默认：清掉存档并回到数据文件里的默认值
-function resetAll() {
-  level.value = props.def.level
-  fitness.value = props.def.fitness
-  regimen.value = props.def.regimen
-  autoCalc()
-  pCur.value = 0
-  pTgt.value = capPhysical.value
-  vCur.value = 0
-  vTgt.value = capVitality.value
-  pointCardPrice.value = 1.56
-  liangcaoPrice.value = 0.5
-  baishouQuality.value = props.def.profitDefaults.baishouQuality
-  baishouPrice.value = props.def.profitDefaults.baishouPrice
-  haimaPrice.value = props.def.profitDefaults.haimaPrice
-  jushenPrice.value = props.def.profit.jushenPrice
-  talismanLevel.value = props.def.profit.talismanLevel
-  talismanPrice.value = props.def.profit.talismanPrice
-  pointCardPerHour.value = props.def.profit.pointCardPerHour
-  liangcaoPerHour.value = props.def.profit.liangcaoPerHour
-  lingxiPrice.value = props.def.profit.lingxiPrice
-  lingxiPerRefine.value = props.def.profit.lingxiPerRefine
-  lingxiRefineCost.value = props.def.profit.lingxiRefineCost
-}
-
 const fmt = (n: number) => (Math.round(n * 100) / 100).toFixed(2)
 </script>
 
@@ -254,7 +229,6 @@ const fmt = (n: number) => (Math.round(n * 100) / 100).toFixed(2)
         </p>
         <div class="vt-save">
           <span class="vt-saved">已自动保存到本机</span>
-          <button type="button" class="vt-reset" @click="resetAll">恢复默认</button>
         </div>
       </div>
     </div>
@@ -510,19 +484,6 @@ const fmt = (n: number) => (Math.round(n * 100) / 100).toFixed(2)
 .vt-saved {
   font-size: 12.5px;
   color: var(--color-success);
-}
-.vt-reset {
-  padding: 5px 12px;
-  font-size: 12.5px;
-  color: var(--color-text-muted);
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
-  cursor: pointer;
-}
-.vt-reset:hover {
-  color: var(--color-text);
-  border-color: var(--color-primary);
 }
 .vt-tip {
   margin-top: 6px;

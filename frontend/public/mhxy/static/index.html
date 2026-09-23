@@ -169,50 +169,6 @@
                         </div>
                     </div>
 
-                    <!-- Slide 3 - 物价手册 -->
-                    <div class="swiper-slide hero-slide" data-module="jizhang">
-                        <div class="slide-bg" style="background: linear-gradient(135deg, #3d1a1a 0%, #281010 50%, #150808 100%);"></div>
-                        <div class="slide-content">
-                            <div class="slide-left">
-                                <div class="slide-tag">📊 市场分析</div>
-                                <h2 class="slide-title">物价手册</h2>
-                                <p class="slide-desc">记录每一笔交易，追踪物价波动，把握市场脉搏，成为商业大亨。</p>
-                                <div class="slide-actions">
-                                    <a href="/wuji/" class="btn-primary">
-                                        <span>💰</span> 物价宝鉴
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="slide-right">
-                                <div class="slide-visual">
-                                    <span class="visual-icon">📒</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 4 - 答题助手 -->
-                    <div class="swiper-slide hero-slide" data-module="quiz">
-                        <div class="slide-bg" style="background: linear-gradient(135deg, #1a2d3d 0%, #0f1a28 50%, #081018 100%);"></div>
-                        <div class="slide-content">
-                            <div class="slide-left">
-                                <div class="slide-tag">📚 学霸必备</div>
-                                <h2 class="slide-title">答题助手</h2>
-                                <p class="slide-desc">海量题库收录，智能搜索匹配，实时答题辅助，轻松应对科举考试。</p>
-                                <div class="slide-actions">
-                                    <a href="/mhxy/static/keju.html" class="btn-primary" target="_top">
-                                        <span>📖</span> 科举识题
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="slide-right">
-                                <div class="slide-visual">
-                                    <span class="visual-icon">📖</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Slide 5 - 分图助手 -->
                     <div class="swiper-slide hero-slide" data-module="fentu">
                         <div class="slide-bg" style="background: linear-gradient(135deg, #0a3d3d 0%, #072828 50%, #041818 100%);"></div>
@@ -264,7 +220,7 @@
                             <div class="slide-left">
                                 <div class="slide-tag">🌾 收货价看板</div>
                                 <h2 class="slide-title">收货采集</h2>
-                                <p class="slide-desc">对标 mhxyai 的收货价采集：每条样本自动聚合出均价 / 最低 / 最高与样本数，比对方多带物品图片。</p>
+                                <p class="slide-desc">每条样本自动聚合出均价 / 最低 / 最高与样本数，并附带物品截图，收货行情一目了然。</p>
                                 <div class="slide-actions">
                                     <a href="/harvest" class="btn-primary" target="_top">
                                         <span>🌾</span> 开始采集
@@ -312,15 +268,6 @@
                     <div class="nav-card-arrow">→</div>
                 </a>
 
-                <a href="/wuji/" class="nav-card" data-color="red">
-                    <div class="nav-card-icon">📒</div>
-                    <div class="nav-card-content">
-                        <span class="nav-card-title">物价手册</span>
-                        <span class="nav-card-sub">物价宝鉴</span>
-                    </div>
-                    <div class="nav-card-arrow">→</div>
-                </a>
-
                 <a href="/gold" class="nav-card" data-color="gold" target="_top">
                     <div class="nav-card-icon">💰</div>
                     <div class="nav-card-content">
@@ -335,6 +282,15 @@
                     <div class="nav-card-content">
                         <span class="nav-card-title">资产登记</span>
                         <span class="nav-card-sub">低买高卖，心里有数</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+
+                <a href="/scammer" class="nav-card" data-color="red" target="_top">
+                    <div class="nav-card-icon">🚨</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">骗子名单</span>
+                        <span class="nav-card-sub">组队交易前查一查</span>
                     </div>
                     <div class="nav-card-arrow">→</div>
                 </a>
@@ -404,16 +360,14 @@
                     <div class="nav-card-arrow">→</div>
                 </a>
 
-                <!-- 钓鱼模块（金牌钓手）暂未测试，隐藏入口；恢复时取消本注释即可
                 <a href="/fishing" class="nav-card" data-color="teal" target="_top">
                     <div class="nav-card-icon">🐟</div>
                     <div class="nav-card-content">
                         <span class="nav-card-title">金牌钓手</span>
-                        <span class="nav-card-sub">本地OCR识别·槽位锁定</span>
+                        <span class="nav-card-sub">钓鱼助手·收杆动作参考</span>
                     </div>
                     <div class="nav-card-arrow">→</div>
                 </a>
-                -->
 
                 <a href="/calc" class="nav-card" data-color="violet" target="_top">
                     <div class="nav-card-icon">🧮</div>
@@ -450,16 +404,47 @@
                     </div>
                     <div class="nav-card-arrow">→</div>
                 </a>
+
+                <a href="/paoshang" class="nav-card" data-color="cyan" target="_top">
+                    <div class="nav-card-icon">💰</div>
+                    <div class="nav-card-content">
+                        <span class="nav-card-title">跑商助手</span>
+                        <span class="nav-card-sub">价格涨跌·刷新计时</span>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
             </div>
         </div>
     </main>
 
+    <!-- 敲木鱼 · 攒功德（轻量内联） -->
+    <div class="muyu-inline" id="muyuBox">
+        <button class="muyu-hit" id="muyuBtn" aria-label="敲木鱼攒功德" title="敲一下，攒功德">
+            <span class="muyu-ring" aria-hidden="true"></span>
+            <img src="/mhxy/static/images/woodfish.png" alt="" draggable="false">
+        </button>
+        <div class="muyu-meta">今日功德 <b id="muyuToday">0</b> · 累计功德 <b id="muyuTotal">0</b></div>
+    </div>
+
     <!-- 底部 -->
     <footer class="footer">
         <div class="footer-content">
-            <span>泰迪熊工具箱</span>
-            <span class="divider">|</span>
-            <span>本站仅供学习研究使用</span>
+            <div class="footer-brand">
+                <span>泰迪熊工具箱</span>
+                <span class="divider">|</span>
+                <span>闽ICP备2026011900号</span>
+            </div>
+            <p class="footer-disclaimer">
+                本站仅用于个人学习、技术演示与体验，免费使用，不提供任何辅助软件下载。技术基于浏览器端视觉小模型识别，不读取游戏内存、不修改或控制游戏、不作弊。游戏相关知识产权归原厂商所有，使用即表示您同意<a class="decl" href="/mhxy/static/disclaimer.html">《免责与合规声明》</a>。
+            </p>
+        </div>
+        <div class="footer-wx" id="wxCorner" title="添加好友邀请入群">
+            <img src="/mhxy/static/vxmp.jpg" alt="微信二维码" class="footer-wx-img">
+            <span class="footer-wx-tip">添加好友邀请入群</span>
+        </div>
+        <div class="footer-wx" id="wxCornerFwh" title="关注服务号接收告警">
+            <img src="/mhxy/static/vxfwh.jpeg" alt="服务号二维码" class="footer-wx-img">
+            <span class="footer-wx-tip">关注服务号接收告警</span>
         </div>
     </footer>
 
@@ -502,6 +487,39 @@
         /* 慈心首页图标：与棋盘白子同款白色圆盘，紫底上清晰可见 */
         .nav-card-icon-img{width:28px;height:28px;object-fit:contain;display:inline-block;vertical-align:middle}
         .nav-card-icon .cixin-disc{display:inline-block;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffff,#cfcfcf);box-shadow:inset 0 1px 2px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.3)}
+        /* 微信加好友：页脚角落静态块 */
+        .footer{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:24px}
+        .footer-content{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+        .footer-brand{display:flex;align-items:center;gap:10px;font-size:13px;color:#aeb6c4}
+        .footer-brand .divider{color:#5a6171}
+        .footer-disclaimer{max-width:760px;margin:0;font-size:11px;line-height:1.7;color:#7b8392}
+        .footer-disclaimer .decl{color:#8fa4ff;font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+        .footer-disclaimer .decl:hover{color:#aebdff}
+        .footer-wx{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+        .footer-wx-img{display:block;width:150px;max-width:90vw;height:auto;background:#fff;border-radius:8px}
+        .footer-wx-tip{color:#9aa3b2;font-size:12px;line-height:1.3;text-align:center}
+        /* 放大弹层 */
+        .wx-modal{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
+        .wx-modal.open{display:flex}
+        .wx-modal-card{position:relative;background:#fff;border-radius:16px;padding:22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);max-width:90vw}
+        .wx-modal-card img{width:240px;height:240px;object-fit:contain;display:block;border-radius:8px}
+        .wx-modal-tip{margin:14px 0 0;color:#333;font-size:14px;font-weight:500}
+        .wx-modal-close{position:absolute;top:14px;right:18px;color:#fff;font-size:28px;line-height:1;cursor:pointer;opacity:.85}
+        .wx-modal-close:hover{opacity:1}
+        /* 敲木鱼 · 攒功德 */
+        .muyu-inline{display:flex;flex-direction:column;align-items:center;gap:10px;margin:6px 0 30px;user-select:none;-webkit-user-select:none}
+        .muyu-hit{position:relative;border:none;background:transparent;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;line-height:0}
+        .muyu-hit img{width:88px;height:auto;pointer-events:none;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45))}
+        .muyu-hit:active img{transform:translateY(7px) scale(.98,.97)}
+        .muyu-hit.is-struck img{animation:wf-strike 220ms ease-out}
+        .muyu-ring{position:absolute;left:50%;top:52%;width:84px;height:62px;margin:-31px 0 0 -42px;border-radius:50%;border:2px solid rgba(242,203,132,.75);opacity:0;pointer-events:none}
+        .muyu-hit.is-struck .muyu-ring{animation:wf-impact 300ms ease-out}
+        @keyframes wf-strike{0%{transform:translateY(0) scale(1);filter:brightness(1)}34%{transform:translateY(9px) scale(.98,.96);filter:brightness(1.16)}100%{transform:translateY(0) scale(1);filter:brightness(1)}}
+        @keyframes wf-impact{0%{opacity:.95;transform:scale(.25)}100%{opacity:0;transform:scale(2.2)}}
+        .muyu-merit-pop{position:absolute;left:50%;top:-4px;color:#f2cb84;font-family:Georgia,"Songti SC",serif;font-size:15px;font-weight:700;text-shadow:0 2px 12px rgba(0,0,0,.8);white-space:nowrap;pointer-events:none;animation:wf-rise 720ms ease-out forwards}
+        @keyframes wf-rise{0%{opacity:0;transform:translate(-50%,8px) scale(.92)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-56px) scale(1.04)}}
+        .muyu-meta{display:flex;align-items:center;gap:4px;color:#9aa3b2;font-size:12px}
+        .muyu-meta b{color:#f2cb84;font-size:15px;font-family:Georgia,"Songti SC",serif;margin:0 2px}
     </style>
 
     <!-- 梦幻精灵悬浮客服 -->
@@ -527,6 +545,44 @@
             <button id="spriteSend">发送</button>
         </div>
     </div>
+
+    <!-- 微信二维码放大弹层 -->
+    <div class="wx-modal" id="wxModal">
+        <span class="wx-modal-close" id="wxModalClose">×</span>
+        <div class="wx-modal-card">
+            <img src="/mhxy/static/vxmp.jpg" alt="微信二维码">
+            <p class="wx-modal-tip">添加好友邀请入群</p>
+        </div>
+    </div>
+
+    <div class="wx-modal" id="wxModalFwh">
+        <span class="wx-modal-close" id="wxModalFwhClose">×</span>
+        <div class="wx-modal-card">
+            <img src="/mhxy/static/vxfwh.jpeg" alt="服务号二维码">
+            <p class="wx-modal-tip">关注服务号接收告警</p>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        var corner = document.getElementById('wxCorner');
+        var modal = document.getElementById('wxModal');
+        var closeBtn = document.getElementById('wxModalClose');
+        if(corner && modal){
+            corner.addEventListener('click', function(){ modal.classList.add('open'); });
+            closeBtn.addEventListener('click', function(){ modal.classList.remove('open'); });
+            modal.addEventListener('click', function(e){ if(e.target === modal) modal.classList.remove('open'); });
+        }
+        var cornerFwh = document.getElementById('wxCornerFwh');
+        var modalFwh = document.getElementById('wxModalFwh');
+        var closeFwh = document.getElementById('wxModalFwhClose');
+        if(cornerFwh && modalFwh){
+            cornerFwh.addEventListener('click', function(){ modalFwh.classList.add('open'); });
+            closeFwh.addEventListener('click', function(){ modalFwh.classList.remove('open'); });
+            modalFwh.addEventListener('click', function(e){ if(e.target === modalFwh) modalFwh.classList.remove('open'); });
+        }
+    })();
+    </script>
 
     <script>
     (function(){
@@ -660,6 +716,120 @@
     </script>
 
     <script src="/mhxy/static/js/app.js?v=20260611h"></script>
+
+    <script>
+    /* 敲木鱼 · 攒功德（内联轻量版：录音优先+合成兜底，打击感参考 jiabanma） */
+    (function(){
+      var btn = document.getElementById('muyuBtn');
+      if(!btn) return;
+      var todayEl = document.getElementById('muyuToday');
+      var totalEl = document.getElementById('muyuTotal');
+      var K_TOTAL = 'mhxy_muyu_merit_total', K_TODAY = 'mhxy_muyu_merit_today', K_DATE = 'mhxy_muyu_merit_today_date';
+      function ls(k, v){ try{ if(v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v);}catch(e){ return null; } }
+      var today = new Date().toISOString().slice(0, 10);
+      if(ls(K_DATE) !== today){ ls(K_DATE, today); ls(K_TODAY, '0'); }
+      var total = parseInt(ls(K_TOTAL) || '0', 10) || 0;
+      var todayN = parseInt(ls(K_TODAY) || '0', 10) || 0;
+      function render(){ if(todayEl) todayEl.textContent = String(todayN); if(totalEl) totalEl.textContent = String(total); }
+      render();
+
+      /* ---- 声音：mokugyo 录音优先 + WebAudio 合成兜底，随机微调音调 ---- */
+      var actx = null, buffer = null, loadFail = false, pending = null;
+      var AC = window.AudioContext || window.webkitAudioContext;
+      function ctx(){ if(!actx && AC){ try{ actx = new AC(); }catch(e){ return null; } } return actx; }
+      (function preload(){
+        if(!window.fetch) { loadFail = true; return; }
+        pending = fetch('/mhxy/static/audio/woodfish-hit.mp3', {cache:'force-cache'})
+          .then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
+          .then(function(d){ var c = ctx(); if(!c) return null; return c.decodeAudioData(d.slice(0)); })
+          .then(function(b){ if(b) buffer = b; return b; })
+          .catch(function(){ loadFail = true; return null; });
+      })();
+      function synth(){
+        var c = ctx(); if(!c) return;
+        var now = c.currentTime, pv = 0.98 + Math.random() * 0.04;
+        var master = c.createGain(); master.gain.setValueAtTime(0.82, now);
+        var hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.setValueAtTime(260, now); hp.Q.value = .7;
+        var lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(3600, now); lp.Q.value = .8;
+        master.connect(hp); hp.connect(lp); lp.connect(c.destination);
+        [{type:'triangle',f1:540,f2:445,g:.34,d:.14},{type:'sine',f1:1080,f2:900,g:.16,d:.075},{type:'sine',f1:1620,f2:1350,g:.07,d:.045}].forEach(function(p){
+          var o = c.createOscillator(), g = c.createGain();
+          o.type = p.type; o.frequency.setValueAtTime(p.f1 * pv, now);
+          o.frequency.exponentialRampToValueAtTime(p.f2 * pv, now + p.d);
+          g.gain.setValueAtTime(0.0001, now);
+          g.gain.exponentialRampToValueAtTime(p.g, now + 0.002);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + p.d);
+          o.connect(g); g.connect(master); o.start(now); o.stop(now + p.d + 0.01);
+        });
+        var n = c.createBuffer(1, Math.floor(c.sampleRate * 0.035), c.sampleRate), nd = n.getChannelData(0);
+        for(var i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / nd.length, 5);
+        var s = c.createBufferSource(), f = c.createBiquadFilter(), ng = c.createGain();
+        s.buffer = n; f.type = 'bandpass'; f.frequency.setValueAtTime(2200 * pv, now); f.Q.value = .9;
+        ng.gain.setValueAtTime(0.2, now); ng.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+        s.connect(f); f.connect(ng); ng.connect(master); s.start(now); s.stop(now + 0.04);
+      }
+      function play(){
+        var c = ctx(); if(!c) return;
+        if(c.state === 'suspended') c.resume().catch(function(){});
+        if(buffer){
+          var src = c.createBufferSource(), g = c.createGain();
+          src.buffer = buffer; src.playbackRate.value = 0.98 + Math.random() * 0.04; g.gain.value = 0.72;
+          src.connect(g); g.connect(c.destination); src.start();
+          return;
+        }
+        if(pending && !loadFail){ pending.then(function(b){ if(b) play(); else synth(); }, function(){ synth(); }); return; }
+        synth();
+      }
+
+      /* ---- 上报：连点攒 5 秒批量 count=N（sendBeacon→fetch keepalive，失败静默） ---- */
+      var pend = 0, timer = null;
+      function uuid(){ try{ if(crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){} 
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(ch){ var r = (Math.random()*16)|0, v = ch === 'x' ? r : (r & 0x3) | 0x8; return v.toString(16); }); }
+      function vid(){ var v = ls('mhxy_analytics_vid'); if(!v){ v = uuid(); ls('mhxy_analytics_vid', v); } return v; }
+      function sid(){ var k = 'mhxy_analytics_sid', v = null; try{ v = sessionStorage.getItem(k); if(!v){ v = uuid(); sessionStorage.setItem(k, v); } }catch(e){ v = v || uuid(); } return v; }
+      function flush(){
+        if(!pend) return; var n = pend; pend = 0;
+        try{
+          var payload = JSON.stringify({module:'muyu', path:'/index', type:'merit', count:n, vid:vid(), sid:sid(), ts:Date.now(), referer:'', ua:navigator.userAgent});
+          if(navigator.sendBeacon){ navigator.sendBeacon('/api/analytics/track', new Blob([payload], {type:'application/json'})); }
+          else fetch('/api/analytics/track', {method:'POST', body:payload, headers:{'Content-Type':'application/json'}, keepalive:true}).catch(function(){});
+        }catch(e){}
+      }
+      function report(){
+        pend++; if(timer) return;
+        timer = setTimeout(function(){ timer = null; flush(); }, 5000);
+      }
+      window.addEventListener('pagehide', flush);
+
+      /* ---- 打击感：压扁 + 冲击环 + 功德 +1 飘字 ---- */
+      function pop(){
+        var p = document.createElement('span');
+        p.className = 'muyu-merit-pop'; p.textContent = '功德 +1';
+        btn.appendChild(p);
+        setTimeout(function(){ p.remove(); }, 760);
+      }
+      function knock(){
+        total++; todayN++;
+        ls(K_TOTAL, String(total)); ls(K_TODAY, String(todayN));
+        render(); pop(); report(); play();
+        btn.classList.remove('is-struck');
+        void btn.offsetWidth;   /* 强制 reflow，连点也能重放动画 */
+        btn.classList.add('is-struck');
+      }
+      var last = 0;
+      btn.addEventListener('pointerdown', function(e){
+        if(e.pointerType === 'mouse' && e.button !== 0) return;
+        last = Date.now(); knock();
+      });
+      btn.addEventListener('keydown', function(e){
+        if(e.key !== ' ' && e.key !== 'Enter') return;
+        e.preventDefault(); if(!e.repeat) knock();
+      });
+      btn.addEventListener('click', function(){
+        if(Date.now() - last > 250){ last = Date.now(); knock(); }
+      });
+    })();
+    </script>
 
 </body>
 </html>

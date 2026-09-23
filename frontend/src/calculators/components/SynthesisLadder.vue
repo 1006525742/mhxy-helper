@@ -200,9 +200,17 @@ function inRange(level: number): boolean {
   color: #e6ecf3;
   font-weight: 600;
 }
+/* 梦幻币三列（消耗额外/本级/累计）：主读数列，放大一号 + 提亮，一眼看清金额 */
 .syn-table .c-wan {
-  color: #e6ecf3;
+  color: #f2f6fa;
   font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 0.4px;
+}
+/* 累计梦幻币为本表核心结果，再放大一号 */
+.syn-table td.c-wan.strong {
+  font-size: 18.5px;
+  font-weight: 700;
 }
 .syn-table .c-rmb {
   color: #6ee7a0;

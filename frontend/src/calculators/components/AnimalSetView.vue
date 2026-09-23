@@ -2,12 +2,28 @@
 import { computed, ref } from 'vue'
 import type { AnimalSetDef, AnimalAttr } from '@/calculators/engine/types'
 import { computeAnimalSet } from '@/calculators/services/calcEngine'
+import { loadPersist, watchPersist } from '@/calculators/services/calcPersist'
 
 const props = defineProps<{ def: AnimalSetDef }>()
 
-const level = ref(props.def.defaultLevel)
-const pieces = ref<3 | 5>(3)
-const attrFilter = ref<AnimalAttr | 'all'>('all')
+// 输入项本机存档（等级 / 件数 / 属性筛选），刷新不丢
+const LS_KEY = 'mhxy_animalset_v1'
+interface SetPersist {
+  level: number
+  pieces: 3 | 5
+  attrFilter: AnimalAttr | 'all'
+}
+const sv = loadPersist<SetPersist>(LS_KEY)
+
+const level = ref(sv?.level ?? props.def.defaultLevel)
+const pieces = ref<3 | 5>(sv?.pieces ?? 3)
+const attrFilter = ref<AnimalAttr | 'all'>(sv?.attrFilter ?? 'all')
+
+watchPersist(LS_KEY, [level, pieces, attrFilter], () => ({
+  level: level.value,
+  pieces: pieces.value,
+  attrFilter: attrFilter.value,
+}))
 
 const ATTRS: (AnimalAttr | 'all')[] = ['all', '敏捷', '魔力', '力量', '体质', '耐力']
 const attrLabel = (a: AnimalAttr | 'all') => (a === 'all' ? '全部' : a)

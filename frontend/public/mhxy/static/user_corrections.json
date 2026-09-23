@@ -1,0 +1,15 @@
+[
+  {
+    "stemHash": "0000ffffffffffffe000f000f000b000:07fe0000:ffff8042ec0c1804",
+    "questionText": "御前科举大赛第12关：这一关考的是古代常识。题目：元曲 四大家不包括",
+    "normQuestion": "元曲四大家不包括",
+    "answer": "B 金圣叹",
+    "correctOptionHashes": {
+      "gridHash": "0000000013f83ff83ff83ff800000000",
+      "rowHash": "001ffe00",
+      "columnHash": "00dff87f7157f000"
+    },
+    "mode": "text",
+    "time": "2026-09-14T16:01:51"
+  }
+]

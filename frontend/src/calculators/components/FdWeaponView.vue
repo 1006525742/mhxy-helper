@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import type { FixedDamageWeaponDef } from '@/calculators/engine/types'
 import { computeFdWeapon } from '@/calculators/services/calcEngine'
+import { loadPersist, watchPersist } from '@/calculators/services/calcPersist'
 
 const props = defineProps<{ def: FixedDamageWeaponDef }>()
 
@@ -11,13 +12,30 @@ interface WeaponInput {
   price: number
 }
 
-const sectId = ref(props.def.sects[0]?.id ?? '')
+// 输入项本机存档（门派 / 整份武器列表），刷新不丢
+const LS_KEY = 'mhxy_fdweapon_v1'
+interface FwPersist {
+  sectId: string
+  weapons: WeaponInput[]
+}
+const sv = loadPersist<FwPersist>(LS_KEY)
+
 // 默认带入估价表「武器性价比」示例三把武器，便于对照
-const weapons = ref<WeaponInput[]>([
+const DEFAULT_WEAPONS: WeaponInput[] = [
   { damage: 490, agility: 0, price: 10 },
   { damage: 467, agility: 19, price: 333 },
   { damage: 500, agility: 0, price: 333 },
-])
+]
+
+const sectId = ref(sv?.sectId ?? props.def.sects[0]?.id ?? '')
+const weapons = ref<WeaponInput[]>(
+  sv?.weapons?.length ? sv.weapons : DEFAULT_WEAPONS.map((w) => ({ ...w })),
+)
+
+watchPersist(LS_KEY, [sectId, weapons], () => ({
+  sectId: sectId.value,
+  weapons: weapons.value,
+}))
 
 function addWeapon() {
   weapons.value.push({ damage: 0, agility: 0, price: 0 })
